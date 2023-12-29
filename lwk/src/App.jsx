@@ -1,11 +1,14 @@
-import {} from 'react'
+import { useState } from 'react'
 import './App.css'
+
 
 const App = () => {
 
-  return{
-
-  }
+  return (
+    <div>
+      <Navbar/>
+    </div>
+  );
 }
 
 export default App
