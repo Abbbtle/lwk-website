@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.log
+
+# local secrets - never commit
+.env
+.env.*
+!.env.example
+
+# build output
+.next/
+out/
+cdk.out/
+*.tsbuildinfo
+next-env.d.ts
+coverage/
