@@ -1,37 +1,48 @@
 @import 'tailwindcss';
 
-/* Brand tokens. #8abcd7 comes from the LWK logo; it is too light for text,
-   so it is used as an accent and paired with a deep blue for text and buttons. */
-:root {
-  --background: #ffffff;
-  --foreground: #172533;
-  --muted: #5b6b7a;
-  --brand: #8abcd7;
-  --brand-soft: #eaf4fa;
-  --brand-strong: #1d4e6e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0e1720;
-    --foreground: #e8eef3;
-    --muted: #9aabba;
-    --brand-soft: #16283a;
-    --brand-strong: #8abcd7;
-  }
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-brand: var(--brand);
-  --color-brand-soft: var(--brand-soft);
-  --color-brand-strong: var(--brand-strong);
-  --font-sans: var(--font-geist-sans);
+/* Palette from the reference POC: saffron orange accent, black, grays, white. */
+@theme {
+  --color-brand: var(--color-orange-500);
+  --color-brand-dark: var(--color-orange-600);
+  --color-surface: #f9f9f9;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  @apply bg-white text-gray-800 antialiased;
+}
+
+/* Square, bold buttons as in the POC. */
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-black px-5 py-2.5 font-bold transition-colors;
+}
+
+/* Black outline that fills black from left to right on hover. */
+@utility btn-outline {
+  @apply btn text-black;
+  background-image: linear-gradient(to right, black 50%, transparent 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition:
+    background-position 0.5s,
+    color 0.5s;
+
+  &:hover {
+    background-position: left bottom;
+    color: white;
+  }
+}
+
+@utility btn-solid {
+  @apply btn bg-black text-surface hover:bg-[#282828];
+}
+
+@utility btn-brand {
+  @apply btn border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-outline {
+    transition: none;
+  }
 }
