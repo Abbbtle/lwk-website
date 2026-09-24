@@ -6,6 +6,16 @@
   --color-brand-dark: var(--color-orange-600);
   --color-surface: #f9f9f9;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 body {
@@ -44,5 +54,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .btn-outline {
     transition: none;
+  }
+  .animate-marquee {
+    animation: none;
   }
 }
