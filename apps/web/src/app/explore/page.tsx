@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CategoryPills } from '@/components/category-pills';
 import { CourseGrid } from '@/components/course-card';
-import { getCategories, searchCourses } from '@/lib/catalog';
+import { getCategories, searchCourses } from '@/server/catalog';
 
 export const metadata: Metadata = {
   title: 'Explore Courses',

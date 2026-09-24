@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { CategoryPills } from '@/components/category-pills';
 import { CourseGrid } from '@/components/course-card';
 import { CourseCover } from '@/components/course-cover';
-import { getCategories, searchCourses } from '@/lib/catalog';
+import { getCategories, searchCourses } from '@/server/catalog';
 
 export default async function HomePage() {
+  await connection();
   const [categories, courses] = await Promise.all([getCategories(), searchCourses()]);
   // One course from each category first, so the home page shows the full range.
   const featured = categories
