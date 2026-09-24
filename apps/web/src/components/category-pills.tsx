@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Category } from '@/lib/catalog';
+import type { Category } from '@/lib/catalog/types';
 
 function pillClass(active: boolean) {
   return active

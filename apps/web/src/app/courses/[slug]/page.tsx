@@ -2,24 +2,23 @@ import { Check, ChartNoAxesColumn, Clock, ListVideo } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { CourseCover } from '@/components/course-cover';
-import { getCourse, getCourseSlugs } from '@/lib/catalog';
 import { formatDuration, formatPrice } from '@/lib/format';
+import { getCourse } from '@/server/catalog';
 
-export async function generateStaticParams() {
-  const slugs = await getCourseSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+// Metadata and page share one query per request.
+const loadCourse = cache(getCourse);
 
 export async function generateMetadata({
   params,
 }: PageProps<'/courses/[slug]'>): Promise<Metadata> {
-  const course = await getCourse((await params).slug);
+  const course = await loadCourse((await params).slug);
   return course ? { title: course.title, description: course.subtitle } : {};
 }
 
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
-  const course = await getCourse((await params).slug);
+  const course = await loadCourse((await params).slug);
   if (!course) notFound();
 
   const facts = [
@@ -103,7 +102,9 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <div className="bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} />
             <div className="space-y-4 p-6">
-              <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>
+              {course.priceUsd !== null && (
+                <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>
+              )}
               <Link href={`/sign-up?next=/courses/${course.slug}`} className="btn-brand w-full">
                 Enroll Now
               </Link>

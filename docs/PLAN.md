@@ -203,6 +203,21 @@ Prisma against local Postgres, migrations and seed data (sample courses), servic
 layer and public `/api/v1` course endpoints; pages switch from mock data to the
 service layer. Vitest for unit and integration tests against a test database.
 
+Status: DONE.
+
+- Prisma **7.10.0** pinned (npm `latest` pointed at an 8.0 release candidate); client
+  generated into `src/generated/prisma` on install. Schema in `apps/web/prisma/`:
+  categories, courses, sections, lessons (snake_case, UUIDv7 keys). Seed data in
+  `prisma/seed-data.ts`; `npm run db:seed -w @lwk/web` is idempotent.
+- Service layer `src/server/catalog.ts` (published courses only); pages render per
+  request via `connection()`. Next step for performance: Cache Components
+  (`'use cache'` plus tag revalidation when a course is published, Phase 4).
+- `/api/v1/health`, `/categories`, `/courses`, `/courses/:slug` with the
+  `{ data }` / `{ error: { code, message } }` envelope.
+- Tests: Vitest against `lwk_test` (locally) or a PostgreSQL 18 service container (CI).
+  Prisma 7 blocks `migrate reset` for AI agents, so test setup uses
+  `migrate deploy` + `TRUNCATE` + seed instead.
+
 **Phase 3 - Authentication**
 CDK `AuthStack` (Cognito user pool, app client, groups) deployed early because it
 costs nothing at this scale. Sign-in/up/out, protected routes (Next.js proxy plus

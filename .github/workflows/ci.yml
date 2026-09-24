@@ -15,8 +15,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Job name is referenced by the "Protected branches" ruleset; keep it as `check`.
   check:
     runs-on: ubuntu-latest
+    services:
+      # Same major version as RDS (see docs/PLAN.md).
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: lwk
+          POSTGRES_PASSWORD: lwk
+          POSTGRES_DB: lwk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lwk -d lwk_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway CI-only database, not a secret.
+      TEST_DATABASE_URL: postgresql://lwk:lwk@localhost:5432/lwk_test
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -27,5 +46,6 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm test
       - run: npm run build
       # TODO(Phase 3): add `npm run synth -w @lwk/infra` once the first stack exists.

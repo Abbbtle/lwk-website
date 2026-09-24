@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { CourseCover } from '@/components/course-cover';
-import { getCategories } from '@/lib/catalog';
+import { getCategories } from '@/server/catalog';
 
 export const metadata: Metadata = {
   title: 'Categories',
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
+  await connection();
   const categories = await getCategories();
 
   return (

@@ -14,3 +14,4 @@ cdk.out/
 *.tsbuildinfo
 next-env.d.ts
 coverage/
+**/src/generated/

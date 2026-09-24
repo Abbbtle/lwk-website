@@ -22,7 +22,8 @@ export type Course = {
   categorySlug: string;
   instructor: string;
   level: Level;
-  priceUsd: number;
+  /** Null until a price is set. */
+  priceUsd: number | null;
   outcomes: string[];
   sections: Section[];
 };
