@@ -21,6 +21,41 @@ product hosted on AWS.
 | Hosting         | Next.js standalone Node server on one EC2 instance, PostgreSQL on RDS, CloudFront in front                                              |
 | Payments        | Decide later (Paystack, PayFast and Stripe are the candidates)                                                                          |
 | Domain          | None yet - use the CloudFront URL; add Route 53 + ACM certificate later                                                                 |
+| Git flow        | Feature branch -> `dev` -> `uat` -> `main`. Pull requests always target `dev` first.                                                    |
+| Design          | Follow the earlier POC at https://livingwithkrishna.netlify.app (see "Reference POC" below)                                             |
+
+## Reference POC
+
+The earlier POC (Vite + React Router + Auth0, hosted on Netlify) is the design and
+content reference: https://livingwithkrishna.netlify.app
+
+- **Look:** saffron/orange accent (Tailwind `orange-500` `#f97316`) on white and light
+  gray, gray-800 text, Poppins font, light and dark logo variants, Swiper carousels,
+  a scrolling marquee, Framer Motion animations, FAQ accordion.
+- **Pages:** Home (hero "Rediscover Devotion - Experience Bhakti Yoga like never
+  before", category carousel for Kirtan / Prasadam / Sastra, course grid,
+  "Become An Instructor" call to action), Explore (course catalog with search),
+  Categories, Plans & Pricing, Become an Instructor, Our Mission, Contact, Log In /
+  Sign Up.
+- **Categories and sample courses:** Kirtan (Kirtan Basics, Mastering Harmonium,
+  Advanced Kirtan Techniques, History of Kirtan, Kirtan Leadership), Prasadam
+  (Prasadam Cooking, Vegetarian Delights, Ayurvedic Recipes, Healthy Cooking,
+  Spiritual Meals), Vaisnava Etiquette (Intro to Vaisnava Etiquette, Respect and
+  Devotion, Daily Devotional Practices, Advanced Vaisnava Manners, Etiquette in the
+  Temple), Sastra Study (Bhagavad Gita Deep Dive, Upanishads Study, Vedic Literature
+  Overview, Sacred Texts Mastery, Philosophy of Bhakti).
+- **The POC's business model is subscriptions,** not per-course purchases: Solo,
+  Group and Classroom plans, monthly or annual billing, 14-day free trial. **Open
+  question for the payments phase:** subscriptions only, per-course purchases, or both.
+  The data model keeps both possible.
+- **Instructor application form:** legal and initiated name, contact details,
+  nationality, expertise, years of experience, degree, certifications, work and
+  teaching experience, languages, motivation, teaching philosophy, strengths. This
+  becomes the instructor onboarding flow (apply -> admin approves -> instructor role).
+- **Contact form:** name, email, company, nature of inquiry (general, support,
+  partnership, feedback, other), message; support@livingwithkrishna.org.
+- The POC's photos (kirtan, sacred books, temple and prasadam scenes) need usage
+  permission confirmed before they appear on the public site.
 
 **AWS account facts (checked 2026-09-24):**
 
@@ -143,7 +178,7 @@ Admin (review queue, user roles). Responsive and accessible (WCAG 2.1 AA target)
    connection string in `apps/web/.env.local`), AWS CLI v2 (installed per-user).
 2. DONE - budget `lwk-monthly-cost` (USD 10/month, credits excluded; alerts at 50%
    forecast, 50% and 100% actual) via stack `lwk-guardrails` in `us-east-1`.
-   **TODO (owner: Kenneth, in the AWS console): enable MFA on the root user and on
+   **TODO (AWS console): enable MFA on the root user and on
    IAM user `kenneth`** - neither has MFA, and `kenneth` has AdministratorAccess via
    group `Admins`. No access keys exist; local CLI access will use `aws login`.
 3. DONE - monorepo with Next.js 16 in `apps/web`, CDK skeleton in `infra/`, Prettier,
@@ -151,8 +186,11 @@ Admin (review queue, user roles). Responsive and accessible (WCAG 2.1 AA target)
    Phase 2 alongside the first server code.
 
 **Phase 1 - Web foundation**
-Layout (header, footer, mobile menu), design tokens (brand colours from the logo),
-Home, Catalog and Course detail pages with mock data, loading and not-found states.
+Rebuild the POC's look in Next.js: saffron design tokens, Poppins, header with
+mobile menu, footer; Home, Explore (catalog with search and category filter), Course
+detail, Categories, Our Mission, Plans & Pricing (static), Contact and Become an
+Instructor pages (forms render and validate; submission is wired up in Phases 2-4).
+POC categories and courses as mock data; loading and not-found states.
 
 **Phase 2 - API and database (local)**
 Prisma against local Postgres, migrations and seed data (sample courses), service
@@ -165,9 +203,11 @@ costs nothing at this scale. Sign-in/up/out, protected routes (Next.js proxy plu
 server-side checks), role checks in the service layer; user record created on first
 sign-in. Also sets up `aws login` and `cdk bootstrap` for `af-south-1`.
 
-**Phase 4 - Instructor authoring and media**
-CDK `StorageStack` (media bucket). Course editor, sections/lessons CRUD and
-reordering, direct-to-S3 uploads, submit for review; admin review queue.
+**Phase 4 - Instructor onboarding, authoring and media**
+Instructor applications (POC form) stored and reviewed by admins; approval adds the
+`instructor` group. CDK `StorageStack` (media bucket). Course editor, sections/lessons
+CRUD and reordering, direct-to-S3 uploads, submit for review; admin review queue.
+Contact form submissions stored for admins (email notifications come with SES later).
 
 **Phase 5 - Learning experience**
 Enrollment, My Learning, lesson player with signed URLs, progress tracking and resume.
@@ -194,6 +234,18 @@ storage, EC2 status). Then GitHub Actions deploys via OIDC role (no long-lived k
 - Analytics and custom reports for admins and instructors
 - Mobile apps (React Native / Expo) using the same API
 - Scale-out: containers on ECS Fargate behind an ALB, RDS Multi-AZ, WAF
+
+## Branches and environments
+
+- `dev` - integration branch; every pull request targets it. CI must pass.
+- `uat` - promoted from `dev` for user acceptance testing.
+- `main` - production; promoted from `uat`.
+- Recommended GitHub rulesets on all three: require a pull request and a passing
+  `CI / check` status, block force pushes and deletion.
+- AWS environments: while on the Free plan there is **one** AWS environment (deployed
+  from `dev` or `uat`); each additional environment costs roughly another USD 30/month.
+  Separate `uat` and `prod` stacks (ideally separate AWS accounts under AWS
+  Organizations) are added before public launch.
 
 ## Verification
 
