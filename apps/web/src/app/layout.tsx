@@ -1,27 +1,31 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Poppins } from 'next/font/google';
+import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { site } from '@/lib/site';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const poppins = Poppins({
+  variable: '--font-poppins',
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: 'Living With Krishna',
-    template: '%s | Living With Krishna',
+    default: `${site.name} - ${site.tagline}`,
+    template: `%s | ${site.name}`,
   },
-  description: 'Online courses in Krishna consciousness, taught by devotees.',
+  description: site.description,
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${poppins.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans">
         <SiteHeader />
         <main className="flex-1">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

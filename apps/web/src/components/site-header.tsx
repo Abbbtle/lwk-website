@@ -1,32 +1,26 @@
 import Image from 'next/image';
 import Link from 'next/link';
-
-const links = [
-  { href: '/courses', label: 'Courses' },
-  { href: '/about', label: 'About' },
-];
+import { MainNav } from '@/components/main-nav';
+import { site } from '@/lib/site';
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-brand/30">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/lwk-logo.png" alt="" width={40} height={40} priority />
-          <span className="text-lg font-semibold">Living With Krishna</span>
+    <header className="relative border-b border-gray-300 bg-white">
+      <nav
+        aria-label="Main"
+        className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-8"
+      >
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo-black.png"
+            alt={site.name}
+            width={1417}
+            height={790}
+            preload
+            className="h-14 w-auto"
+          />
         </Link>
-        <div className="flex items-center gap-6 text-sm">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-muted hover:text-foreground">
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            href="/sign-in"
-            className="rounded-md bg-brand-strong px-4 py-2 font-medium text-background hover:opacity-90"
-          >
-            Sign in
-          </Link>
-        </div>
+        <MainNav />
       </nav>
     </header>
   );
