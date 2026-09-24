@@ -1,0 +1,23 @@
+{
+  "name": "lwk",
+  "private": true,
+  "description": "Living With Krishna - online learning platform",
+  "workspaces": [
+    "apps/*",
+    "infra"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @lwk/web",
+    "build": "npm run build -w @lwk/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3"
+  }
+}
