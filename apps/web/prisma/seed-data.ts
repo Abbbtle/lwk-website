@@ -1,5 +1,5 @@
-// Sample catalogue based on the reference POC. Replaced by the database in Phase 2.
-import type { Category, Course, Level, Section } from './types';
+// Sample catalogue based on the reference POC, loaded by prisma/seed.ts.
+import type { Category, Course, Level, Section } from '../src/lib/catalog/types';
 
 export const categories: Category[] = [
   {

@@ -1,5 +1,5 @@
 // Catalogue queries. Async so pages keep the same shape when the database arrives in Phase 2.
-import { categories, courses } from './sample-data';
+import { categories, courses } from '../../../prisma/seed-data';
 import type { Category, Course, CourseSummary } from './types';
 
 export type { Category, Course, CourseSummary, Level, Section } from './types';

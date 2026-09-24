@@ -1,0 +1,99 @@
+// Catalogue schema (Phase 2). Users, enrollments and progress arrive in Phases 3-5.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CourseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonType {
+  VIDEO
+  PDF
+  TEXT
+}
+
+model Category {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  slug        String   @unique
+  name        String
+  headline    String
+  description String
+  position    Int
+  courses     Course[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model Course {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  slug           String       @unique
+  title          String
+  subtitle       String
+  description    String
+  outcomes       String[]
+  level          CourseLevel
+  status         CourseStatus @default(DRAFT)
+  // Display name until instructors become user accounts (Phase 4).
+  instructorName String       @map("instructor_name")
+  // Nullable until pricing is decided in the payments phase.
+  priceCents     Int?         @map("price_cents")
+  currency       String       @default("USD") @db.Char(3)
+  categoryId     String       @map("category_id") @db.Uuid
+  category       Category     @relation(fields: [categoryId], references: [id])
+  sections       Section[]
+  publishedAt    DateTime?    @map("published_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("courses")
+}
+
+model Section {
+  id       String   @id @default(uuid(7)) @db.Uuid
+  courseId String   @map("course_id") @db.Uuid
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title    String
+  position Int
+  lessons  Lesson[]
+
+  @@unique([courseId, position])
+  @@map("sections")
+}
+
+model Lesson {
+  id              String     @id @default(uuid(7)) @db.Uuid
+  sectionId       String     @map("section_id") @db.Uuid
+  section         Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title           String
+  type            LessonType
+  position        Int
+  durationSeconds Int        @default(0) @map("duration_seconds")
+  isPreview       Boolean    @default(false) @map("is_preview")
+  // S3 object key for video/PDF lessons (Phase 4).
+  mediaKey        String?    @map("media_key")
+  // Body for text lessons.
+  body            String?
+
+  @@unique([sectionId, position])
+  @@map("lessons")
+}
