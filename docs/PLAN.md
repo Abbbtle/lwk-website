@@ -192,6 +192,12 @@ detail, Categories, Our Mission, Plans & Pricing (static), Contact and Become an
 Instructor pages (forms render and validate; submission is wired up in Phases 2-4).
 POC categories and courses as mock data; loading and not-found states.
 
+Status: DONE. Pages live under `apps/web/src/app`; sample catalogue in
+`src/lib/catalog` (async queries, swapped for Prisma in Phase 2); form schemas in
+`src/lib/forms` (reused by Phase 4 when submissions are stored). Log In and Sign Up
+show a "coming soon" page until Phase 3. Course covers are placeholders until images
+are uploaded (Phase 4) or the POC photos are cleared for use.
+
 **Phase 2 - API and database (local)**
 Prisma against local Postgres, migrations and seed data (sample courses), service
 layer and public `/api/v1` course endpoints; pages switch from mock data to the
@@ -240,8 +246,9 @@ storage, EC2 status). Then GitHub Actions deploys via OIDC role (no long-lived k
 - `dev` - integration branch; every pull request targets it. CI must pass.
 - `uat` - promoted from `dev` for user acceptance testing.
 - `main` - production; promoted from `uat`.
-- Recommended GitHub rulesets on all three: require a pull request and a passing
-  `CI / check` status, block force pushes and deletion.
+- GitHub ruleset "Protected branches" (active) on all three: pull request required
+  (0 approvals while there is one developer; raise to 1 when the team grows), `check`
+  status must pass, force pushes and deletion blocked, no bypass.
 - AWS environments: while on the Free plan there is **one** AWS environment (deployed
   from `dev` or `uat`); each additional environment costs roughly another USD 30/month.
   Separate `uat` and `prod` stacks (ideally separate AWS accounts under AWS
