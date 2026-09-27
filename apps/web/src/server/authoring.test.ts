@@ -5,6 +5,9 @@ import * as authoring from './authoring';
 import { getDb } from './db';
 
 afterAll(async () => {
+  // Remove courses created here (seeded courses have no owner) so other test files see only
+  // the sample catalogue.
+  await getDb().course.deleteMany({ where: { instructorId: { not: null } } });
   await getDb().$disconnect();
 });
 
