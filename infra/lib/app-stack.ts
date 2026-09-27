@@ -75,7 +75,11 @@ export class AppStack extends cdk.Stack {
     role.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ssm:GetParametersByPath'],
-        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter${paramPrefix}`],
+        // The request ARN includes the trailing slash of the path (/lwk/<stage>/web/).
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter${paramPrefix}`,
+          `arn:aws:ssm:${this.region}:${this.account}:parameter${paramPrefix}/*`,
+        ],
       }),
     );
 
