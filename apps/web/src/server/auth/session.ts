@@ -63,9 +63,13 @@ let verifier: ReturnType<typeof createSessionVerifier> | undefined;
 
 /** The signed-in user for this request, or null. Verified on every request. */
 export const getSession = cache(async (): Promise<Session | null> => {
-  verifier ??= createSessionVerifier(getAuthConfig());
   const jar = await cookies();
-  return verifier.verify(jar.get(AUTH_COOKIES.access)?.value, jar.get(AUTH_COOKIES.id)?.value);
+  const accessToken = jar.get(AUTH_COOKIES.access)?.value;
+  const idToken = jar.get(AUTH_COOKIES.id)?.value;
+  // Visitors without tokens never need the auth settings (e.g. pages prerendered at build time).
+  if (!accessToken || !idToken) return null;
+  verifier ??= createSessionVerifier(getAuthConfig());
+  return verifier.verify(accessToken, idToken);
 });
 
 /** Admins can do everything an instructor can. */
