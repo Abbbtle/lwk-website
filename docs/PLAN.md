@@ -310,6 +310,40 @@ key group for signed URLs). Deploy: `next build` standalone output zipped to S3,
 SSM Run Command on the instance to unpack, run migrations and restart the service. CloudWatch alarms (5xx, CPU, RDS
 storage, EC2 status). Then GitHub Actions deploys via OIDC role (no long-lived keys).
 
+Status: infrastructure DEPLOYED; first release goes out when this phase is merged into
+`dev`. What was built (differences from the outline above in bold):
+
+- `lwk-dev-network`: VPC `10.40.0.0/16`, 2 AZs, public + isolated subnets, no NAT, S3
+  gateway endpoint. Security groups: web accepts port 3000 only from the CloudFront
+  origin-facing prefix list (`pl-c0aa4fa9`); database accepts 5432 only from web.
+- `lwk-dev-data`: PostgreSQL 18.3, db.t4g.micro, Single-AZ, 20 GB gp3 (auto-grows to 50),
+  encrypted, private, deletion protection, final snapshot on delete, **RDS-managed
+  master password in Secrets Manager (rotated by RDS)**. **Backups: 1 day** - the AWS
+  Free plan rejects longer retention; raise to 7+ days after upgrading to the Paid plan.
+- `lwk-dev-app` (**server and CloudFront in one stack**, since each needs the other):
+  t4g.micro Amazon Linux 2023, IMDSv2, encrypted disk, no SSH (Session Manager), Elastic
+  IP, CloudFront `https://d1uih31m6ki5c2.cloudfront.net` (pages uncached with all viewer
+  headers forwarded; `/_next/static/*` cached), artifacts bucket (30-day expiry), log group
+  `/lwk/dev/web` (30 days), runtime config in Parameter Store `/lwk/dev/web/*`. The app
+  reads the database password from Secrets Manager at connect time (cached 1 minute) and
+  verifies the RDS TLS certificate.
+- `lwk-dev-deploy-access`: GitHub OIDC provider and role `lwk-dev-github-deploy`, trusted
+  only for `refs/heads/dev` of this repository; it can upload bundles, run commands on
+  the web server and read the app stack's outputs.
+- Deploy: `.github/workflows/deploy.yml` on push to `dev` - build on `ubuntu-24.04-arm`,
+  `deploy/build-bundle.sh`, upload, `deploy/instance/activate.sh` via SSM (config,
+  migrations, switch release, health check, automatic rollback), then a health check
+  through CloudFront. The four course categories now come from a migration; sample
+  courses stay local-only.
+- **Media is still served with signed S3 links**; a CloudFront media behaviour with
+  signed URLs or cookies moves to the content-protection phase.
+- Cost: about USD 32/month (Pricing API, Sept 2026). Budget raised to USD 40/month.
+- **Known limitation: CloudFront reaches the server over plain HTTP** (only CloudFront
+  IPs may connect). Before public launch: register a domain, put CloudFront on it with
+  an ACM certificate and give the origin its own TLS certificate.
+- Next: CloudWatch alarms (EC2 status check with auto-recovery, RDS CPU and free
+  storage, app errors) with email notifications.
+
 **Later phases (from the proposal)**
 
 - Payments and paid enrollment (provider TBD), revenue dashboard
