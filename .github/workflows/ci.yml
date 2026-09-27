@@ -48,4 +48,5 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      # TODO(Phase 3): add `npm run synth -w @lwk/infra` once the first stack exists.
+      - name: Synthesize CDK app
+        run: npm run synth -w @lwk/infra -- --strict --quiet
