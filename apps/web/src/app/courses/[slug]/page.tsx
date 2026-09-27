@@ -7,6 +7,8 @@ import { CourseCover } from '@/components/course-cover';
 import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
+import { getEnrollmentBySlug } from '@/server/learning';
+import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.
 const loadCourse = cache(getCourse);
@@ -19,8 +21,10 @@ export async function generateMetadata({
 }
 
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
-  const [course, session] = await Promise.all([loadCourse((await params).slug), getSession()]);
+  const { slug } = await params;
+  const [course, session] = await Promise.all([loadCourse(slug), getSession()]);
   if (!course) notFound();
+  const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -110,21 +114,49 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <div className="bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
-              {course.priceUsd !== null && (
-                <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>
-              )}
-              {session ? (
-                // Enrollment arrives in Phase 5.
-                <p className="border border-gray-300 p-3 text-center font-semibold">
-                  Enrollment opens soon
-                </p>
+              {enrollment ? (
+                <>
+                  <p className="font-semibold">
+                    {enrollment.completedAt ? 'You completed this course.' : 'You are enrolled.'}
+                  </p>
+                  <Link href={`/learn/${course.slug}`} className="btn-brand w-full">
+                    {enrollment.completedAt ? 'Review the course' : 'Continue learning'}
+                  </Link>
+                </>
               ) : (
-                <a
-                  href={`/auth/signup?returnTo=${encodeURIComponent(`/courses/${course.slug}`)}`}
-                  className="btn-brand w-full"
-                >
-                  Sign up to enroll
-                </a>
+                <>
+                  {course.priceUsd !== null && (
+                    <p className="text-3xl font-extrabold">
+                      <span className="text-gray-400 line-through">
+                        {formatPrice(course.priceUsd)}
+                      </span>{' '}
+                      Free
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600">Free during early access.</p>
+                  {session ? (
+                    <form action={enrollInCourse.bind(null, course.slug)}>
+                      <button type="submit" className="btn-brand w-full">
+                        Enroll now
+                      </button>
+                    </form>
+                  ) : (
+                    <a
+                      href={`/auth/signup?returnTo=${encodeURIComponent(`/courses/${course.slug}`)}`}
+                      className="btn-brand w-full"
+                    >
+                      Sign up to enroll
+                    </a>
+                  )}
+                  {course.previewLessonId && (
+                    <Link
+                      href={`/learn/${course.slug}/${course.previewLessonId}`}
+                      className="btn-outline w-full"
+                    >
+                      Watch a free preview
+                    </Link>
+                  )}
+                </>
               )}
               <p className="text-center text-sm text-gray-600">
                 Or access every course with a{' '}

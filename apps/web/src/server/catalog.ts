@@ -17,7 +17,12 @@ const courseInclude = {
   category: true,
   sections: {
     orderBy: { position: 'asc' },
-    include: { lessons: { select: { durationSeconds: true } } },
+    include: {
+      lessons: {
+        orderBy: { position: 'asc' },
+        select: { id: true, durationSeconds: true, isPreview: true },
+      },
+    },
   },
 } satisfies Prisma.CourseInclude;
 
@@ -53,6 +58,7 @@ async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
     outcomes: row.outcomes,
     sections,
     coverUrl: row.coverKey ? await signedMediaUrl(row.coverKey) : null,
+    previewLessonId: row.sections.flatMap((s) => s.lessons).find((l) => l.isPreview)?.id ?? null,
     lessonCount: sections.reduce((sum, s) => sum + s.lessonCount, 0),
     durationMinutes: sections.reduce((sum, s) => sum + s.durationMinutes, 0),
   };

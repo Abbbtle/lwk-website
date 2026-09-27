@@ -1,5 +1,5 @@
-// Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4).
-// Enrollments and progress arrive in Phase 5.
+// Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
+// enrollments and progress (Phase 5).
 
 generator client {
   provider = "prisma-client"
@@ -65,6 +65,7 @@ model Course {
   categoryId     String       @map("category_id") @db.Uuid
   category       Category     @relation(fields: [categoryId], references: [id])
   sections       Section[]
+  enrollments    Enrollment[]
   submittedAt    DateTime?    @map("submitted_at")
   // Feedback from the last review, shown to the instructor.
   reviewNote     String?      @map("review_note")
@@ -91,18 +92,19 @@ model Section {
 }
 
 model Lesson {
-  id              String     @id @default(uuid(7)) @db.Uuid
-  sectionId       String     @map("section_id") @db.Uuid
-  section         Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  id              String           @id @default(uuid(7)) @db.Uuid
+  sectionId       String           @map("section_id") @db.Uuid
+  section         Section          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   title           String
   type            LessonType
   position        Int
-  durationSeconds Int        @default(0) @map("duration_seconds")
-  isPreview       Boolean    @default(false) @map("is_preview")
+  durationSeconds Int              @default(0) @map("duration_seconds")
+  isPreview       Boolean          @default(false) @map("is_preview")
   // S3 object key for video/PDF lessons (Phase 4).
-  mediaKey        String?    @map("media_key")
+  mediaKey        String?          @map("media_key")
   // Body for text lessons.
   body            String?
+  progress        LessonProgress[]
 
   @@unique([sectionId, position])
   @@map("lessons")
@@ -120,6 +122,8 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   coursesTaught          Course[]                @relation("taught")
+  enrollments            Enrollment[]
+  lessonProgress         LessonProgress[]
   instructorApplications InstructorApplication[] @relation("applicant")
   reviewedApplications   InstructorApplication[] @relation("reviewer")
 
@@ -190,4 +194,37 @@ model InstructorApplication {
   @@index([status, createdAt])
   @@index([userId])
   @@map("instructor_applications")
+}
+
+// A learner's place in a course. Free during early access; payments come later.
+model Enrollment {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String    @map("course_id") @db.Uuid
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt   DateTime  @default(now()) @map("enrolled_at")
+  // Set when every lesson is complete.
+  completedAt  DateTime? @map("completed_at")
+  // Last time the learner opened or progressed in the course (for "continue" ordering).
+  lastActiveAt DateTime  @default(now()) @map("last_active_at")
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  userId              String    @map("user_id") @db.Uuid
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId            String    @map("lesson_id") @db.Uuid
+  lesson              Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  // Where to resume a video.
+  lastPositionSeconds Int       @default(0) @map("last_position_seconds")
+  completedAt         DateTime? @map("completed_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@id([userId, lessonId])
+  @@index([lessonId])
+  @@map("lesson_progress")
 }
