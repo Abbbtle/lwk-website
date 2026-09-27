@@ -52,7 +52,10 @@ model Course {
   outcomes       String[]
   level          CourseLevel
   status         CourseStatus @default(DRAFT)
-  // Display name until instructors become user accounts (Phase 4).
+  // Owner; null for the seeded sample catalogue.
+  instructorId   String?      @map("instructor_id") @db.Uuid
+  instructor     User?        @relation("taught", fields: [instructorId], references: [id])
+  // Name shown to learners ("Taught by"); defaults to the owner's name.
   instructorName String       @map("instructor_name")
   // Nullable until pricing is decided in the payments phase.
   priceCents     Int?         @map("price_cents")
@@ -60,12 +63,16 @@ model Course {
   categoryId     String       @map("category_id") @db.Uuid
   category       Category     @relation(fields: [categoryId], references: [id])
   sections       Section[]
+  submittedAt    DateTime?    @map("submitted_at")
+  // Feedback from the last review, shown to the instructor.
+  reviewNote     String?      @map("review_note")
   publishedAt    DateTime?    @map("published_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   @@index([categoryId])
   @@index([status])
+  @@index([instructorId])
   @@map("courses")
 }
 
@@ -110,6 +117,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  coursesTaught          Course[]                @relation("taught")
   instructorApplications InstructorApplication[] @relation("applicant")
   reviewedApplications   InstructorApplication[] @relation("reviewer")
 
