@@ -60,6 +60,8 @@ model Course {
   // Nullable until pricing is decided in the payments phase.
   priceCents     Int?         @map("price_cents")
   currency       String       @default("USD") @db.Char(3)
+  // S3 key of the cover image, if uploaded.
+  coverKey       String?      @map("cover_key")
   categoryId     String       @map("category_id") @db.Uuid
   category       Category     @relation(fields: [categoryId], references: [id])
   sections       Section[]

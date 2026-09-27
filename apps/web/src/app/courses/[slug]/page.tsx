@@ -101,7 +101,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
         <aside className="lg:-mt-48">
           <div className="bg-white shadow-lg lg:sticky lg:top-6">
-            <CourseCover categorySlug={course.categorySlug} />
+            <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
               {course.priceUsd !== null && (
                 <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>

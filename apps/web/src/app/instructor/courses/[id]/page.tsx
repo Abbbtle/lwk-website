@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
+import { MediaUploader } from '@/components/media-uploader';
 import { StatusBadge } from '@/components/status-badge';
 import { hasRole, requireRole } from '@/server/auth/session';
 import { AuthoringError, getCourseForEditing, reviewChecklist } from '@/server/authoring';
 import { getCategories } from '@/server/catalog';
+import { signedMediaUrl } from '@/server/media';
+import { confirmCoverUpload, requestCoverUpload } from '../../actions';
 import { Curriculum } from './curriculum';
 import { DetailsForm } from './details-form';
 import { ReviewPanel } from './review-panel';
@@ -21,7 +24,14 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
     if (error instanceof AuthoringError) notFound();
     throw error;
   });
-  const categories = await getCategories();
+  const lessonsWithMedia = course.sections.flatMap((s) => s.lessons).filter((l) => l.mediaKey);
+  const [categories, coverUrl, mediaUrls] = await Promise.all([
+    getCategories(),
+    course.coverKey ? signedMediaUrl(course.coverKey) : undefined,
+    Promise.all(
+      lessonsWithMedia.map(async (l) => [l.id, await signedMediaUrl(l.mediaKey!)] as const),
+    ).then(Object.fromEntries),
+  ]);
   const locked = course.status !== 'DRAFT' && !hasRole(session, 'admin');
 
   return (
@@ -60,10 +70,29 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
           </section>
           <section>
             <h2 className="mb-4 text-2xl font-bold">Curriculum</h2>
-            <Curriculum course={course} locked={locked} />
+            <Curriculum course={course} locked={locked} mediaUrls={mediaUrls} />
           </section>
         </div>
-        <aside className="lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <div className="space-y-3 border border-gray-300 p-6">
+            <h2 className="text-xl font-bold">Cover image</h2>
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- short-lived signed S3 URL
+              <img src={coverUrl} alt="" className="aspect-video w-full object-cover" />
+            ) : (
+              <p className="text-sm text-gray-700">
+                Optional. Without one, the category artwork is shown.
+              </p>
+            )}
+            {!locked && (
+              <MediaUploader
+                kind="cover"
+                label={coverUrl ? 'Replace cover' : 'Upload cover'}
+                requestUpload={requestCoverUpload.bind(null, course.id)}
+                confirmUpload={confirmCoverUpload.bind(null, course.id)}
+              />
+            )}
+          </div>
           <ReviewPanel
             courseId={course.id}
             status={course.status}

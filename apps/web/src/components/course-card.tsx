@@ -7,7 +7,7 @@ import { formatDuration, formatPrice } from '@/lib/format';
 export function CourseCard({ course }: { course: CourseSummary }) {
   return (
     <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
-      <CourseCover categorySlug={course.categorySlug} />
+      <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
       <div className="flex flex-1 flex-col gap-2 p-5">
         <p className="text-xs font-semibold tracking-wide text-brand uppercase">
           {course.category.name}

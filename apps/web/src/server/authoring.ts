@@ -3,6 +3,14 @@ import type { LessonType, Prisma } from '@/generated/prisma/client';
 import type { CourseDetailsInput, LessonInput, NewCourseInput } from '@/lib/forms/course';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
+import {
+  coverPrefix,
+  createUpload,
+  deleteMedia,
+  lessonMediaPrefix,
+  type UploadTicket,
+  verifyUpload,
+} from './media';
 
 // Course authoring for instructors (and admins). Every function checks that the session may
 // manage the course and that the course is still editable.
@@ -187,8 +195,10 @@ export async function renameSection(session: Session, sectionId: string, title: 
 }
 
 export async function deleteSection(session: Session, sectionId: string) {
-  await loadEditable(session, await courseIdOfSection(sectionId));
+  const course = await loadEditable(session, await courseIdOfSection(sectionId));
+  const lessons = course.sections.find((s) => s.id === sectionId)?.lessons ?? [];
   await getDb().section.delete({ where: { id: sectionId } });
+  await Promise.all(lessons.map((l) => deleteMedia(l.mediaKey)));
 }
 
 /**
@@ -236,6 +246,8 @@ export async function addLesson(
 export async function updateLesson(session: Session, lessonId: string, input: LessonInput) {
   const lesson = await lessonWithCourse(lessonId);
   await loadEditable(session, lesson.section.courseId);
+  // A file uploaded for another lesson type (e.g. a video on what is now a PDF lesson) goes.
+  const dropMedia = input.type !== lesson.type && lesson.mediaKey !== null;
   await getDb().lesson.update({
     where: { id: lessonId },
     data: {
@@ -244,14 +256,17 @@ export async function updateLesson(session: Session, lessonId: string, input: Le
       body: input.type === 'TEXT' ? (input.body ?? null) : null,
       isPreview: input.isPreview,
       durationSeconds: input.durationMinutes * 60,
+      ...(dropMedia && { mediaKey: null }),
     },
   });
+  if (dropMedia) await deleteMedia(lesson.mediaKey);
 }
 
 export async function deleteLesson(session: Session, lessonId: string) {
   const lesson = await lessonWithCourse(lessonId);
   await loadEditable(session, lesson.section.courseId);
   await getDb().lesson.delete({ where: { id: lessonId } });
+  await deleteMedia(lesson.mediaKey);
   return lesson;
 }
 
@@ -262,6 +277,69 @@ export async function moveLesson(session: Session, lessonId: string, direction: 
   const index = lessons.findIndex((l) => l.id === lessonId);
   const other = lessons[direction === 'up' ? index - 1 : index + 1];
   if (other) await swapPositions('lesson', lessons[index], other);
+}
+
+// ---- Media ------------------------------------------------------------------
+
+function mediaKindOf(type: LessonType) {
+  if (type === 'TEXT') throw new AuthoringError('locked', 'Text lessons do not have a file.');
+  return type === 'VIDEO' ? ('video' as const) : ('pdf' as const);
+}
+
+export async function startLessonUpload(
+  session: Session,
+  lessonId: string,
+  file: { contentType: string; size: number },
+): Promise<UploadTicket> {
+  const lesson = await lessonWithCourse(lessonId);
+  await loadEditable(session, lesson.section.courseId);
+  return createUpload(
+    lessonMediaPrefix(lesson.section.courseId, lessonId),
+    mediaKindOf(lesson.type),
+    file.contentType,
+    file.size,
+  );
+}
+
+/** Attach a finished upload to the lesson, replacing (and deleting) any previous file. */
+export async function attachLessonMedia(
+  session: Session,
+  lessonId: string,
+  key: string,
+  durationSeconds?: number,
+) {
+  const lesson = await lessonWithCourse(lessonId);
+  await loadEditable(session, lesson.section.courseId);
+  await verifyUpload(
+    key,
+    lessonMediaPrefix(lesson.section.courseId, lessonId),
+    mediaKindOf(lesson.type),
+  );
+  await getDb().lesson.update({
+    where: { id: lessonId },
+    data: {
+      mediaKey: key,
+      // The browser reads the video's length before uploading.
+      ...(lesson.type === 'VIDEO' && durationSeconds !== undefined && { durationSeconds }),
+    },
+  });
+  if (lesson.mediaKey && lesson.mediaKey !== key) await deleteMedia(lesson.mediaKey);
+}
+
+export async function startCoverUpload(
+  session: Session,
+  courseId: string,
+  file: { contentType: string; size: number },
+): Promise<UploadTicket> {
+  await loadEditable(session, courseId);
+  return createUpload(coverPrefix(courseId), 'cover', file.contentType, file.size);
+}
+
+export async function attachCover(session: Session, courseId: string, key: string) {
+  const course = await loadEditable(session, courseId);
+  await verifyUpload(key, coverPrefix(courseId), 'cover');
+  await getDb().course.update({ where: { id: courseId }, data: { coverKey: key } });
+  if (course.coverKey && course.coverKey !== key) await deleteMedia(course.coverKey);
 }
 
 // ---- Review -----------------------------------------------------------------

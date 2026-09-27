@@ -7,6 +7,7 @@ import { courseDetailsSchema, lessonSchema, newCourseSchema } from '@/lib/forms/
 import { type FormState, invalid, parseForm } from '@/lib/forms/form-state';
 import { getSession, hasRole } from '@/server/auth/session';
 import * as authoring from '@/server/authoring';
+import { MediaError } from '@/server/media';
 
 // Server actions are public endpoints: each one checks the session, and the authoring service
 // checks that the course belongs to this instructor (or that they are an admin).
@@ -136,4 +137,81 @@ export async function withdrawSubmission(courseId: string) {
   await authoring.withdrawSubmission(session, id.parse(courseId));
   refresh(courseId);
   revalidatePath('/admin', 'layout');
+}
+
+// ---- Uploads ------------------------------------------------------------------
+
+const fileInfo = z.object({
+  contentType: z.string().max(100),
+  size: z.number().int().positive(),
+});
+
+async function mediaErrors<T>(run: () => Promise<T>): Promise<T | { error: string }> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof MediaError || error instanceof authoring.AuthoringError) {
+      return { error: error.message };
+    }
+    console.error('Upload failed', error);
+    return { error: 'The upload could not be prepared. Please try again.' };
+  }
+}
+
+export async function requestLessonUpload(
+  lessonId: string,
+  file: { contentType: string; size: number },
+) {
+  const session = await instructor();
+  return mediaErrors(() =>
+    authoring.startLessonUpload(session, id.parse(lessonId), fileInfo.parse(file)),
+  );
+}
+
+export async function confirmLessonUpload(
+  lessonId: string,
+  courseId: string,
+  key: string,
+  durationSeconds?: number,
+) {
+  const session = await instructor();
+  const result = await mediaErrors(async () => {
+    const seconds =
+      durationSeconds === undefined
+        ? undefined
+        : z
+            .number()
+            .min(0)
+            .max(24 * 3600)
+            .parse(Math.round(durationSeconds));
+    await authoring.attachLessonMedia(
+      session,
+      id.parse(lessonId),
+      z.string().max(300).parse(key),
+      seconds,
+    );
+    return {};
+  });
+  refresh(courseId);
+  return result;
+}
+
+export async function requestCoverUpload(
+  courseId: string,
+  file: { contentType: string; size: number },
+) {
+  const session = await instructor();
+  return mediaErrors(() =>
+    authoring.startCoverUpload(session, id.parse(courseId), fileInfo.parse(file)),
+  );
+}
+
+export async function confirmCoverUpload(courseId: string, key: string) {
+  const session = await instructor();
+  const result = await mediaErrors(async () => {
+    await authoring.attachCover(session, id.parse(courseId), z.string().max(300).parse(key));
+    return {};
+  });
+  refresh(courseId);
+  return result;
 }

@@ -1,14 +1,17 @@
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { MediaUploader } from '@/components/media-uploader';
 import { lessonTypeOptions } from '@/lib/forms/course';
 import type { EditableCourse } from '@/server/authoring';
 import {
   addLesson,
   addSection,
+  confirmLessonUpload,
   deleteLesson,
   deleteSection,
   moveLesson,
   moveSection,
   renameSection,
+  requestLessonUpload,
   updateLesson,
 } from '../../actions';
 
@@ -56,7 +59,64 @@ function MoveButtons({
   );
 }
 
-export function Curriculum({ course, locked }: { course: EditableCourse; locked: boolean }) {
+function LessonMedia({
+  lesson,
+  courseId,
+  url,
+  locked,
+}: {
+  lesson: EditableCourse['sections'][number]['lessons'][number];
+  courseId: string;
+  url?: string;
+  locked: boolean;
+}) {
+  if (lesson.type === 'TEXT') return null;
+  const isVideo = lesson.type === 'VIDEO';
+  return (
+    <div className="space-y-3 bg-surface p-3">
+      {url ? (
+        isVideo ? (
+          <video
+            controls
+            preload="metadata"
+            src={url}
+            className="aspect-video w-full max-w-xl bg-black"
+          />
+        ) : (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold underline"
+          >
+            Open the PDF
+          </a>
+        )
+      ) : (
+        <p className="text-sm text-gray-700">No {isVideo ? 'video' : 'PDF'} uploaded yet.</p>
+      )}
+      {!locked && (
+        <MediaUploader
+          kind={isVideo ? 'video' : 'pdf'}
+          label={`${url ? 'Replace' : 'Upload'} ${isVideo ? 'video' : 'PDF'}`}
+          requestUpload={requestLessonUpload.bind(null, lesson.id)}
+          confirmUpload={confirmLessonUpload.bind(null, lesson.id, courseId)}
+        />
+      )}
+    </div>
+  );
+}
+
+export function Curriculum({
+  course,
+  locked,
+  mediaUrls,
+}: {
+  course: EditableCourse;
+  locked: boolean;
+  /** Signed preview links for uploaded lesson files, keyed by lesson id. */
+  mediaUrls: Record<string, string>;
+}) {
   return (
     <div className="space-y-6">
       {course.sections.map((section, sIndex) => (
@@ -121,6 +181,12 @@ export function Curriculum({ course, locked }: { course: EditableCourse; locked:
                   </summary>
 
                   <div className="mt-3 space-y-3 border-t border-gray-200 pt-3">
+                    <LessonMedia
+                      lesson={lesson}
+                      courseId={course.id}
+                      url={mediaUrls[lesson.id]}
+                      locked={locked}
+                    />
                     <form
                       action={updateLesson.bind(null, lesson.id, course.id)}
                       className="space-y-3"

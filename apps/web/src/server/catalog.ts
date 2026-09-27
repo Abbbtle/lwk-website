@@ -2,6 +2,7 @@ import 'server-only';
 import type { CourseLevel, Prisma } from '@/generated/prisma/client';
 import type { Category, CourseSummary, Level } from '@/lib/catalog/types';
 import { getDb } from './db';
+import { signedMediaUrl } from './media';
 
 const levelLabels: Record<CourseLevel, Level> = {
   BEGINNER: 'Beginner',
@@ -32,7 +33,7 @@ function toCategory(row: CategoryRow): Category {
   };
 }
 
-function toCourseSummary(row: CourseRow): CourseSummary {
+async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
   const sections = row.sections.map((s) => ({
     title: s.title,
     lessonCount: s.lessons.length,
@@ -51,6 +52,7 @@ function toCourseSummary(row: CourseRow): CourseSummary {
     priceUsd: row.priceCents === null ? null : row.priceCents / 100,
     outcomes: row.outcomes,
     sections,
+    coverUrl: row.coverKey ? await signedMediaUrl(row.coverKey) : null,
     lessonCount: sections.reduce((sum, s) => sum + s.lessonCount, 0),
     durationMinutes: sections.reduce((sum, s) => sum + s.durationMinutes, 0),
   };
@@ -90,7 +92,7 @@ export async function searchCourses({
     include: courseInclude,
     orderBy: [{ category: { position: 'asc' } }, { publishedAt: 'asc' }, { title: 'asc' }],
   });
-  return rows.map(toCourseSummary);
+  return Promise.all(rows.map(toCourseSummary));
 }
 
 export async function getCourse(slug: string): Promise<CourseSummary | undefined> {
