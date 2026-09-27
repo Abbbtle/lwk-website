@@ -7,7 +7,7 @@ Parameters:
     Description: Address that receives budget alerts
   MonthlyLimitUsd:
     Type: Number
-    Default: 10
+    Default: 40
     Description: Monthly budget in USD
 
 Resources:

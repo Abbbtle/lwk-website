@@ -31,6 +31,16 @@ CDK and the CLI: `aws login --profile lwk`, then run commands with `--profile lw
 After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web`; the running dev
 server picks up the regenerated client automatically.
 
+## Deploying
+
+Merging into `dev` deploys to AWS automatically (`.github/workflows/deploy.yml`):
+the site is at https://d1uih31m6ki5c2.cloudfront.net. Infrastructure changes are made
+with CDK from `infra/` (`npm run diff` first, then `npm run deploy -- <stack>`).
+
+Open a shell on the web server (no SSH): `aws ssm start-session --target <instance-id>
+--profile lwk` (requires the Session Manager plugin). App logs: CloudWatch Logs group
+`/lwk/dev/web`.
+
 ## Checks (same as CI)
 
 ```bash
