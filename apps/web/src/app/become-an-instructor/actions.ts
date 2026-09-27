@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { type FormState, invalid, parseForm } from '@/lib/forms/form-state';
 import { instructorApplicationSchema } from '@/lib/forms/instructor-application';
 import { getSession } from '@/server/auth/session';
@@ -22,7 +21,8 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
     throw error;
   }
 
-  revalidatePath('/become-an-instructor');
+  // No page refresh here: the form swaps itself for this confirmation; the page shows
+  // "under review" on the next visit.
   return {
     status: 'received',
     message: 'Thank you! Your application has been received and will be reviewed soon.',

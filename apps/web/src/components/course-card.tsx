@@ -2,7 +2,7 @@ import { Clock } from 'lucide-react';
 import Link from 'next/link';
 import { CourseCover } from '@/components/course-cover';
 import type { CourseSummary } from '@/lib/catalog/types';
-import { formatDuration, formatPrice } from '@/lib/format';
+import { formatDuration, formatPrice, joinParts } from '@/lib/format';
 
 export function CourseCard({ course }: { course: CourseSummary }) {
   return (
@@ -21,7 +21,10 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         <div className="mt-auto flex items-center justify-between pt-3 text-sm">
           <span className="flex items-center gap-1 text-gray-600">
             <Clock className="size-4" aria-hidden />
-            {formatDuration(course.durationMinutes)} · {course.level}
+            {joinParts([
+              course.durationMinutes > 0 && formatDuration(course.durationMinutes),
+              course.level,
+            ])}
           </span>
           {course.priceUsd !== null && (
             <span className="text-lg font-bold">{formatPrice(course.priceUsd)}</span>
