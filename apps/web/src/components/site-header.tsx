@@ -1,9 +1,20 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { MainNav } from '@/components/main-nav';
+import { MainNav, type NavUser } from '@/components/main-nav';
 import { site } from '@/lib/site';
+import { getSession, hasRole } from '@/server/auth/session';
 
-export function SiteHeader() {
+async function getNavUser(): Promise<NavUser | null> {
+  const session = await getSession();
+  if (!session) return null;
+  const links = [{ href: '/my-learning', label: 'My Learning' }];
+  if (hasRole(session, 'instructor')) links.push({ href: '/instructor', label: 'Instructor' });
+  if (hasRole(session, 'admin')) links.push({ href: '/admin', label: 'Admin' });
+  return { name: session.name, email: session.email, links };
+}
+
+export async function SiteHeader() {
+  const user = await getNavUser();
   return (
     <header className="relative border-b border-gray-300 bg-white">
       <nav
@@ -20,7 +31,7 @@ export function SiteHeader() {
             className="h-14 w-auto"
           />
         </Link>
-        <MainNav />
+        <MainNav user={user} />
       </nav>
     </header>
   );

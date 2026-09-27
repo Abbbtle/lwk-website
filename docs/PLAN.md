@@ -224,6 +224,28 @@ costs nothing at this scale. Sign-in/up/out, protected routes (Next.js proxy plu
 server-side checks), role checks in the service layer; user record created on first
 sign-in. Also sets up `aws login` and `cdk bootstrap` for `af-south-1`.
 
+Status: DONE.
+
+- Stack `lwk-dev-auth` (af-south-1): user pool `af-south-1_vNL5Ybi4T` (Essentials plan,
+  email sign-in, optional TOTP MFA, deletion protection, retained on stack delete),
+  groups `admin` and `instructor`, managed login at
+  `https://livingwithkrishna-dev.auth.af-south-1.amazoncognito.com`, public web client
+  `2h3omuejks8avr9gjpdm9q3d9b` (code + PKCE, SRP only, rotation and revocation, 15-minute
+  access/ID tokens, 30-day refresh). Stage settings in `infra/lib/config.ts`.
+- Backend-for-frontend: `/auth/login`, `/auth/signup`, `/auth/callback`, `/auth/logout`
+  (`src/app/auth`); tokens only in HttpOnly cookies; `src/proxy.ts` refreshes access
+  tokens; `src/server/auth/session.ts` verifies tokens on every request (aws-jwt-verify)
+  and provides `requireSession` / `requireRole`. `users` table keyed by Cognito `sub`.
+- Verified end to end with a real test user in headless Chrome (16 checks, including
+  refresh-token rotation, role changes and revocation on sign-out); test user deleted.
+- Grant a role: `aws cognito-idp admin-add-user-to-group --user-pool-id
+af-south-1_vNL5Ybi4T --username <email> --group-name admin --profile lwk` (takes effect
+  on the next token refresh, within 15 minutes). An admin UI for this comes in Phase 4.
+- Follow-ups: brand the hosted sign-in pages (LWK logo and POC colours via managed login
+  branding); send Cognito email through SES before launch (the built-in sender has a low
+  daily limit); in-app MFA enrollment page; Content Security Policy with nonces (Phase 6);
+  bearer-token support in `/api/v1` for the mobile apps; decide whether admins must use MFA.
+
 **Phase 4 - Instructor onboarding, authoring and media**
 Instructor applications (POC form) stored and reviewed by admins; approval adds the
 `instructor` group. CDK `StorageStack` (media bucket). Course editor, sections/lessons

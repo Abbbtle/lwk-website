@@ -21,7 +21,11 @@ npm run dev                                     # http://localhost:3000
 ```
 
 Useful endpoints: `/api/v1/health`, `/api/v1/categories`, `/api/v1/courses?q=&category=`,
-`/api/v1/courses/:slug`.
+`/api/v1/courses/:slug`, `/api/v1/me`.
+
+Sign-in uses the dev Cognito user pool (values in `apps/web/.env.example`). AWS access for
+CDK and the CLI: `aws login --profile lwk`, then run commands with `--profile lwk` or
+`AWS_PROFILE=lwk`.
 
 ## Checks (same as CI)
 

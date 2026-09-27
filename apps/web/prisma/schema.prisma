@@ -1,4 +1,4 @@
-// Catalogue schema (Phase 2). Users, enrollments and progress arrive in Phases 3-5.
+// Catalogue (Phase 2) and users (Phase 3). Enrollments and progress arrive in Phase 5.
 
 generator client {
   provider = "prisma-client"
@@ -96,4 +96,19 @@ model Lesson {
 
   @@unique([sectionId, position])
   @@map("lessons")
+}
+
+// A person who has signed in at least once. Identity, passwords and roles live in Cognito;
+// this row lets the database reference users (enrollments, progress, courses they teach).
+model User {
+  // Cognito `sub` claim.
+  id           String   @id @db.Uuid
+  email        String
+  name         String
+  lastSignInAt DateTime @map("last_sign_in_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@map("users")
 }

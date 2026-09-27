@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { CourseCover } from '@/components/course-cover';
 import { formatDuration, formatPrice } from '@/lib/format';
+import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
 
 // Metadata and page share one query per request.
@@ -18,7 +19,7 @@ export async function generateMetadata({
 }
 
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
-  const course = await loadCourse((await params).slug);
+  const [course, session] = await Promise.all([loadCourse((await params).slug), getSession()]);
   if (!course) notFound();
 
   const facts = [
@@ -105,9 +106,19 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
               {course.priceUsd !== null && (
                 <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>
               )}
-              <Link href={`/sign-up?next=/courses/${course.slug}`} className="btn-brand w-full">
-                Enroll Now
-              </Link>
+              {session ? (
+                // Enrollment arrives in Phase 5.
+                <p className="border border-gray-300 p-3 text-center font-semibold">
+                  Enrollment opens soon
+                </p>
+              ) : (
+                <a
+                  href={`/auth/signup?returnTo=${encodeURIComponent(`/courses/${course.slug}`)}`}
+                  className="btn-brand w-full"
+                >
+                  Sign up to enroll
+                </a>
+              )}
               <p className="text-center text-sm text-gray-600">
                 Or access every course with a{' '}
                 <Link href="/plans-and-pricing" className="font-semibold underline">

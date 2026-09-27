@@ -1,16 +1,33 @@
 'use client';
 
-import { Menu, X } from 'lucide-react';
+import { ChevronDown, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { mainNav } from '@/lib/site';
 
+export type NavUser = {
+  name: string;
+  email: string;
+  links: { href: string; label: string }[];
+};
+
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MainNav() {
+function LogoutButton({ className }: { className: string }) {
+  // POST so other sites cannot sign people out with a link.
+  return (
+    <form action="/auth/logout" method="post">
+      <button type="submit" className={className}>
+        Log Out
+      </button>
+    </form>
+  );
+}
+
+export function MainNav({ user }: { user: NavUser | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [openedAt, setOpenedAt] = useState(pathname);
@@ -22,6 +39,7 @@ export function MainNav() {
 
   const linkClass = (href: string) =>
     isActive(pathname, href) ? 'text-brand' : 'text-gray-800 hover:text-brand';
+  const returnTo = encodeURIComponent(pathname);
 
   return (
     <>
@@ -36,12 +54,43 @@ export function MainNav() {
       </ul>
 
       <div className="hidden items-center gap-3 lg:flex">
-        <Link href="/login" className="btn-outline">
-          Log In
-        </Link>
-        <Link href="/sign-up" className="btn-solid">
-          Sign Up
-        </Link>
+        {user ? (
+          <details className="group relative">
+            <summary className="btn-outline list-none">
+              {user.name}
+              <ChevronDown
+                className="size-4 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </summary>
+            <div className="absolute right-0 z-40 mt-2 w-64 border border-gray-300 bg-white shadow-lg">
+              <p className="truncate border-b border-gray-300 px-4 py-3 text-sm text-gray-600">
+                {user.email}
+              </p>
+              <ul className="py-1">
+                {user.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="block px-4 py-2 hover:bg-gray-100">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="border-t border-gray-300 py-1">
+                <LogoutButton className="w-full cursor-pointer px-4 py-2 text-left hover:bg-gray-100" />
+              </div>
+            </div>
+          </details>
+        ) : (
+          <>
+            <a href={`/auth/login?returnTo=${returnTo}`} className="btn-outline">
+              Log In
+            </a>
+            <a href={`/auth/signup?returnTo=${returnTo}`} className="btn-solid">
+              Sign Up
+            </a>
+          </>
+        )}
       </div>
 
       <button
@@ -72,14 +121,30 @@ export function MainNav() {
               </li>
             ))}
           </ul>
-          <div className="flex gap-3 px-4 pb-4">
-            <Link href="/login" className="btn-outline flex-1">
-              Log In
-            </Link>
-            <Link href="/sign-up" className="btn-solid flex-1">
-              Sign Up
-            </Link>
-          </div>
+          {user ? (
+            <div className="border-t border-gray-300 px-4 py-2">
+              <p className="py-2 text-sm text-gray-600">Signed in as {user.name}</p>
+              <ul>
+                {user.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className={`block py-3 ${linkClass(link.href)}`}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <LogoutButton className="btn-outline mb-2 w-full" />
+            </div>
+          ) : (
+            <div className="flex gap-3 px-4 pb-4">
+              <a href={`/auth/login?returnTo=${returnTo}`} className="btn-outline flex-1">
+                Log In
+              </a>
+              <a href={`/auth/signup?returnTo=${returnTo}`} className="btn-solid flex-1">
+                Sign Up
+              </a>
+            </div>
+          )}
         </div>
       )}
     </>

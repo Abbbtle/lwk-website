@@ -3,7 +3,8 @@ import { z } from 'zod';
 
 // Response envelope for /api/v1: `{ data }` on success, `{ error: { code, message } }` on failure.
 
-export type ApiErrorCode = 'bad_request' | 'not_found' | 'internal_error' | 'unavailable';
+export type ApiErrorCode =
+  'bad_request' | 'unauthorized' | 'not_found' | 'internal_error' | 'unavailable';
 
 /** Catalog responses may be cached briefly by CloudFront and browsers. */
 export const PUBLIC_CACHE = 'public, max-age=60, s-maxage=60, stale-while-revalidate=300';
