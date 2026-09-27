@@ -27,5 +27,7 @@ cp deploy/instance/prisma.config.mjs "$work/migrate/"
 cp deploy/instance/activate.sh "$work/"
 chmod +x "$work/activate.sh"
 
+# mktemp creates the directory as 0700; the service user must be able to read the release.
+chmod -R u=rwX,go=rX "$work"
 tar -czf "$out" -C "$work" .
 echo "Bundle written to $out ($(du -h "$out" | cut -f1))"

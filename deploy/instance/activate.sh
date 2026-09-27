@@ -45,14 +45,21 @@ fi
   password=$(aws secretsmanager get-secret-value --secret-id "$DATABASE_SECRET_ARN" \
     --query SecretString --output text |
     node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(encodeURIComponent(JSON.parse(s).password)))')
-  export DATABASE_URL="postgresql://$DATABASE_USER:$password@$DATABASE_HOST:${DATABASE_PORT:-5432}/$DATABASE_NAME?sslmode=require&sslcert=$PGSSLROOTCERT&sslaccept=strict"
+  export DATABASE_URL="postgresql://$DATABASE_USER:$password@$DATABASE_HOST:${DATABASE_PORT:-5432}/$DATABASE_NAME?sslmode=require&sslaccept=strict"
   unset password
+  # Prisma's migration engine reads only the first certificate of an `sslcert` file; the RDS
+  # bundle holds several roots, so trust the whole bundle through OpenSSL instead.
+  export SSL_CERT_FILE="$PGSSLROOTCERT"
   cd "$release/migrate"
   prisma migrate deploy
 )
 
 # 3. Switch and restart. The app itself is read-only; only the Next.js cache is writable.
-previous=$(readlink -f /opt/lwk/current 2>/dev/null || true)
+previous=""
+if [ -L /opt/lwk/current ] && [ -d "$(readlink -f /opt/lwk/current)/app" ]; then
+  previous=$(readlink -f /opt/lwk/current)
+fi
+chmod -R u=rwX,go=rX "$release"
 mkdir -p "$release/app/apps/web/.next/cache"
 chown -R lwk:lwk "$release/app/apps/web/.next/cache"
 ln -sfn "$release" /opt/lwk/current
@@ -70,7 +77,8 @@ done
 
 if [ "$healthy" != true ]; then
   echo "Health check failed. Recent logs:"
-  journalctl -u lwk-web -n 60 --no-pager || true
+  systemctl status lwk-web --no-pager -l | head -12 || true
+  tail -n 60 /var/log/lwk/web.log || true
   if [ -n "$previous" ] && [ "$previous" != "$release" ]; then
     echo "Rolling back to $previous"
     ln -sfn "$previous" /opt/lwk/current
