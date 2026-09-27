@@ -28,8 +28,8 @@ CDK and the CLI: `aws login --profile lwk`, then run commands with `--profile lw
 `AWS_PROFILE=lwk`. The app uses the same profile for Cognito and S3 calls, so run
 `aws login --profile lwk` again when the 12-hour session expires.
 
-After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web` and restart
-`npm run dev` (the dev server keeps one database client across hot reloads).
+After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web`; the running dev
+server picks up the regenerated client automatically.
 
 ## Checks (same as CI)
 

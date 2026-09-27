@@ -34,4 +34,6 @@ export type CourseSummary = Course & {
   durationMinutes: number;
   /** Short-lived link to the uploaded cover image, if any. */
   coverUrl: string | null;
+  /** First free-preview lesson, if any. */
+  previewLessonId: string | null;
 };

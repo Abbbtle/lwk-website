@@ -282,6 +282,25 @@ Status: DONE.
 **Phase 5 - Learning experience**
 Enrollment, My Learning, lesson player with signed URLs, progress tracking and resume.
 
+Status: DONE.
+
+- `enrollments` and `lesson_progress` tables. Enrollment is free during early access (the
+  course page shows the price struck through with "Free during early access").
+- Access: free-preview lessons open to everyone; all lessons for enrolled learners, the
+  course owner and admins. Media links (3-hour signed S3 URLs) are only issued for lessons
+  the viewer may open.
+- Player (`/learn/<course>/<lesson>`): video resumes at the saved position, saves every 15
+  seconds and on pause, completes on end; PDF inline; text lessons; mark complete / undo;
+  curriculum sidebar with completed and locked states; previous / next.
+  `/learn/<course>` resumes at the first unfinished lesson.
+- My Learning with progress and `GET /api/v1/me/enrollments`.
+- Verified end to end with a temporary learner and a test course holding a real MP4 and
+  PDF in S3 (16 checks, including resume at the saved position); test data removed.
+- Known limitation until the content-protection phase: a signed media link can be
+  shared while it is valid (3 hours). HLS with encryption, watermarking and CloudFront
+  signed cookies address this later.
+- The core web MVP (Phases 1-5) is complete; Phase 6 deploys it to AWS.
+
 **Phase 6 - Deploy to AWS**
 CDK stacks: `NetworkStack` (VPC, 2 AZs, public + isolated subnets, S3 gateway
 endpoint), `DataStack` (RDS PostgreSQL, automated backups 7 days, deletion protection),
