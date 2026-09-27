@@ -12,3 +12,13 @@ export function formatPrice(usd: number): string {
     maximumFractionDigits: 0,
   }).format(usd);
 }
+
+/** "1 lesson", "3 lessons". */
+export function plural(count: number, noun: string): string {
+  return `${count} ${count === 1 ? noun : `${noun}s`}`;
+}
+
+/** Join the parts that have a value, e.g. ["2 lessons", null, "1h"] -> "2 lessons · 1h". */
+export function joinParts(parts: (string | null | false | undefined)[]): string {
+  return parts.filter(Boolean).join(' · ');
+}

@@ -2,6 +2,7 @@
 import * as cdk from 'aws-cdk-lib/core';
 import { AuthStack } from '../lib/auth-stack';
 import { config, stages } from '../lib/config';
+import { StorageStack } from '../lib/storage-stack';
 
 const app = new cdk.App();
 
@@ -23,6 +24,14 @@ for (const stageConfig of Object.values(stages)) {
     terminationProtection: true,
   });
   cdk.Tags.of(stack).add('stage', stageConfig.stage);
+
+  const storage = new StorageStack(app, `lwk-${stageConfig.stage}-storage`, {
+    env,
+    stageConfig,
+    description: `LWK ${stageConfig.stage} - course media storage (S3)`,
+    terminationProtection: true,
+  });
+  cdk.Tags.of(storage).add('stage', stageConfig.stage);
 }
 
 app.synth();

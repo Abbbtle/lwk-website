@@ -25,7 +25,11 @@ Useful endpoints: `/api/v1/health`, `/api/v1/categories`, `/api/v1/courses?q=&ca
 
 Sign-in uses the dev Cognito user pool (values in `apps/web/.env.example`). AWS access for
 CDK and the CLI: `aws login --profile lwk`, then run commands with `--profile lwk` or
-`AWS_PROFILE=lwk`.
+`AWS_PROFILE=lwk`. The app uses the same profile for Cognito and S3 calls, so run
+`aws login --profile lwk` again when the 12-hour session expires.
+
+After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web` and restart
+`npm run dev` (the dev server keeps one database client across hot reloads).
 
 ## Checks (same as CI)
 

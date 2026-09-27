@@ -1,4 +1,5 @@
-// Catalogue (Phase 2) and users (Phase 3). Enrollments and progress arrive in Phase 5.
+// Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4).
+// Enrollments and progress arrive in Phase 5.
 
 generator client {
   provider = "prisma-client"
@@ -51,20 +52,29 @@ model Course {
   outcomes       String[]
   level          CourseLevel
   status         CourseStatus @default(DRAFT)
-  // Display name until instructors become user accounts (Phase 4).
+  // Owner; null for the seeded sample catalogue.
+  instructorId   String?      @map("instructor_id") @db.Uuid
+  instructor     User?        @relation("taught", fields: [instructorId], references: [id])
+  // Name shown to learners ("Taught by"); defaults to the owner's name.
   instructorName String       @map("instructor_name")
   // Nullable until pricing is decided in the payments phase.
   priceCents     Int?         @map("price_cents")
   currency       String       @default("USD") @db.Char(3)
+  // S3 key of the cover image, if uploaded.
+  coverKey       String?      @map("cover_key")
   categoryId     String       @map("category_id") @db.Uuid
   category       Category     @relation(fields: [categoryId], references: [id])
   sections       Section[]
+  submittedAt    DateTime?    @map("submitted_at")
+  // Feedback from the last review, shown to the instructor.
+  reviewNote     String?      @map("review_note")
   publishedAt    DateTime?    @map("published_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   @@index([categoryId])
   @@index([status])
+  @@index([instructorId])
   @@map("courses")
 }
 
@@ -109,6 +119,75 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  coursesTaught          Course[]                @relation("taught")
+  instructorApplications InstructorApplication[] @relation("applicant")
+  reviewedApplications   InstructorApplication[] @relation("reviewer")
+
   @@index([email])
   @@map("users")
+}
+
+enum InquiryType {
+  GENERAL
+  SUPPORT
+  PARTNERSHIP
+  FEEDBACK
+  OTHER
+}
+
+// Messages from the public contact form, read by admins.
+model ContactMessage {
+  id          String      @id @default(uuid(7)) @db.Uuid
+  name        String
+  email       String
+  company     String?
+  inquiryType InquiryType @map("inquiry_type")
+  message     String
+  handledAt   DateTime?   @map("handled_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([handledAt, createdAt])
+  @@map("contact_messages")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Requests to teach on the platform. Approval adds the applicant to the Cognito
+// "instructor" group.
+model InstructorApplication {
+  id                 String            @id @default(uuid(7)) @db.Uuid
+  userId             String            @map("user_id") @db.Uuid
+  user               User              @relation("applicant", fields: [userId], references: [id])
+  fullName           String            @map("full_name")
+  initiatedName      String?           @map("initiated_name")
+  email              String
+  nationality        String
+  phoneNumber        String            @map("phone_number")
+  linkedIn           String?           @map("linked_in")
+  website            String?
+  expertise          String
+  experienceYears    Int               @map("experience_years")
+  degree             String
+  certifications     String?
+  workExperience     String            @map("work_experience")
+  teachingExperience String            @map("teaching_experience")
+  languages          String
+  motivation         String
+  philosophy         String
+  strengths          String
+  status             ApplicationStatus @default(PENDING)
+  reviewNote         String?           @map("review_note")
+  reviewedById       String?           @map("reviewed_by_id") @db.Uuid
+  reviewedBy         User?             @relation("reviewer", fields: [reviewedById], references: [id])
+  reviewedAt         DateTime?         @map("reviewed_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("instructor_applications")
 }

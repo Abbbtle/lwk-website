@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { CourseCover } from '@/components/course-cover';
-import { formatDuration, formatPrice } from '@/lib/format';
+import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
 
@@ -24,9 +24,10 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
-    { icon: Clock, label: formatDuration(course.durationMinutes) },
-    { icon: ListVideo, label: `${course.lessonCount} lessons` },
-  ];
+    // Hidden until lesson lengths are known.
+    course.durationMinutes > 0 && { icon: Clock, label: formatDuration(course.durationMinutes) },
+    { icon: ListVideo, label: plural(course.lessonCount, 'lesson') },
+  ].filter((fact) => fact !== false);
 
   return (
     <>
@@ -76,8 +77,11 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <section>
             <h2 className="text-2xl font-bold">Course content</h2>
             <p className="mt-1 text-sm text-gray-600">
-              {course.sections.length} sections · {course.lessonCount} lessons ·{' '}
-              {formatDuration(course.durationMinutes)} total
+              {joinParts([
+                plural(course.sections.length, 'section'),
+                plural(course.lessonCount, 'lesson'),
+                course.durationMinutes > 0 && `${formatDuration(course.durationMinutes)} total`,
+              ])}
             </p>
             <ol className="mt-4 divide-y divide-gray-300 border border-gray-300">
               {course.sections.map((section, index) => (
@@ -86,7 +90,10 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                     <span className="text-gray-500">{index + 1}.</span> {section.title}
                   </span>
                   <span className="shrink-0 text-sm text-gray-600">
-                    {section.lessonCount} lessons · {formatDuration(section.durationMinutes)}
+                    {joinParts([
+                      plural(section.lessonCount, 'lesson'),
+                      section.durationMinutes > 0 && formatDuration(section.durationMinutes),
+                    ])}
                   </span>
                 </li>
               ))}
@@ -101,7 +108,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
         <aside className="lg:-mt-48">
           <div className="bg-white shadow-lg lg:sticky lg:top-6">
-            <CourseCover categorySlug={course.categorySlug} />
+            <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
               {course.priceUsd !== null && (
                 <p className="text-3xl font-extrabold">{formatPrice(course.priceUsd)}</p>

@@ -32,4 +32,6 @@ export type CourseSummary = Course & {
   category: Category;
   lessonCount: number;
   durationMinutes: number;
+  /** Short-lived link to the uploaded cover image, if any. */
+  coverUrl: string | null;
 };

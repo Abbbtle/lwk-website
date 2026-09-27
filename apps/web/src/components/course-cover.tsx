@@ -14,14 +14,23 @@ const icons: Record<string, LucideIcon> = {
   'sastra-study': BookOpen,
 };
 
-// Placeholder artwork until course images are uploaded (Phase 4).
+// Category artwork, used when a course has no uploaded cover image.
 export function CourseCover({
   categorySlug,
+  imageUrl,
   className = '',
 }: {
   categorySlug: string;
+  /** Uploaded cover image; falls back to the category artwork. */
+  imageUrl?: string | null;
   className?: string;
 }) {
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- short-lived signed S3 URL
+      <img src={imageUrl} alt="" className={`aspect-video w-full object-cover ${className}`} />
+    );
+  }
   const Icon = icons[categorySlug] ?? GraduationCap;
   return (
     <div

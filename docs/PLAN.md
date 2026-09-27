@@ -252,6 +252,33 @@ Instructor applications (POC form) stored and reviewed by admins; approval adds 
 CRUD and reordering, direct-to-S3 uploads, submit for review; admin review queue.
 Contact form submissions stored for admins (email notifications come with SES later).
 
+Status: DONE.
+
+- Contact messages and instructor applications stored; applying needs an account;
+  admins approve (adds the Cognito `instructor` group, then records the decision) or
+  decline with a note. Admin area: overview, Courses, Instructor applications, Messages.
+- Course editor (`/instructor`): drafts with unique slugs (fixed after first
+  publication), sections and lessons (video, PDF, text) with reordering, free previews,
+  cover image, review checklist, submit / withdraw. Instructors edit only their own
+  drafts; admins can edit any course.
+- Review queue (`/admin/courses`): publish, return with a required note, unpublish.
+  Decisions are conditional updates, so stale pages cannot overwrite newer decisions.
+- Stack `lwk-dev-storage`: private bucket `lwk-dev-media-455280338092` (encrypted, TLS
+  1.2+, CORS for app origins, retained on delete). Browsers upload with presigned POST
+  (S3 enforces key, type and size: video 2 GB, PDF 100 MB, cover 5 MB); uploads are
+  verified before attaching; replaced or orphaned files are deleted. Previews and covers
+  use short-lived signed S3 links until CloudFront (Phase 6).
+- The app calls AWS (Cognito groups, S3) with the `lwk` profile locally
+  (`AWS_PROFILE=lwk` in `.env.local`) and will use the EC2 instance role in AWS (Phase 6
+  must grant `cognito-idp:AdminAddUserToGroup` and S3 object access on the media bucket).
+- Verified end to end in headless Chrome with two temporary Cognito users (17 checks:
+  contact inbox, application and approval, course with a real S3 video and cover,
+  review, publishing, public search and course page); all test data removed afterwards.
+- Follow-ups: email notifications (applicant decision, course returned or published,
+  new contact message) once SES is set up; multipart uploads for videos over 2 GB;
+  video transcoding and streaming (HLS) in the content-protection phase; an admin UI to
+  manage roles directly.
+
 **Phase 5 - Learning experience**
 Enrollment, My Learning, lesson player with signed URLs, progress tracking and resume.
 
