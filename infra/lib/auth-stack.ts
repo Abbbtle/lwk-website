@@ -11,11 +11,15 @@ export type AuthStackProps = cdk.StackProps & { stageConfig: StageConfig };
  * tokens in HttpOnly cookies, so no client secret is needed.
  */
 export class AuthStack extends cdk.Stack {
+  readonly userPool: cognito.UserPool;
+  readonly webClient: cognito.UserPoolClient;
+  readonly hostedDomainUrl: string;
+
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
     const { stage, authDomainPrefix, appOrigins } = props.stageConfig;
 
-    const userPool = new cognito.UserPool(this, 'UserPool', {
+    const userPool = (this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `lwk-${stage}-users`,
       // Essentials: managed login pages; free for the first 10,000 monthly active users.
       featurePlan: cognito.FeaturePlan.ESSENTIALS,
@@ -45,7 +49,7 @@ export class AuthStack extends cdk.Stack {
       deletionProtection: true,
       // The pool holds user accounts: never delete it with the stack.
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    }));
 
     // Every signed-in user is a learner; these groups grant extra access.
     new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
@@ -66,7 +70,7 @@ export class AuthStack extends cdk.Stack {
       managedLoginVersion: cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN,
     });
 
-    const webClient = userPool.addClient('WebClient', {
+    const webClient = (this.webClient = userPool.addClient('WebClient', {
       userPoolClientName: `lwk-${stage}-web`,
       generateSecret: false,
       // SRP only (passwords never leave the sign-in page). Setting a flow explicitly also keeps
@@ -86,7 +90,8 @@ export class AuthStack extends cdk.Stack {
       accessTokenValidity: cdk.Duration.minutes(15),
       idTokenValidity: cdk.Duration.minutes(15),
       refreshTokenValidity: cdk.Duration.days(30),
-    });
+    }));
+    this.hostedDomainUrl = `https://${authDomainPrefix}.auth.${this.region}.amazoncognito.com`;
 
     // Managed login needs a branding style per app client; start from Cognito's defaults.
     const branding = new cognito.CfnManagedLoginBranding(this, 'WebClientBranding', {
@@ -99,9 +104,7 @@ export class AuthStack extends cdk.Stack {
     // Public identifiers the web app needs (none of these are secrets).
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'WebClientId', { value: webClient.userPoolClientId });
-    new cdk.CfnOutput(this, 'HostedDomain', {
-      value: `https://${authDomainPrefix}.auth.${this.region}.amazoncognito.com`,
-    });
+    new cdk.CfnOutput(this, 'HostedDomain', { value: this.hostedDomainUrl });
     new cdk.CfnOutput(this, 'Issuer', { value: userPool.userPoolProviderUrl });
   }
 }
