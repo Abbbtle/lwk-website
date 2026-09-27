@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1141.0",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "aws-jwt-verify": "^5.2.1",

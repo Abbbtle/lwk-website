@@ -4,7 +4,7 @@ import { useActionState, type ReactNode } from 'react';
 import { FormStatus, SelectField, TextAreaField, TextField } from '@/components/form-fields';
 import { initialFormState } from '@/lib/forms/form-state';
 import { degreeOptions } from '@/lib/forms/instructor-application';
-import { submitInstructorApplication } from './actions';
+import { submitApplication } from './actions';
 
 function Fieldset({ legend, children }: { legend: string; children: ReactNode }) {
   return (
@@ -15,11 +15,21 @@ function Fieldset({ legend, children }: { legend: string; children: ReactNode })
   );
 }
 
-export function InstructorForm({ countries }: { countries: string[] }) {
-  const [state, formAction, pending] = useActionState(
-    submitInstructorApplication,
-    initialFormState,
-  );
+export function InstructorForm({
+  countries,
+  defaults,
+}: {
+  countries: string[];
+  /** Pre-filled from the signed-in account. */
+  defaults: { fullName: string; email: string };
+}) {
+  const [state, formAction, pending] = useActionState(submitApplication, {
+    ...initialFormState,
+    values: defaults,
+  });
+
+  // After a successful submit, show only the confirmation.
+  if (state.status === 'received') return <FormStatus state={state} />;
 
   return (
     <form action={formAction} noValidate className="space-y-8">

@@ -17,7 +17,7 @@ export default async function setup() {
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
   try {
     await db.$executeRawUnsafe(
-      'TRUNCATE TABLE users, lessons, sections, courses, categories RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE instructor_applications, contact_messages, users, lessons, sections, courses, categories RESTART IDENTITY CASCADE',
     );
   } finally {
     await db.$disconnect();
