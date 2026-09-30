@@ -8,6 +8,7 @@ const links: { href: string; label: string; role: Role }[] = [
   { href: '/admin/explore', label: 'Explore', role: 'admin' },
   { href: '/admin/applications', label: 'Instructor applications', role: 'admin' },
   { href: '/admin/support', label: 'Support', role: 'support' },
+  { href: '/admin/ai', label: 'AI', role: 'admin' },
   { href: '/admin/messages', label: 'Messages', role: 'admin' },
   { href: '/admin/activity', label: 'Activity log', role: 'admin' },
 ];
