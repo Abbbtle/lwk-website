@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { LogoutButton } from '@/components/logout-button';
+import { NotificationBell } from '@/components/notification-bell';
 import { SearchBar } from '@/components/search-bar';
 import { mainNav } from '@/lib/site';
 
@@ -12,6 +13,8 @@ export type NavUser = {
   name: string;
   email: string;
   links: { href: string; label: string }[];
+  /** Unread notifications. */
+  unread: number;
 };
 
 function isActive(pathname: string, href: string) {
@@ -45,6 +48,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
       </ul>
 
       <div className="hidden shrink-0 items-center gap-3 lg:flex">
+        {user && <NotificationBell unread={user.unread} />}
         {user ? (
           <details className="group relative">
             <summary className="btn-outline list-none">
@@ -87,6 +91,11 @@ export function MainNav({ user }: { user: NavUser | null }) {
         )}
       </div>
 
+      {user && (
+        <div className="shrink-0 lg:hidden">
+          <NotificationBell unread={user.unread} />
+        </div>
+      )}
       <button
         type="button"
         className="shrink-0 p-2 xl:hidden"
