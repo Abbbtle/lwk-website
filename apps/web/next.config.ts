@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // npm workspaces install packages at the repo root, so trace files from there.
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
+  // Runtime file reads (e.g. the database CA bundle path) make the tracer copy the whole app
+  // folder; the server only needs the build output, so leave sources, tests and tooling out.
+  outputFileTracingExcludes: {
+    '*': ['src/**', 'test/**', 'prisma/**', '*.md', '*.config.{ts,mts,mjs}', 'tsconfig*', '.env*'],
+  },
   poweredByHeader: false,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
