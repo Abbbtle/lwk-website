@@ -55,7 +55,7 @@ export function ReviewPanel({
           <form action={submit}>
             <button
               type="submit"
-              className="btn-brand w-full"
+              className="btn-brand w-full disabled:cursor-not-allowed disabled:opacity-50"
               disabled={pending || missing.length > 0}
             >
               {pending ? 'Submitting...' : 'Submit for review'}

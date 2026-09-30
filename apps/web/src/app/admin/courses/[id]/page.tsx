@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { Curriculum } from '@/app/instructor/courses/[id]/curriculum';
+import { AiCourseReviewCard } from '@/components/ai-course-review-card';
 import { CourseCover } from '@/components/course-cover';
 import { StatusBadge } from '@/components/status-badge';
 import { levelOptions } from '@/lib/forms/course';
+import { aiConfig } from '@/server/ai/config';
 import { requireRole } from '@/server/auth/session';
 import { AuthoringError, getCourseForEditing, reviewChecklist } from '@/server/authoring';
 import { signedMediaUrl } from '@/server/media';
@@ -76,6 +78,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
             <p className="mb-4 text-sm text-gray-600">Open a lesson to watch or read it.</p>
             <Curriculum course={course} locked mediaUrls={mediaUrls} />
           </section>
+          {aiConfig().enabled && <AiCourseReviewCard courseId={course.id} />}
         </div>
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           <CourseCover

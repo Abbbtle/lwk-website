@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { MediaUploader } from '@/components/media-uploader';
 import { StatusBadge } from '@/components/status-badge';
+import { aiConfig } from '@/server/ai/config';
 import { hasRole, requireRole } from '@/server/auth/session';
 import { AuthoringError, getCourseForEditing, reviewChecklist } from '@/server/authoring';
 import { getCategories } from '@/server/catalog';
@@ -11,6 +12,7 @@ import { signedMediaUrl } from '@/server/media';
 import { confirmCoverUpload, requestCoverUpload } from '../../actions';
 import { Curriculum } from './curriculum';
 import { DetailsForm } from './details-form';
+import { AiCourseHelp } from './ai-help';
 import { ReviewPanel } from './review-panel';
 
 export const metadata: Metadata = { title: 'Edit course', robots: { index: false } };
@@ -73,6 +75,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
             <h2 className="mb-4 text-2xl font-bold">Curriculum</h2>
             <Curriculum course={course} locked={locked} mediaUrls={mediaUrls} />
           </section>
+          {!locked && aiConfig().enabled && <AiCourseHelp courseId={course.id} />}
         </div>
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           <div className="space-y-3 border border-gray-300 p-6">

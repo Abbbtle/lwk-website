@@ -76,6 +76,7 @@ export async function* converseStream({
   system,
   messages,
   tools,
+  forceTool,
   maxTokens = 800,
   temperature = 0.3,
 }: {
@@ -83,6 +84,8 @@ export async function* converseStream({
   system: string;
   messages: Message[];
   tools?: Tool[];
+  /** Make the model answer by calling this tool (structured output). */
+  forceTool?: string;
   maxTokens?: number;
   temperature?: number;
 }): AsyncGenerator<StreamEvent> {
@@ -102,7 +105,10 @@ export async function* converseStream({
         messages,
         inferenceConfig: { maxTokens, temperature },
         ...(tools?.length && {
-          toolConfig: { tools: [...tools, { cachePoint: { type: 'default' } }] },
+          toolConfig: {
+            tools: [...tools, { cachePoint: { type: 'default' } }],
+            ...(forceTool && { toolChoice: { tool: { name: forceTool } } }),
+          },
         }),
       }),
     );

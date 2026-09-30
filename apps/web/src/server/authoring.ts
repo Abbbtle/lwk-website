@@ -182,6 +182,16 @@ export async function updateCourseDetails(
   });
 }
 
+/** Change some of a draft's details (for example when an instructor uses an AI suggestion). */
+export async function updateCourseFields(
+  session: Session,
+  courseId: string,
+  fields: { subtitle?: string; description?: string; outcomes?: string[] },
+) {
+  await loadEditable(session, courseId);
+  await getDb().course.update({ where: { id: courseId }, data: fields });
+}
+
 // ---- Sections ---------------------------------------------------------------
 
 export async function addSection(session: Session, courseId: string, title: string) {
@@ -254,7 +264,8 @@ export async function updateLesson(session: Session, lessonId: string, input: Le
     data: {
       title: input.title,
       type: input.type,
-      body: input.type === 'TEXT' ? (input.body ?? null) : null,
+      // Text lessons' content, or notes and transcripts for video and PDF lessons.
+      body: input.body ?? null,
       isPreview: input.isPreview,
       durationSeconds: input.durationMinutes * 60,
       ...(dropMedia && { mediaKey: null }),
