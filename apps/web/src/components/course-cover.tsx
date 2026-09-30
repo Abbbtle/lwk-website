@@ -1,29 +1,28 @@
-import {
-  BookOpen,
-  CookingPot,
-  GraduationCap,
-  HandHeart,
-  Music,
-  type LucideIcon,
-} from 'lucide-react';
+import Image from 'next/image';
 
-const icons: Record<string, LucideIcon> = {
-  kirtan: Music,
-  prasadam: CookingPot,
-  'vaisnava-etiquette': HandHeart,
-  'sastra-study': BookOpen,
+// POC photos used as category artwork and as the cover of courses without their own image.
+export const categoryImages: Record<string, { src: string; alt: string }> = {
+  kirtan: { src: '/images/hero-kirtan.jpg', alt: 'A kirtan leader singing with devotees' },
+  prasadam: { src: '/images/hero-prasadam.jpg', alt: 'A prasadam feast laid out on leaves' },
+  'vaisnava-etiquette': {
+    src: '/images/hero-devotion.jpg',
+    alt: 'Devotees gathered in kirtan around a garlanded seat',
+  },
+  'sastra-study': { src: '/images/hero-sastra.jpg', alt: 'Volumes of Vedic literature' },
 };
+const fallback = categoryImages['vaisnava-etiquette'];
 
-// Category artwork, used when a course has no uploaded cover image.
 export function CourseCover({
   categorySlug,
   imageUrl,
   className = '',
+  sizes = '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
 }: {
   categorySlug: string;
-  /** Uploaded cover image; falls back to the category artwork. */
+  /** Uploaded cover image; falls back to the category photo. */
   imageUrl?: string | null;
   className?: string;
+  sizes?: string;
 }) {
   if (imageUrl) {
     return (
@@ -31,13 +30,10 @@ export function CourseCover({
       <img src={imageUrl} alt="" className={`aspect-video w-full object-cover ${className}`} />
     );
   }
-  const Icon = icons[categorySlug] ?? GraduationCap;
+  const image = categoryImages[categorySlug] ?? fallback;
   return (
-    <div
-      aria-hidden
-      className={`flex aspect-video items-center justify-center bg-gray-100 text-brand ${className}`}
-    >
-      <Icon className="size-1/4" strokeWidth={1.25} />
+    <div className={`relative aspect-video w-full overflow-hidden bg-gray-200 ${className}`}>
+      <Image src={image.src} alt="" fill sizes={sizes} className="object-cover" />
     </div>
   );
 }

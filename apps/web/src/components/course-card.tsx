@@ -1,34 +1,39 @@
-import { Clock } from 'lucide-react';
 import Link from 'next/link';
 import { CourseCover } from '@/components/course-cover';
 import type { CourseSummary } from '@/lib/catalog/types';
-import { formatDuration, formatPrice, joinParts } from '@/lib/format';
+import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 
+/** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
 export function CourseCard({ course }: { course: CourseSummary }) {
   return (
-    <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
+    <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <p className="text-xs font-semibold tracking-wide text-brand uppercase">
-          {course.category.name}
-        </p>
-        <h3 className="text-lg font-semibold">
-          <Link href={`/courses/${course.slug}`} className="after:absolute after:inset-0">
+      <div className="flex flex-1 flex-col gap-1.5 p-5">
+        <h3 className="text-lg leading-snug font-semibold">
+          <Link
+            href={`/courses/${course.slug}`}
+            className="after:absolute after:inset-0 group-hover:text-brand"
+          >
             {course.title}
           </Link>
         </h3>
-        <p className="text-sm text-gray-600">{course.instructor}</p>
-        <div className="mt-auto flex items-center justify-between pt-3 text-sm">
-          <span className="flex items-center gap-1 text-gray-600">
-            <Clock className="size-4" aria-hidden />
-            {joinParts([
-              course.durationMinutes > 0 && formatDuration(course.durationMinutes),
-              course.level,
-            ])}
+        <p className="line-clamp-2 text-sm text-gray-600">{course.subtitle}</p>
+        <p className="text-xs text-gray-500">{course.instructor}</p>
+        <p className="text-xs text-gray-500">
+          {joinParts([
+            course.durationMinutes > 0 && `${formatDuration(course.durationMinutes)} total`,
+            plural(course.lessonCount, 'lesson'),
+            course.level,
+          ])}
+        </p>
+        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+          <span className="text-lg font-bold">
+            {course.priceUsd !== null ? formatPrice(course.priceUsd) : 'Free'}
           </span>
-          {course.priceUsd !== null && (
-            <span className="text-lg font-bold">{formatPrice(course.priceUsd)}</span>
-          )}
+          {/* The whole card links to the course; this is the visual call to action. */}
+          <span aria-hidden className="btn-outline px-4 py-2 text-sm">
+            Enroll Now
+          </span>
         </div>
       </div>
     </article>
