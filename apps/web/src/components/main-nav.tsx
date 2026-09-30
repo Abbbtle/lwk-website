@@ -4,6 +4,7 @@ import { ChevronDown, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { LogoutButton } from '@/components/logout-button';
 import { SearchBar } from '@/components/search-bar';
 import { mainNav } from '@/lib/site';
 
@@ -15,17 +16,6 @@ export type NavUser = {
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function LogoutButton({ className }: { className: string }) {
-  // POST so other sites cannot sign people out with a link.
-  return (
-    <form action="/auth/logout" method="post">
-      <button type="submit" className={className}>
-        Log Out
-      </button>
-    </form>
-  );
 }
 
 export function MainNav({ user }: { user: NavUser | null }) {
@@ -78,7 +68,10 @@ export function MainNav({ user }: { user: NavUser | null }) {
                 ))}
               </ul>
               <div className="border-t border-gray-300 py-1">
-                <LogoutButton className="w-full cursor-pointer px-4 py-2 text-left hover:bg-gray-100" />
+                <LogoutButton
+                  name={user.name}
+                  className="w-full cursor-pointer px-4 py-2 text-left hover:bg-gray-100"
+                />
               </div>
             </div>
           </details>
@@ -135,7 +128,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
                   </li>
                 ))}
               </ul>
-              <LogoutButton className="btn-outline mb-2 w-full" />
+              <LogoutButton name={user.name} className="btn-outline mb-2 w-full" />
             </div>
           ) : (
             <div className="flex gap-3 px-4 pb-4 lg:hidden">
