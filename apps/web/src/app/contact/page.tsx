@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { inquiryTypes } from '@/lib/forms/contact';
 import { site, socialLinks } from '@/lib/site';
+import { getSession } from '@/server/auth/session';
 import { ContactForm } from './contact-form';
 
 export const metadata: Metadata = {
@@ -7,7 +10,10 @@ export const metadata: Metadata = {
   description: 'Questions, feedback or partnership ideas? Get in touch with Living With Krishna.',
 };
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: PageProps<'/contact'>) {
+  const type = (await searchParams).type;
+  const inquiryType = inquiryTypes.find((t) => t.value === type)?.value;
+  const session = await getSession();
   return (
     <>
       <div className="overflow-hidden py-10" aria-hidden>
@@ -73,7 +79,18 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <ContactForm />
+        <div className="space-y-6">
+          {session && (
+            <p className="border-l-4 border-brand bg-orange-50 p-4 text-sm">
+              You are logged in: for questions about your account or courses,{' '}
+              <Link href="/support/new" className="font-semibold underline">
+                send a support request
+              </Link>{' '}
+              and follow our reply in your account.
+            </p>
+          )}
+          <ContactForm inquiryType={inquiryType} />
+        </div>
       </div>
     </>
   );

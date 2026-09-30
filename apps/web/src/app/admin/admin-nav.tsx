@@ -1,19 +1,24 @@
 import Link from 'next/link';
+import { getSession, hasRole, type Role } from '@/server/auth/session';
 
-const links = [
-  { href: '/admin', label: 'Overview' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/courses', label: 'Courses' },
-  { href: '/admin/explore', label: 'Explore' },
-  { href: '/admin/applications', label: 'Instructor applications' },
-  { href: '/admin/messages', label: 'Messages' },
-  { href: '/admin/activity', label: 'Activity log' },
+const links: { href: string; label: string; role: Role }[] = [
+  { href: '/admin', label: 'Overview', role: 'admin' },
+  { href: '/admin/users', label: 'Users', role: 'admin' },
+  { href: '/admin/courses', label: 'Courses', role: 'admin' },
+  { href: '/admin/explore', label: 'Explore', role: 'admin' },
+  { href: '/admin/applications', label: 'Instructor applications', role: 'admin' },
+  { href: '/admin/support', label: 'Support', role: 'support' },
+  { href: '/admin/messages', label: 'Messages', role: 'admin' },
+  { href: '/admin/activity', label: 'Activity log', role: 'admin' },
 ];
 
-export function AdminNav({ current }: { current: string }) {
+/** Admin area tabs; support staff only see what they can use. */
+export async function AdminNav({ current }: { current: string }) {
+  const session = await getSession();
+  const visible = links.filter((link) => session && hasRole(session, link.role));
   return (
     <nav aria-label="Admin" className="mb-8 flex flex-wrap gap-3 border-b border-gray-300 pb-4">
-      {links.map((link) => (
+      {visible.map((link) => (
         <Link
           key={link.href}
           href={link.href}
