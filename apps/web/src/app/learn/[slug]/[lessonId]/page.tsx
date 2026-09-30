@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { z } from 'zod';
 import { enrollInCourse } from '@/app/courses/[slug]/actions';
+import { HelpLink } from '@/components/help-link';
 import { RichText } from '@/components/rich-text';
 import { formatDuration, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
@@ -151,6 +152,12 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
             )
           ) : (
             <RichText text={lesson.body ?? ''} className="max-w-3xl" />
+          )}
+
+          {lesson.type !== 'TEXT' && lesson.unlocked && (
+            <HelpLink slug="video-or-pdf-will-not-load">
+              {lesson.type === 'VIDEO' ? 'Video not playing?' : 'Document not showing?'}
+            </HelpLink>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-300 pt-6">
