@@ -76,11 +76,11 @@ export function NotificationBell({ unread }: { unread: number }) {
         onClick={toggle}
         aria-label={label}
         aria-expanded={open}
-        className="relative cursor-pointer p-2 text-gray-800 hover:text-brand"
+        className="relative cursor-pointer p-2 text-gray-800 hover:text-brand-ink"
       >
         <Bell className="size-6" aria-hidden />
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0.5 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs leading-5 font-bold text-white">
+          <span className="absolute top-0.5 right-0.5 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs leading-5 font-bold text-black">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -97,7 +97,7 @@ export function NotificationBell({ unread }: { unread: number }) {
               <button
                 type="button"
                 onClick={markAll}
-                className="cursor-pointer text-sm font-semibold underline hover:text-brand"
+                className="cursor-pointer text-sm font-semibold underline hover:text-brand-ink"
               >
                 Mark all as read
               </button>

@@ -37,7 +37,8 @@ export function parseBlocks(source: string): Block[] {
     }
     const heading = /^(#{1,4})\s+(.*)$/.exec(trimmed);
     if (heading) {
-      const level = Math.min(4, Math.max(2, heading[1].length + 1)) as 2 | 3 | 4;
+      // "#" and "##" are section headings under the page title; "###" and "####" go below them.
+      const level = Math.min(4, Math.max(2, heading[1].length)) as 2 | 3 | 4;
       blocks.push({ kind: 'heading', level, text: heading[2] });
       i++;
       continue;
@@ -129,7 +130,7 @@ function inline(text: string, keyPrefix = ''): ReactNode[] {
       const href = safeHref(link[2]);
       if (!href) return <Fragment key={key}>{link[1]}</Fragment>;
       return href.startsWith('/') ? (
-        <Link key={key} href={href} className="font-semibold underline hover:text-brand">
+        <Link key={key} href={href} className="font-semibold underline hover:text-brand-ink">
           {link[1]}
         </Link>
       ) : (
@@ -138,7 +139,7 @@ function inline(text: string, keyPrefix = ''): ReactNode[] {
           href={href}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          className="font-semibold underline hover:text-brand"
+          className="font-semibold underline hover:text-brand-ink"
         >
           {link[1]}
         </a>

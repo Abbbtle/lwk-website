@@ -80,7 +80,7 @@ export function SignUpForm({
       footer={
         <>
           Already have an account?{' '}
-          <Link href={loginHref} className="font-semibold underline hover:text-brand">
+          <Link href={loginHref} className="font-semibold underline hover:text-brand-ink">
             Log in
           </Link>
         </>

@@ -49,7 +49,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
       <AdminNav current="/admin/explore" />
       <Link
         href="/admin/explore"
-        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand"
+        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand-ink"
       >
         <ArrowLeft className="size-4" aria-hidden /> All free resources
       </Link>

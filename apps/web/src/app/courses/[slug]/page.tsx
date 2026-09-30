@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { JsonLd } from '@/components/json-ld';
 import { RichText } from '@/components/rich-text';
 import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
@@ -19,7 +20,13 @@ export async function generateMetadata({
   params,
 }: PageProps<'/courses/[slug]'>): Promise<Metadata> {
   const course = await loadCourse((await params).slug);
-  return course ? { title: course.title, description: course.subtitle } : {};
+  if (!course) return {};
+  return {
+    title: course.title,
+    description: course.subtitle,
+    alternates: { canonical: `/courses/${course.slug}` },
+    openGraph: { title: course.title, description: course.subtitle, type: 'website' },
+  };
 }
 
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
@@ -37,6 +44,22 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
   return (
     <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Course',
+          name: course.title,
+          description: course.subtitle || course.description,
+          provider: { '@type': 'Organization', name: 'Living With Krishna' },
+          educationalLevel: course.level,
+          isAccessibleForFree: course.isFree || course.priceUsd === null,
+          hasCourseInstance: {
+            '@type': 'CourseInstance',
+            courseMode: 'online',
+            instructor: { '@type': 'Person', name: course.instructor },
+          },
+        }}
+      />
       <section className="bg-black text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
           <div className="space-y-4 lg:col-span-2">
@@ -85,7 +108,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {course.outcomes.map((outcome) => (
                 <li key={outcome} className="flex gap-3">
-                  <Check className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
+                  <Check className="mt-0.5 size-5 shrink-0 text-brand-ink" aria-hidden />
                   {outcome}
                 </li>
               ))}
@@ -152,7 +175,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                     <>
                       {course.priceUsd !== null && (
                         <p className="text-3xl font-extrabold">
-                          <span className="text-gray-400 line-through">
+                          <span className="text-gray-500 line-through">
                             {formatPrice(course.priceUsd)}
                           </span>{' '}
                           Free

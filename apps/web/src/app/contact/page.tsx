@@ -17,7 +17,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
   return (
     <>
       <div className="overflow-hidden py-10" aria-hidden>
-        <p className="animate-marquee text-7xl font-extrabold whitespace-nowrap text-brand uppercase md:text-9xl">
+        <p className="animate-marquee text-7xl font-extrabold whitespace-nowrap text-brand-ink uppercase md:text-9xl">
           {Array.from({ length: 8 }, () => 'Contact us ').join('')}
         </p>
       </div>
@@ -44,7 +44,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
                         href={s.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-brand"
+                        className="hover:text-brand-ink"
                       >
                         {s.id === 'x' ? 'Twitter' : s.label}
                       </a>
@@ -61,7 +61,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
               <h2 className="text-xl font-bold uppercase">Get in touch</h2>
               <a
                 href={`mailto:${site.supportEmail}`}
-                className="mt-2 block uppercase hover:text-brand"
+                className="mt-2 block uppercase hover:text-brand-ink"
               >
                 {site.supportEmail}
               </a>

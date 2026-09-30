@@ -114,7 +114,7 @@ export function NewRequestForm({
                 <Link
                   href={`/help/${s.slug}`}
                   target="_blank"
-                  className="inline-flex items-center gap-1 text-sm font-semibold underline hover:text-brand"
+                  className="inline-flex items-center gap-1 text-sm font-semibold underline hover:text-brand-ink"
                 >
                   {s.title} <ChevronRight className="size-3" aria-hidden />
                 </Link>

@@ -86,7 +86,7 @@ export function StaffReplyForm({ ticketNumber, ai }: { ticketNumber: number; ai:
             disabled={drafting}
             className="btn-outline px-3 py-1.5 text-sm disabled:opacity-60"
           >
-            <Sparkles className="size-4 text-brand" aria-hidden />
+            <Sparkles className="size-4 text-brand-ink" aria-hidden />
             {drafting ? 'Drafting...' : 'Draft a reply with AI'}
           </button>
           {draft?.error && <p className="text-sm text-red-700">{draft.error}</p>}

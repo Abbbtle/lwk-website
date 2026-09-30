@@ -38,7 +38,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link href="/instructor" className="text-sm font-semibold hover:text-brand">
+      <Link href="/instructor" className="text-sm font-semibold hover:text-brand-ink">
         ← Instructor dashboard
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-3">

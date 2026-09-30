@@ -43,7 +43,12 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
       <AdminHeading title="Users" greeting={session.name} />
       <AdminNav current="/admin/users" />
 
-      <form action="/admin/users" className="mb-6 flex max-w-xl gap-2" role="search">
+      <form
+        action="/admin/users"
+        className="mb-6 flex max-w-xl gap-2"
+        role="search"
+        aria-label="Users"
+      >
         {filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
         <label htmlFor="user-search" className="sr-only">
           Search by name or email
@@ -66,7 +71,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
             key={f}
             href={href({ filter: f, page: 1 })}
             aria-current={f === filter ? 'page' : undefined}
-            className={f === filter ? 'text-brand underline' : 'hover:text-brand'}
+            className={f === filter ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
           >
             {filterLabels[f]}
           </Link>
@@ -105,7 +110,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
                   <td className="px-4 py-3">
                     <Link
                       href={`/admin/users/${user.id}`}
-                      className="font-semibold hover:text-brand"
+                      className="font-semibold hover:text-brand-ink"
                     >
                       {user.name}
                     </Link>

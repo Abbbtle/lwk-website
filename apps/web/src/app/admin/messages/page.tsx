@@ -25,14 +25,14 @@ export default async function MessagesPage({ searchParams }: PageProps<'/admin/m
         <Link
           href="/admin/messages"
           aria-current={!handled ? 'page' : undefined}
-          className={!handled ? 'text-brand underline' : 'hover:text-brand'}
+          className={!handled ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
         >
           Open
         </Link>
         <Link
           href="/admin/messages?view=handled"
           aria-current={handled ? 'page' : undefined}
-          className={handled ? 'text-brand underline' : 'hover:text-brand'}
+          className={handled ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
         >
           Handled
         </Link>

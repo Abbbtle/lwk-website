@@ -27,7 +27,7 @@ export function SocialIcons({ className = '' }: { className?: string }) {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-brand"
+                  className="hover:text-brand-ink"
                 >
                   {icon}
                 </a>

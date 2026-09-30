@@ -50,7 +50,7 @@ export default async function ActivityPage({ searchParams }: PageProps<'/admin/a
             key={c.label}
             href={c.prefix ? `/admin/activity?action=${c.prefix}` : '/admin/activity'}
             aria-current={c.prefix === action ? 'page' : undefined}
-            className={c.prefix === action ? 'text-brand underline' : 'hover:text-brand'}
+            className={c.prefix === action ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
           >
             {c.label}
           </Link>
@@ -68,7 +68,7 @@ export default async function ActivityPage({ searchParams }: PageProps<'/admin/a
                 <div>
                   <p className="font-medium">
                     {href ? (
-                      <Link href={href} className="hover:text-brand">
+                      <Link href={href} className="hover:text-brand-ink">
                         {event.summary}
                       </Link>
                     ) : (

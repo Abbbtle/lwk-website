@@ -27,8 +27,10 @@ export default async function CategoriesPage() {
             >
               <CourseCover categorySlug={category.slug} />
               <div className="space-y-2 p-6">
-                <p className="text-sm font-semibold text-brand uppercase">{category.headline}</p>
-                <h2 className="text-2xl font-bold group-hover:text-brand">{category.name}</h2>
+                <p className="text-sm font-semibold text-brand-ink uppercase">
+                  {category.headline}
+                </p>
+                <h2 className="text-2xl font-bold group-hover:text-brand-ink">{category.name}</h2>
                 <p className="text-gray-700">{category.description}</p>
                 <p className="pt-2 text-sm font-semibold">
                   {category.courseCount} {category.courseCount === 1 ? 'course' : 'courses'}

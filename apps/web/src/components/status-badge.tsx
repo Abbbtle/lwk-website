@@ -1,6 +1,6 @@
 const styles: Record<string, { label: string; className: string }> = {
   DRAFT: { label: 'Draft', className: 'border-gray-400 text-gray-700' },
-  IN_REVIEW: { label: 'In review', className: 'border-brand text-brand-dark' },
+  IN_REVIEW: { label: 'In review', className: 'border-brand text-brand-ink' },
   PUBLISHED: { label: 'Published', className: 'border-green-700 text-green-800' },
   ARCHIVED: { label: 'Archived', className: 'border-gray-400 text-gray-500' },
 };

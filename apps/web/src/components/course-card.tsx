@@ -5,11 +5,11 @@ import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
-export function CourseCard({ course }: { course: CourseSummary }) {
+export function CourseCard({ course, eager = false }: { course: CourseSummary; eager?: boolean }) {
   return (
     <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       <div className="relative">
-        <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
+        <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} eager={eager} />
         {(course.isFree || course.isSample) && (
           <div className="absolute top-3 left-3 flex gap-2">
             {course.isFree && <FreeBadge />}
@@ -21,7 +21,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         <h3 className="text-lg leading-snug font-semibold">
           <Link
             href={`/courses/${course.slug}`}
-            className="after:absolute after:inset-0 group-hover:text-brand"
+            className="after:absolute after:inset-0 group-hover:text-brand-ink"
           >
             {course.title}
           </Link>
@@ -52,8 +52,8 @@ export function CourseCard({ course }: { course: CourseSummary }) {
 export function CourseGrid({ courses }: { courses: CourseSummary[] }) {
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {courses.map((course) => (
-        <CourseCard key={course.slug} course={course} />
+      {courses.map((course, index) => (
+        <CourseCard key={course.slug} course={course} eager={index < 3} />
       ))}
     </div>
   );

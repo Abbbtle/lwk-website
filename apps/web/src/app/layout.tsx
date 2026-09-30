@@ -14,13 +14,27 @@ const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700', '800'],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${site.name} - ${site.tagline}`,
-    template: `%s | ${site.name}`,
-  },
-  description: site.description,
-};
+// Read per request so the public address comes from the environment (APP_URL).
+export async function generateMetadata(): Promise<Metadata> {
+  const base = process.env.APP_URL ?? 'http://localhost:3000';
+  return {
+    metadataBase: new URL(base),
+    title: {
+      default: `${site.name} - ${site.tagline}`,
+      template: `%s | ${site.name}`,
+    },
+    description: site.description,
+    applicationName: site.name,
+    openGraph: {
+      type: 'website',
+      siteName: site.name,
+      title: site.name,
+      description: site.description,
+      images: [{ url: '/images/hero-devotion.jpg', alt: 'Devotees gathered in kirtan' }],
+    },
+    twitter: { card: 'summary_large_image' },
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {
   const session = await getSession();

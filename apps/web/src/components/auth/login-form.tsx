@@ -154,7 +154,7 @@ export function LoginForm({
       footer={
         <>
           New to Living With Krishna?{' '}
-          <Link href={signUpHref} className="font-semibold underline hover:text-brand">
+          <Link href={signUpHref} className="font-semibold underline hover:text-brand-ink">
             Sign up
           </Link>
         </>
@@ -184,7 +184,7 @@ export function LoginForm({
           onChange={(e) => setPassword(e.target.value)}
         />
         <div className="text-right text-sm">
-          <Link href="/forgot-password" className="underline hover:text-brand">
+          <Link href="/forgot-password" className="underline hover:text-brand-ink">
             Forgot password?
           </Link>
         </div>

@@ -21,7 +21,7 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
         <h3 className="text-lg leading-snug font-semibold">
           <Link
             href={`/explore/${resource.slug}`}
-            className="after:absolute after:inset-0 group-hover:text-brand"
+            className="after:absolute after:inset-0 group-hover:text-brand-ink"
           >
             {resource.title}
           </Link>

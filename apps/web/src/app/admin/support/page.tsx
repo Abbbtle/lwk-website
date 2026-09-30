@@ -58,7 +58,12 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
 
       <div className="grid gap-8 lg:grid-cols-4">
         <div className="space-y-5 lg:col-span-3">
-          <form action="/admin/support" className="flex max-w-xl gap-2" role="search">
+          <form
+            action="/admin/support"
+            className="flex max-w-xl gap-2"
+            role="search"
+            aria-label="Support requests"
+          >
             <input type="hidden" name="view" value={view} />
             <label htmlFor="ticket-search" className="sr-only">
               Search requests
@@ -81,7 +86,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
                 key={v}
                 href={href({ view: v, page: 1 })}
                 aria-current={v === view ? 'page' : undefined}
-                className={v === view ? 'text-brand underline' : 'hover:text-brand'}
+                className={v === view ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
               >
                 {viewLabels[v]}
               </Link>
@@ -173,7 +178,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
               <ul className="space-y-2 text-sm">
                 {feedback.articles.map((a) => (
                   <li key={a.slug} className="flex justify-between gap-2">
-                    <Link href={`/help/${a.slug}`} className="hover:text-brand">
+                    <Link href={`/help/${a.slug}`} className="hover:text-brand-ink">
                       {a.title}
                     </Link>
                     <span className="shrink-0 text-gray-600">

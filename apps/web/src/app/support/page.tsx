@@ -17,7 +17,7 @@ export default async function SupportPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <p className="text-sm font-semibold text-brand uppercase">Hare Krishna, {session.name}</p>
+      <p className="text-sm font-semibold text-brand-ink uppercase">Hare Krishna, {session.name}</p>
       <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">Help and support</h1>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
@@ -66,7 +66,7 @@ export default async function SupportPage() {
         <aside className="space-y-6">
           <section className="space-y-4 bg-white p-6 shadow-md">
             <h2 className="text-lg font-bold">Find an answer now</h2>
-            <form action="/help" role="search" className="relative">
+            <form action="/help" role="search" aria-label="Help centre" className="relative">
               <label htmlFor="support-help-search" className="sr-only">
                 Search the help centre
               </label>

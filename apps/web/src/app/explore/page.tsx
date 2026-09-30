@@ -45,7 +45,7 @@ function Row({
           <h2 className="text-2xl font-extrabold md:text-3xl">{title}</h2>
           <p className="mt-1 text-gray-700">{subtitle}</p>
         </div>
-        <Link href={href} className="flex items-center gap-1 font-semibold hover:text-brand">
+        <Link href={href} className="flex items-center gap-1 font-semibold hover:text-brand-ink">
           See all <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
@@ -96,7 +96,12 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
             Watch talks, listen to kirtan, read articles and recipes, and take free courses at your
             own pace. No subscription needed.
           </p>
-          <form action="/explore" role="search" className="relative mt-8 max-w-xl">
+          <form
+            action="/explore"
+            role="search"
+            aria-label="Free content"
+            className="relative mt-8 max-w-xl"
+          >
             {filter && <input type="hidden" name="type" value={filter} />}
             {category && <input type="hidden" name="category" value={category} />}
             <label htmlFor="explore-search" className="sr-only">
@@ -167,20 +172,21 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
           </div>
         ) : filtered ? (
           <section className="space-y-8">
+            <h2 className="sr-only">Results</h2>
             <p className="text-sm text-gray-600" aria-live="polite">
               {total} {total === 1 ? 'result' : 'results'}
               {query && <> for &ldquo;{query}&rdquo;</>}
             </p>
             {courses.length > 0 && (
               <div className="space-y-4">
-                {resources.length > 0 && <h2 className="text-xl font-bold">Free courses</h2>}
+                {resources.length > 0 && <h3 className="text-xl font-bold">Free courses</h3>}
                 <CourseGrid courses={courses} />
               </div>
             )}
             {resources.length > 0 && (
               <div className="space-y-4">
                 {courses.length > 0 && (
-                  <h2 className="text-xl font-bold">Videos, audio and reading</h2>
+                  <h3 className="text-xl font-bold">Videos, audio and reading</h3>
                 )}
                 <ResourceGrid resources={resources} />
               </div>

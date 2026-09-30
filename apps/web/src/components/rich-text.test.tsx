@@ -10,7 +10,7 @@ describe('RichText', () => {
     const out = html(
       '## Heading\n\nA **bold** and *soft* word with `code`.\nNext line.\n\n- one\n- two\n\n1. first\n2. second\n\n> A quote',
     );
-    expect(out).toContain('<h3');
+    expect(out).toContain('<h2');
     expect(out).toContain('<strong>bold</strong>');
     expect(out).toContain('<em>soft</em>');
     expect(out).toContain('code</code>');

@@ -29,7 +29,7 @@ function Panel({
   return (
     <details className="group border border-gray-300 bg-white">
       <summary className="cursor-pointer list-none px-5 py-4">
-        <span className="font-semibold group-open:text-brand">{title}</span>
+        <span className="font-semibold group-open:text-brand-ink">{title}</span>
         <span className="block text-sm text-gray-600">{description}</span>
       </summary>
       <div className="space-y-4 border-t border-gray-200 px-5 py-4">{children}</div>
@@ -91,7 +91,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
   return (
     <section aria-labelledby="ai-help-title" className="space-y-3">
       <h2 id="ai-help-title" className="flex items-center gap-2 text-2xl font-bold">
-        <Sparkles className="size-6 text-brand" aria-hidden /> AI writing help
+        <Sparkles className="size-6 text-brand-ink" aria-hidden /> AI writing help
       </h2>
       <p className="text-sm text-gray-700">
         Suggestions to get you started faster. Nothing changes until you choose to use it, and you

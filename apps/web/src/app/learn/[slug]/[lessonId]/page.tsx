@@ -42,7 +42,7 @@ function LessonIcon({ lesson }: { lesson: PlayerLesson }) {
   if (!lesson.unlocked)
     return <Lock className="size-4 shrink-0 text-gray-400" aria-label="Locked" />;
   if (lesson.completed) {
-    return <CheckCircle2 className="size-4 shrink-0 text-brand" aria-label="Completed" />;
+    return <CheckCircle2 className="size-4 shrink-0 text-brand-ink" aria-label="Completed" />;
   }
   return <Circle className="size-4 shrink-0 text-gray-400" aria-hidden />;
 }
@@ -62,7 +62,10 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href={`/courses/${course.slug}`} className="text-sm font-semibold hover:text-brand">
+        <Link
+          href={`/courses/${course.slug}`}
+          className="text-sm font-semibold hover:text-brand-ink"
+        >
           ← {course.title}
         </Link>
         {player.enrolled && (
@@ -87,7 +90,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
       <div className="mt-6 grid gap-8 lg:grid-cols-3">
         <article className="space-y-6 lg:col-span-2">
           <header>
-            <p className="text-sm font-semibold text-brand uppercase">
+            <p className="text-sm font-semibold text-brand-ink uppercase">
               {lesson.isPreview && !player.enrolled ? 'Free preview' : course.category.name}
             </p>
             <h1 className="mt-1 text-2xl font-extrabold md:text-3xl">{lesson.title}</h1>
@@ -223,7 +226,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
                           <span className="flex-1">{l.title}</span>
                           <Icon className="size-4 shrink-0 text-gray-400" aria-hidden />
                           {l.durationSeconds > 0 && (
-                            <span className="shrink-0 text-xs text-gray-500">
+                            <span className="shrink-0 text-xs text-gray-600">
                               {formatDuration(Math.max(1, Math.round(l.durationSeconds / 60)))}
                             </span>
                           )}
