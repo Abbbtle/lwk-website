@@ -80,7 +80,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
   return (
     <li
       className={`flex flex-col border p-6 ${
-        featured ? 'border-brand bg-brand text-white' : 'border-gray-600 bg-gray-100'
+        featured ? 'border-brand bg-brand text-black' : 'border-gray-600 bg-gray-100'
       }`}
     >
       <h3 className="text-2xl font-semibold">{plan.name}</h3>

@@ -28,7 +28,7 @@ export function AiApplicationSummary({ applicationId }: { applicationId: string 
   return (
     <section className="space-y-3 border border-gray-300 bg-white p-5">
       <h2 className="flex items-center gap-2 font-bold">
-        <Sparkles className="size-4 text-brand" aria-hidden /> AI summary
+        <Sparkles className="size-4 text-brand-ink" aria-hidden /> AI summary
       </h2>
       {!summary && (
         <button

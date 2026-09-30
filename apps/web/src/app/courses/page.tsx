@@ -56,16 +56,16 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
         />
         <Link
           href={freeHref(!free)}
-          aria-pressed={free}
-          className={`flex items-center gap-2 text-sm font-semibold ${free ? 'text-brand' : 'hover:text-brand'}`}
+          className={`flex items-center gap-2 text-sm font-semibold ${free ? 'text-brand-ink' : 'hover:text-brand-ink'}`}
         >
           <span
             aria-hidden
-            className={`flex size-5 items-center justify-center border-2 ${free ? 'border-brand bg-brand text-white' : 'border-black'}`}
+            className={`flex size-5 items-center justify-center border-2 ${free ? 'border-brand bg-brand text-black' : 'border-black'}`}
           >
             {free && '✓'}
           </span>
           Free courses only
+          <span className="sr-only">{free ? '(on, choose to show all courses)' : '(off)'}</span>
         </Link>
       </div>
 
@@ -74,7 +74,10 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
       </p>
 
       {courses.length > 0 ? (
-        <CourseGrid courses={courses} />
+        <>
+          <h2 className="sr-only">Courses</h2>
+          <CourseGrid courses={courses} />
+        </>
       ) : (
         <div className="bg-white p-10 text-center shadow-md">
           <p className="text-lg font-semibold">No courses match your search.</p>

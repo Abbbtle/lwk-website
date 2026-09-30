@@ -33,13 +33,16 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <nav aria-label="Breadcrumb" className="text-sm text-gray-600">
-        <Link href="/explore" className="hover:text-brand">
+        <Link href="/explore" className="hover:text-brand-ink">
           Explore
         </Link>
         {resource.categorySlug && (
           <>
             {' / '}
-            <Link href={`/explore?category=${resource.categorySlug}`} className="hover:text-brand">
+            <Link
+              href={`/explore?category=${resource.categorySlug}`}
+              className="hover:text-brand-ink"
+            >
               {resource.categoryName}
             </Link>
           </>

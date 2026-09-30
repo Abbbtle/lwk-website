@@ -38,7 +38,7 @@ export default async function ProfilePage() {
             <dd className="font-semibold break-all">{session.email}</dd>
             <dd className="mt-1 text-sm text-gray-600">
               To change your email address,{' '}
-              <Link href="/contact" className="underline hover:text-brand">
+              <Link href="/contact" className="underline hover:text-brand-ink">
                 contact support
               </Link>
               .
@@ -60,7 +60,7 @@ export default async function ProfilePage() {
             <dt className="text-sm text-gray-600">Two-step verification</dt>
             <dd className="font-semibold">
               {session.mfaEnabled ? 'On' : 'Off'} ·{' '}
-              <Link href="/account/security" className="font-normal underline hover:text-brand">
+              <Link href="/account/security" className="font-normal underline hover:text-brand-ink">
                 Manage
               </Link>
             </dd>

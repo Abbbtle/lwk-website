@@ -4,6 +4,8 @@
 @theme {
   --color-brand: var(--color-orange-500);
   --color-brand-dark: var(--color-orange-600);
+  /* Orange for text on light backgrounds: orange-500 is too light to read there (WCAG AA). */
+  --color-brand-ink: var(--color-orange-700);
   --color-surface: #f9f9f9;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --animate-marquee: marquee 40s linear infinite;
@@ -47,8 +49,9 @@ body {
   @apply btn bg-black text-surface hover:bg-[#282828];
 }
 
+/* Black text on saffron: white text on orange is too faint to read (WCAG AA). */
 @utility btn-brand {
-  @apply btn border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark;
+  @apply btn border-brand bg-brand text-black hover:border-brand-dark hover:bg-brand-dark;
 }
 
 @media (prefers-reduced-motion: reduce) {

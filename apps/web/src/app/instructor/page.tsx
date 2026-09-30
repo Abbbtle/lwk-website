@@ -21,7 +21,7 @@ export default async function InstructorPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <p className="text-sm font-semibold text-brand uppercase">{session.name}</p>
+      <p className="text-sm font-semibold text-brand-ink uppercase">{session.name}</p>
       <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">Instructor dashboard</h1>
 
       {checklist && (

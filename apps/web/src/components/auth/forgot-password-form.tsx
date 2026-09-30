@@ -58,7 +58,7 @@ export function ForgotPasswordForm({ config }: { config: CognitoClientConfig }) 
   }
 
   const backToLogin = (
-    <Link href="/login" className="font-semibold underline hover:text-brand">
+    <Link href="/login" className="font-semibold underline hover:text-brand-ink">
       Back to log in
     </Link>
   );

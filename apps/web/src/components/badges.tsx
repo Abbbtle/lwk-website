@@ -4,7 +4,7 @@ const badge = 'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold uppe
 
 /** Free for everyone. */
 export function FreeBadge({ className = '' }: { className?: string }) {
-  return <span className={`${badge} bg-brand text-white ${className}`}>Free</span>;
+  return <span className={`${badge} bg-brand text-black ${className}`}>Free</span>;
 }
 
 /** Sample content used for testing; removed before launch. */

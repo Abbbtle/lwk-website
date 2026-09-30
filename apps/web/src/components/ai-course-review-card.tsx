@@ -14,7 +14,7 @@ export function AiCourseReviewCard({ courseId }: { courseId: string }) {
   return (
     <section className="space-y-3 border border-gray-300 bg-white p-5">
       <h2 className="flex items-center gap-2 font-bold">
-        <Sparkles className="size-4 text-brand" aria-hidden /> AI review
+        <Sparkles className="size-4 text-brand-ink" aria-hidden /> AI review
       </h2>
       <p className="text-sm text-gray-600">
         A read-through for clarity, structure, accuracy and accessibility. You decide.

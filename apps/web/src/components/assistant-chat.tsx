@@ -205,147 +205,154 @@ export function AssistantChat({
 
   return (
     <div className="flex h-full flex-col">
-      <ol
-        ref={log}
+      <div
         role="log"
         aria-live="polite"
         aria-label="Conversation with the assistant"
         className="flex-1 space-y-4 overflow-y-auto px-5 py-4"
       >
-        {entries.length === 0 && (
-          <li className="space-y-4">
-            <div className="flex items-start gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-50 text-brand">
-                <Sparkles className="size-5" aria-hidden />
-              </span>
-              <p className="text-sm text-gray-800">
-                {name ? `Hare Krishna, ${name}! ` : 'Hare Krishna! '}I can answer questions about
-                using Living With Krishna, find courses and free content, and pass things to our
-                team when you need a person.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {suggestionsFor(pathname, signedIn).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => void ask(s)}
-                  className="cursor-pointer rounded-full border border-gray-300 px-3 py-1.5 text-left text-sm hover:border-black"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </li>
-        )}
-        {entries.map((entry) =>
-          entry.role === 'user' ? (
-            <li
-              key={entry.id}
-              className="ml-8 bg-black px-4 py-3 text-sm whitespace-pre-line text-white"
-            >
-              <span className="sr-only">You: </span>
-              {entry.content}
-            </li>
-          ) : (
-            <li key={entry.id} className="mr-4 space-y-3 border border-gray-200 bg-white px-4 py-3">
-              <span className="sr-only">Assistant: </span>
-              {entry.content && <RichText text={entry.content} size="sm" />}
-              {entry.pending && !entry.content && (
-                <p className="flex items-center gap-1 text-sm text-gray-500" aria-label="Thinking">
-                  <span className="size-1.5 animate-bounce rounded-full bg-gray-400" />
-                  <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
-                  <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
+        <ol ref={log} className="space-y-4">
+          {entries.length === 0 && (
+            <li className="space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-50 text-brand-ink">
+                  <Sparkles className="size-5" aria-hidden />
+                </span>
+                <p className="text-sm text-gray-800">
+                  {name ? `Hare Krishna, ${name}! ` : 'Hare Krishna! '}I can answer questions about
+                  using Living With Krishna, find courses and free content, and pass things to our
+                  team when you need a person.
                 </p>
-              )}
-              {entry.error && <p className="text-sm text-red-700">{entry.error}</p>}
-              {entry.fallback && (
-                <div className="space-y-2 text-sm">
-                  <p>
-                    {entry.fallback.reason === 'budget'
-                      ? 'The assistant is resting until next month.'
-                      : 'The assistant is not available right now.'}{' '}
-                    {entry.fallback.articles.length > 0
-                      ? 'These articles may help:'
-                      : 'The help centre and our team can help:'}
-                  </p>
-                  {entry.fallback.articles.length > 0 && (
-                    <ul className="space-y-1">
-                      {entry.fallback.articles.map((a) => (
-                        <li key={a.slug}>
-                          <Link
-                            href={`/help/${a.slug}`}
-                            className="font-semibold underline hover:text-brand"
-                          >
-                            {a.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <Link
-                    href={signedIn ? '/support/new' : '/contact'}
-                    className="inline-block font-semibold underline"
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {suggestionsFor(pathname, signedIn).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => void ask(s)}
+                    className="cursor-pointer rounded-full border border-gray-300 px-3 py-1.5 text-left text-sm hover:border-black"
                   >
-                    Contact support
-                  </Link>
-                </div>
-              )}
-              {entry.sources && entry.sources.length > 0 && (
-                <p className="flex flex-wrap gap-2 text-xs">
-                  {entry.sources.map((s) => (
-                    <Link
-                      key={s.href}
-                      href={s.href}
-                      className="rounded-full bg-gray-100 px-2 py-1 hover:bg-gray-200"
-                    >
-                      {s.title}
-                    </Link>
-                  ))}
-                </p>
-              )}
-              {entry.handoff && (
-                <Handoff
-                  signedIn={signedIn}
-                  suggestion={entry.handoff.subject}
-                  transcript={entries
-                    .slice(0, entries.findIndex((e) => e.id === entry.id) + 1)
-                    .filter((e) => e.content)
-                    .map(({ role, content }) => ({ role, content }))}
-                  path={pathname}
-                />
-              )}
-              {!entry.pending && entry.content && !entry.fallback && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  {entry.rated ? (
-                    <span>Thanks for the feedback.</span>
-                  ) : (
-                    <>
-                      <span>Helpful?</span>
-                      <button
-                        type="button"
-                        aria-label="Helpful"
-                        onClick={() => void rate(entry, true)}
-                        className="cursor-pointer p-1 hover:text-black"
-                      >
-                        <ThumbsUp className="size-4" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Not helpful"
-                        onClick={() => void rate(entry, false)}
-                        className="cursor-pointer p-1 hover:text-black"
-                      >
-                        <ThumbsDown className="size-4" aria-hidden />
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
+                    {s}
+                  </button>
+                ))}
+              </div>
             </li>
-          ),
-        )}
-      </ol>
+          )}
+          {entries.map((entry) =>
+            entry.role === 'user' ? (
+              <li
+                key={entry.id}
+                className="ml-8 bg-black px-4 py-3 text-sm whitespace-pre-line text-white"
+              >
+                <span className="sr-only">You: </span>
+                {entry.content}
+              </li>
+            ) : (
+              <li
+                key={entry.id}
+                className="mr-4 space-y-3 border border-gray-200 bg-white px-4 py-3"
+              >
+                <span className="sr-only">Assistant: </span>
+                {entry.content && <RichText text={entry.content} size="sm" />}
+                {entry.pending && !entry.content && (
+                  <p
+                    className="flex items-center gap-1 text-sm text-gray-500"
+                    aria-label="Thinking"
+                  >
+                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400" />
+                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
+                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
+                  </p>
+                )}
+                {entry.error && <p className="text-sm text-red-700">{entry.error}</p>}
+                {entry.fallback && (
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      {entry.fallback.reason === 'budget'
+                        ? 'The assistant is resting until next month.'
+                        : 'The assistant is not available right now.'}{' '}
+                      {entry.fallback.articles.length > 0
+                        ? 'These articles may help:'
+                        : 'The help centre and our team can help:'}
+                    </p>
+                    {entry.fallback.articles.length > 0 && (
+                      <ul className="space-y-1">
+                        {entry.fallback.articles.map((a) => (
+                          <li key={a.slug}>
+                            <Link
+                              href={`/help/${a.slug}`}
+                              className="font-semibold underline hover:text-brand-ink"
+                            >
+                              {a.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link
+                      href={signedIn ? '/support/new' : '/contact'}
+                      className="inline-block font-semibold underline"
+                    >
+                      Contact support
+                    </Link>
+                  </div>
+                )}
+                {entry.sources && entry.sources.length > 0 && (
+                  <p className="flex flex-wrap gap-2 text-xs">
+                    {entry.sources.map((s) => (
+                      <Link
+                        key={s.href}
+                        href={s.href}
+                        className="rounded-full bg-gray-100 px-2 py-1 hover:bg-gray-200"
+                      >
+                        {s.title}
+                      </Link>
+                    ))}
+                  </p>
+                )}
+                {entry.handoff && (
+                  <Handoff
+                    signedIn={signedIn}
+                    suggestion={entry.handoff.subject}
+                    transcript={entries
+                      .slice(0, entries.findIndex((e) => e.id === entry.id) + 1)
+                      .filter((e) => e.content)
+                      .map(({ role, content }) => ({ role, content }))}
+                    path={pathname}
+                  />
+                )}
+                {!entry.pending && entry.content && !entry.fallback && (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    {entry.rated ? (
+                      <span>Thanks for the feedback.</span>
+                    ) : (
+                      <>
+                        <span>Helpful?</span>
+                        <button
+                          type="button"
+                          aria-label="Helpful"
+                          onClick={() => void rate(entry, true)}
+                          className="cursor-pointer p-1 hover:text-black"
+                        >
+                          <ThumbsUp className="size-4" aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Not helpful"
+                          onClick={() => void rate(entry, false)}
+                          className="cursor-pointer p-1 hover:text-black"
+                        >
+                          <ThumbsDown className="size-4" aria-hidden />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </li>
+            ),
+          )}
+        </ol>
+      </div>
 
       <form onSubmit={submit} className="border-t border-gray-200 px-5 py-3">
         <div className="flex items-end gap-2">

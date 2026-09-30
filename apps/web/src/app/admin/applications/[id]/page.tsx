@@ -41,7 +41,7 @@ export default async function ApplicationPage({ params }: PageProps<'/admin/appl
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <AdminHeading title={a.fullName} greeting={session.name} />
       <AdminNav current="/admin/applications" />
-      <Link href="/admin/applications" className="text-sm font-semibold hover:text-brand">
+      <Link href="/admin/applications" className="text-sm font-semibold hover:text-brand-ink">
         ← All applications
       </Link>
 

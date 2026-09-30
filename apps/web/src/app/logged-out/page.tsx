@@ -11,7 +11,7 @@ export default async function LoggedOutPage({ searchParams }: PageProps<'/logged
     return (
       <div className="flex justify-center px-4 py-16 md:py-24">
         <div className="w-full max-w-md bg-white p-8 text-center shadow-lg">
-          <CheckCircle2 className="mx-auto size-12 text-brand" aria-hidden />
+          <CheckCircle2 className="mx-auto size-12 text-brand-ink" aria-hidden />
           <h1 className="mt-4 text-3xl font-bold">Your account has been deleted</h1>
           <p className="mt-3 text-gray-700">
             We have removed your account and your learning history. Thank you for learning with us.
@@ -28,7 +28,7 @@ export default async function LoggedOutPage({ searchParams }: PageProps<'/logged
   return (
     <div className="flex justify-center px-4 py-16 md:py-24">
       <div className="w-full max-w-md bg-white p-8 text-center shadow-lg">
-        <CheckCircle2 className="mx-auto size-12 text-brand" aria-hidden />
+        <CheckCircle2 className="mx-auto size-12 text-brand-ink" aria-hidden />
         <h1 className="mt-4 text-3xl font-bold">You&apos;ve logged out</h1>
         <p className="mt-3 text-gray-700">
           {everywhere === '1'

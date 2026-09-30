@@ -28,7 +28,12 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
         <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
           <p className="font-semibold text-brand uppercase">Help centre</p>
           <h1 className="mt-2 text-4xl font-extrabold md:text-5xl">How can we help?</h1>
-          <form action="/help" role="search" className="relative mt-8 max-w-2xl">
+          <form
+            action="/help"
+            role="search"
+            aria-label="Help centre"
+            className="relative mt-8 max-w-2xl"
+          >
             <label htmlFor="help-search" className="sr-only">
               Search the help centre
             </label>
@@ -113,7 +118,7 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
                     <li key={article.slug}>
                       <Link
                         href={`/help/${article.slug}`}
-                        className="hover:text-brand hover:underline"
+                        className="hover:text-brand-ink hover:underline"
                       >
                         {article.title}
                       </Link>

@@ -41,7 +41,7 @@ function Card({
     <section className="bg-white p-6 shadow-md sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="flex items-center gap-3 text-xl font-bold">
-          <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-brand">
+          <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-brand-ink">
             {icon}
           </span>
           {title}

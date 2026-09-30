@@ -76,7 +76,7 @@ export function HelpFeedback({ slug, signedIn }: { slug: string; signedIn: boole
           {signedIn ? (
             <>
               Still need help?{' '}
-              <Link href="/support/new" className="font-semibold underline hover:text-brand">
+              <Link href="/support/new" className="font-semibold underline hover:text-brand-ink">
                 Send a support request
               </Link>
               .
@@ -84,7 +84,7 @@ export function HelpFeedback({ slug, signedIn }: { slug: string; signedIn: boole
           ) : (
             <>
               Still need help?{' '}
-              <Link href="/contact" className="font-semibold underline hover:text-brand">
+              <Link href="/contact" className="font-semibold underline hover:text-brand-ink">
                 Contact us
               </Link>
               .

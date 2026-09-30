@@ -45,7 +45,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
       <AdminNav current="/admin/support" />
       <Link
         href="/admin/support"
-        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand"
+        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand-ink"
       >
         <ArrowLeft className="size-4" aria-hidden /> Support inbox
       </Link>

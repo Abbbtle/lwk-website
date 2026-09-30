@@ -52,7 +52,7 @@ export function GettingStarted({ checklist }: { checklist: Checklist }) {
             {item.done ? (
               <span className="text-gray-500 line-through">{item.label}</span>
             ) : (
-              <Link href={item.href} className="font-semibold hover:text-brand hover:underline">
+              <Link href={item.href} className="font-semibold hover:text-brand-ink hover:underline">
                 {item.label}
               </Link>
             )}

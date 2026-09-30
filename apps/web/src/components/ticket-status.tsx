@@ -1,5 +1,5 @@
 const styles: Record<string, string> = {
-  OPEN: 'border-brand text-brand-dark',
+  OPEN: 'border-brand text-brand-ink',
   PENDING: 'border-blue-700 text-blue-800',
   RESOLVED: 'border-green-700 text-green-800',
   CLOSED: 'border-gray-400 text-gray-600',

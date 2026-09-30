@@ -38,7 +38,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
       <AdminNav current="/admin/users" />
       <Link
         href="/admin/users"
-        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand"
+        className="mb-6 inline-flex items-center gap-2 text-sm hover:text-brand-ink"
       >
         <ArrowLeft className="size-4" aria-hidden /> All users
       </Link>
@@ -102,7 +102,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
               <ul className="mt-4 space-y-2 text-sm">
                 {user.enrollments.map((e) => (
                   <li key={e.id} className="flex flex-wrap justify-between gap-2">
-                    <Link href={`/courses/${e.course.slug}`} className="hover:text-brand">
+                    <Link href={`/courses/${e.course.slug}`} className="hover:text-brand-ink">
                       {e.course.title}
                     </Link>
                     <span className="text-gray-600">
@@ -123,7 +123,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
                       key={course.id}
                       className="flex flex-wrap items-center justify-between gap-2"
                     >
-                      <Link href={`/admin/courses/${course.id}`} className="hover:text-brand">
+                      <Link href={`/admin/courses/${course.id}`} className="hover:text-brand-ink">
                         {course.title}
                       </Link>
                       <StatusBadge status={course.status} />

@@ -32,7 +32,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
   }
 
   const linkClass = (href: string) =>
-    isActive(pathname, href) ? 'text-brand' : 'text-gray-800 hover:text-brand';
+    isActive(pathname, href) ? 'text-brand-ink' : 'text-gray-800 hover:text-brand-ink';
   const returnTo = encodeURIComponent(pathname);
 
   return (
@@ -115,7 +115,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
           id="mobile-menu"
           className="absolute inset-x-0 top-full z-40 border-b border-gray-300 bg-white shadow-md xl:hidden"
         >
-          <SearchBar id="mobile-search" className="px-4 pt-4 md:hidden" />
+          <SearchBar id="mobile-search" label="Courses (menu)" className="px-4 pt-4 md:hidden" />
           <ul className="flex flex-col px-4 py-2">
             {mainNav.map((item) => (
               <li key={item.href}>

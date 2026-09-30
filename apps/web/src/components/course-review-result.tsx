@@ -5,7 +5,7 @@ import { AiLabel } from './ai-label';
 const severityLabel = { must: 'Must fix', should: 'Should fix', could: 'Could improve' } as const;
 const severityStyle = {
   must: 'border-red-700 text-red-700',
-  should: 'border-brand text-brand-dark',
+  should: 'border-brand text-brand-ink',
   could: 'border-gray-400 text-gray-600',
 } as const;
 
@@ -16,7 +16,7 @@ export function CourseReviewResult({ review }: { review: CourseReview }) {
   return (
     <div className="space-y-3">
       <p
-        className={`flex items-center gap-2 font-semibold ${review.ready ? 'text-green-800' : 'text-brand-dark'}`}
+        className={`flex items-center gap-2 font-semibold ${review.ready ? 'text-green-800' : 'text-brand-ink'}`}
       >
         {review.ready ? (
           <CheckCircle2 className="size-5" aria-hidden />

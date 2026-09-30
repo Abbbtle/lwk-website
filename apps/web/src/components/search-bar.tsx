@@ -1,9 +1,18 @@
 import { Search } from 'lucide-react';
 
 /** Pill search box from the POC header; searching opens the course catalogue. */
-export function SearchBar({ id, className = '' }: { id: string; className?: string }) {
+export function SearchBar({
+  id,
+  className = '',
+  label = 'Courses',
+}: {
+  id: string;
+  className?: string;
+  /** Name of the search area, unique on the page (for screen readers). */
+  label?: string;
+}) {
   return (
-    <form action="/courses" role="search" className={`relative ${className}`}>
+    <form action="/courses" role="search" aria-label={label} className={`relative ${className}`}>
       <label htmlFor={id} className="sr-only">
         Search courses
       </label>

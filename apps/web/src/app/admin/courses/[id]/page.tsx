@@ -39,7 +39,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <AdminHeading title="Review course" greeting={session.name} />
       <AdminNav current="/admin/courses" />
-      <Link href="/admin/courses" className="text-sm font-semibold hover:text-brand">
+      <Link href="/admin/courses" className="text-sm font-semibold hover:text-brand-ink">
         ← All courses
       </Link>
 
@@ -66,7 +66,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
               <ul className="grid gap-2 sm:grid-cols-2">
                 {course.outcomes.map((outcome) => (
                   <li key={outcome} className="flex gap-2">
-                    <Check className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
+                    <Check className="mt-0.5 size-5 shrink-0 text-brand-ink" aria-hidden />
                     {outcome}
                   </li>
                 ))}

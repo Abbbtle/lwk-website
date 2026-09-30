@@ -35,7 +35,7 @@ export default async function RequestPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link href="/support" className="text-sm hover:text-brand">
+      <Link href="/support" className="text-sm hover:text-brand-ink">
         ← Help and support
       </Link>
 

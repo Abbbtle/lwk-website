@@ -29,13 +29,13 @@ export default async function HelpArticlePage({ params }: PageProps<'/help/[slug
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       <nav aria-label="Breadcrumb" className="text-sm text-gray-600">
-        <Link href="/help" className="hover:text-brand">
+        <Link href="/help" className="hover:text-brand-ink">
           Help centre
         </Link>
         {topic && (
           <>
             {' / '}
-            <Link href={`/help#${topic.slug}`} className="hover:text-brand">
+            <Link href={`/help#${topic.slug}`} className="hover:text-brand-ink">
               {topic.title}
             </Link>
           </>

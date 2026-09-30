@@ -30,7 +30,7 @@ export default async function AdminCoursesPage({ searchParams }: PageProps<'/adm
             key={tab.status}
             href={`/admin/courses?status=${tab.status}`}
             aria-current={tab.status === status ? 'page' : undefined}
-            className={tab.status === status ? 'text-brand underline' : 'hover:text-brand'}
+            className={tab.status === status ? 'text-brand-ink underline' : 'hover:text-brand-ink'}
           >
             {tab.label}
           </Link>

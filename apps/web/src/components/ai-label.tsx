@@ -8,7 +8,7 @@ export function AiLabel({
 }) {
   return (
     <p className="flex items-center gap-1.5 text-xs text-gray-600">
-      <Sparkles className="size-3.5 text-brand" aria-hidden />
+      <Sparkles className="size-3.5 text-brand-ink" aria-hidden />
       {children}
     </p>
   );

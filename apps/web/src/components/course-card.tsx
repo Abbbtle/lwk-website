@@ -21,7 +21,7 @@ export function CourseCard({ course }: { course: CourseSummary }) {
         <h3 className="text-lg leading-snug font-semibold">
           <Link
             href={`/courses/${course.slug}`}
-            className="after:absolute after:inset-0 group-hover:text-brand"
+            className="after:absolute after:inset-0 group-hover:text-brand-ink"
           >
             {course.title}
           </Link>
