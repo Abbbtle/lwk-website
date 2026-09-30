@@ -5,7 +5,25 @@ import Link from 'next/link';
 export const metadata: Metadata = { title: 'Logged out', robots: { index: false } };
 
 export default async function LoggedOutPage({ searchParams }: PageProps<'/logged-out'>) {
-  const { everywhere } = await searchParams;
+  const { everywhere, deleted } = await searchParams;
+
+  if (deleted === '1') {
+    return (
+      <div className="flex justify-center px-4 py-16 md:py-24">
+        <div className="w-full max-w-md bg-white p-8 text-center shadow-lg">
+          <CheckCircle2 className="mx-auto size-12 text-brand" aria-hidden />
+          <h1 className="mt-4 text-3xl font-bold">Your account has been deleted</h1>
+          <p className="mt-3 text-gray-700">
+            We have removed your account and your learning history. Thank you for learning with us.
+            You are always welcome back.
+          </p>
+          <Link href="/" className="btn-outline mt-8 w-full">
+            Go to the home page
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center px-4 py-16 md:py-24">

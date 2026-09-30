@@ -5,5 +5,6 @@ import { getSession } from '@/server/auth/session';
 export const GET = handleErrors(async () => {
   const session = await getSession();
   if (!session) return fail(401, 'unauthorized', 'Sign in required.');
-  return ok(session);
+  const { userId, email, name, roles, mfaEnabled } = session;
+  return ok({ userId, email, name, roles, mfaEnabled });
 });
