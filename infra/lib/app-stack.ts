@@ -32,6 +32,8 @@ export class AppStack extends cdk.Stack {
   readonly instance: ec2.Instance;
   readonly artifactsBucket: s3.Bucket;
   readonly distribution: cloudfront.Distribution;
+  readonly logGroup: logs.LogGroup;
+  readonly appUrl: string;
 
   constructor(scope: Construct, id: string, props: AppStackProps) {
     super(scope, id, props);
@@ -49,11 +51,11 @@ export class AppStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    const logGroup = new logs.LogGroup(this, 'WebLogs', {
+    const logGroup = (this.logGroup = new logs.LogGroup(this, 'WebLogs', {
       logGroupName: `/lwk/${stage}/web`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    }));
 
     // ---- Instance role: least privilege for what the app and deploy script do ----
     const role = new iam.Role(this, 'WebRole', {
@@ -93,9 +95,7 @@ export class AppStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       securityGroup: props.securityGroup,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux2023({
-        cpuType: ec2.AmazonLinuxCpuType.ARM_64,
-      }),
+      machineImage: ec2.MachineImage.genericLinux({ [config.region]: config.webServerAmi }),
       role,
       userData,
       userDataCausesReplacement: true,
@@ -109,6 +109,12 @@ export class AppStack extends cdk.Stack {
           }),
         },
       ],
+    });
+
+    cdk.Validations.of(this.instance).acknowledge({
+      id: 'CloudFormation-Validate::W9010',
+      reason:
+        'The AMI is pinned on purpose (config.webServerAmi) so new images never replace the server.',
     });
 
     // A fixed address, so the CloudFront origin survives instance replacement.
@@ -157,7 +163,7 @@ export class AppStack extends cdk.Stack {
         },
       },
     });
-    const appUrl = `https://${this.distribution.distributionDomainName}`;
+    const appUrl = (this.appUrl = `https://${this.distribution.distributionDomainName}`);
 
     // ---- Runtime configuration read by activate.sh (names are env var names; no secrets) ----
     const params: Record<string, string> = {

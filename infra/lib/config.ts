@@ -12,6 +12,11 @@ export const config = {
   // Versions installed on the web server; keep in step with .nvmrc and apps/web/package.json.
   nodeVersion: '24.21.0',
   prismaVersion: '7.10.0',
+  // Pinned so a newly published image never replaces the running server on an unrelated
+  // deploy. Changing it rebuilds the server (plan a deploy afterwards). OS security patches
+  // on the running server come from dnf / Systems Manager Patch Manager.
+  // al2023-ami-2023.12.20260918.0-kernel-6.1-arm64
+  webServerAmi: 'ami-02ab347c9808072ec',
 } as const;
 
 export type StageConfig = {

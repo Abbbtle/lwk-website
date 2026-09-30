@@ -341,8 +341,12 @@ Status: infrastructure DEPLOYED; first release goes out when this phase is merge
 - **Known limitation: CloudFront reaches the server over plain HTTP** (only CloudFront
   IPs may connect). Before public launch: register a domain, put CloudFront on it with
   an ACM certificate and give the origin its own TLS certificate.
-- Next: CloudWatch alarms (EC2 status check with auto-recovery, RDS CPU and free
-  storage, app errors) with email notifications.
+- Monitoring (`lwk-dev-monitoring`, DONE): SNS topic `lwk-dev-alerts` emailing the
+  address given at deploy time; 8 alarms (free tier) - EC2 system check (automatic
+  recover), instance check (automatic reboot), CPU credits, site down (a Lambda checks
+  `/api/v1/health` through CloudFront every 5 minutes; missing data counts as down), app
+  errors from the log group, RDS CPU, free storage and freeable memory.
+- The web server AMI is pinned in `infra/lib/config.ts`; updating it rebuilds the server.
 
 **Later phases (from the proposal)**
 
