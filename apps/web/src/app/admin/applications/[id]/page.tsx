@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { requireRole } from '@/server/auth/session';
 import { getApplication } from '@/server/instructor-applications';
+import { aiConfig } from '@/server/ai/config';
 import { AdminHeading, AdminNav } from '../../admin-nav';
+import { AiApplicationSummary } from './ai-summary';
 import { DecisionForm } from './decision-form';
 
 export const metadata: Metadata = { title: 'Instructor application', robots: { index: false } };
@@ -91,6 +93,7 @@ export default async function ApplicationPage({ params }: PageProps<'/admin/appl
               {a.reviewNote && <p className="mt-2 whitespace-pre-line">{a.reviewNote}</p>}
             </div>
           )}
+          {aiConfig().enabled && <AiApplicationSummary applicationId={a.id} />}
         </aside>
       </div>
     </div>

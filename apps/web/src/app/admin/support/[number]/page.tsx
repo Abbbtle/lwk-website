@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { TicketBadge } from '@/components/ticket-status';
 import { TicketThread } from '@/components/ticket-thread';
+import { aiConfig } from '@/server/ai/config';
 import { hasRole, requireRole } from '@/server/auth/session';
 import {
   getTicketForStaff,
@@ -63,7 +64,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
           </div>
           <TicketThread messages={ticket.messages} viewer="staff" />
           <section className="bg-white p-6 shadow-md">
-            <StaffReplyForm ticketNumber={ticket.number} />
+            <StaffReplyForm ticketNumber={ticket.number} ai={aiConfig().enabled} />
           </section>
         </div>
 
