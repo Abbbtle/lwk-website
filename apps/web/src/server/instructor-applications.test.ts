@@ -10,8 +10,11 @@ import {
   submitInstructorApplication,
 } from './instructor-applications';
 
-const addUserToGroup = vi.hoisted(() => vi.fn());
-vi.mock('./cognito', () => ({ addUserToGroup }));
+const { addUserToGroup, listUserRoles } = vi.hoisted(() => ({
+  addUserToGroup: vi.fn(),
+  listUserRoles: vi.fn(async () => ['instructor']),
+}));
+vi.mock('./cognito', () => ({ addUserToGroup, listUserRoles }));
 
 afterAll(async () => {
   await getDb().$disconnect();
@@ -47,6 +50,8 @@ async function createUser(name: string) {
   });
 }
 
+const reviewer = (user: { id: string; name: string }) => ({ userId: user.id, name: user.name });
+
 describe('instructor applications', () => {
   it('allows one pending application per user', async () => {
     const user = await createUser('pending-once');
@@ -60,9 +65,18 @@ describe('instructor applications', () => {
     const [user, admin] = await Promise.all([createUser('to-approve'), createUser('admin-a')]);
     const application = await submitInstructorApplication(user.id, input);
 
-    await approveApplication(application.id, admin.id, 'Welcome');
+    await approveApplication(application.id, reviewer(admin), 'Welcome');
 
     expect(addUserToGroup).toHaveBeenCalledWith(user.id, 'instructor');
+    // The role applies to the applicant's current session straight away.
+    const updated = await getDb().user.findUniqueOrThrow({ where: { id: user.id } });
+    expect(updated.roles).toEqual(['instructor']);
+    expect(updated.rolesChangedAt).not.toBeNull();
+    expect(
+      await getDb().auditEvent.count({
+        where: { action: 'application.approved', targetId: user.id, actorId: admin.id },
+      }),
+    ).toBe(1);
     expect(await getLatestApplication(user.id)).toMatchObject({
       status: 'APPROVED',
       reviewNote: 'Welcome',
@@ -78,7 +92,7 @@ describe('instructor applications', () => {
     const application = await submitInstructorApplication(user.id, input);
     addUserToGroup.mockRejectedValueOnce(new Error('Cognito unavailable'));
 
-    await expect(approveApplication(application.id, admin.id)).rejects.toThrow('Cognito');
+    await expect(approveApplication(application.id, reviewer(admin))).rejects.toThrow('Cognito');
     expect((await getLatestApplication(user.id))?.status).toBe('PENDING');
   });
 
@@ -86,14 +100,14 @@ describe('instructor applications', () => {
     const [user, admin] = await Promise.all([createUser('to-reject'), createUser('admin-c')]);
     const application = await submitInstructorApplication(user.id, input);
 
-    await rejectApplication(application.id, admin.id, 'Please add teaching examples');
+    await rejectApplication(application.id, reviewer(admin), 'Please add teaching examples');
     expect(addUserToGroup).not.toHaveBeenCalled();
     expect(await getLatestApplication(user.id)).toMatchObject({
       status: 'REJECTED',
       reviewNote: 'Please add teaching examples',
     });
 
-    await expect(approveApplication(application.id, admin.id)).rejects.toBeInstanceOf(
+    await expect(approveApplication(application.id, reviewer(admin))).rejects.toBeInstanceOf(
       ApplicationError,
     );
     const second = await submitInstructorApplication(user.id, input);

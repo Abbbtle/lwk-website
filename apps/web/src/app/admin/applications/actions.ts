@@ -31,8 +31,9 @@ export async function decideApplication(
   const { id, decision, note } = parsed.data;
 
   try {
-    if (decision === 'approve') await approveApplication(id, session.userId, note);
-    else await rejectApplication(id, session.userId, note);
+    const reviewer = { userId: session.userId, name: session.name };
+    if (decision === 'approve') await approveApplication(id, reviewer, note);
+    else await rejectApplication(id, reviewer, note);
   } catch (error) {
     if (error instanceof ApplicationError) return { error: error.message };
     console.error('Application decision failed', error);

@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import type { Session } from './auth/session';
 import { getDb } from './db';
 import { enroll, getPlayer, LearningError, listMyLearning, saveProgress } from './learning';
+import { testSession } from '../../test/sessions';
 
 // Uses the seeded sample course "kirtan-basics": 15 lessons, the first one a free preview.
 const SLUG = 'kirtan-basics';
@@ -20,7 +21,7 @@ async function learner(roles: Session['roles'] = []): Promise<Session> {
       lastSignInAt: new Date(),
     },
   });
-  return { userId: user.id, email: user.email, name: 'L', roles };
+  return testSession(user, roles);
 }
 
 describe('access', () => {

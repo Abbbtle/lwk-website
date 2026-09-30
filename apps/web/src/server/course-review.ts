@@ -1,4 +1,5 @@
 import 'server-only';
+import { recordAudit } from './audit';
 import { hasRole, type Session } from './auth/session';
 import { AuthoringError } from './authoring';
 import { getDb } from './db';
@@ -28,6 +29,7 @@ async function transition(
   courseId: string,
   from: 'IN_REVIEW' | 'PUBLISHED',
   data: Parameters<ReturnType<typeof getDb>['course']['update']>[0]['data'],
+  audit: { action: string; verb: string; note?: string },
 ) {
   assertAdmin(session);
   // Conditional update: only succeeds if the course is still in the expected state.
@@ -38,31 +40,50 @@ async function transition(
   if (count === 0) {
     throw new AuthoringError('locked', 'The course has changed since this page was loaded.');
   }
+  const course = await getDb().course.findUnique({
+    where: { id: courseId },
+    select: { title: true },
+  });
+  await recordAudit(
+    { userId: session.userId, name: session.name },
+    {
+      action: audit.action,
+      target: { type: 'course', id: courseId },
+      summary: `${audit.verb} "${course?.title ?? courseId}"`,
+      ...(audit.note && { details: { note: audit.note } }),
+    },
+  );
 }
 
 export async function publishCourse(session: Session, courseId: string) {
   const course = await getDb().course.findUnique({ where: { id: courseId } });
-  await transition(session, courseId, 'IN_REVIEW', {
-    status: 'PUBLISHED',
-    reviewNote: null,
-    publishedAt: course?.publishedAt ?? new Date(),
-  });
+  await transition(
+    session,
+    courseId,
+    'IN_REVIEW',
+    { status: 'PUBLISHED', reviewNote: null, publishedAt: course?.publishedAt ?? new Date() },
+    { action: 'course.published', verb: 'Published' },
+  );
 }
 
 export async function returnCourse(session: Session, courseId: string, note: string) {
   if (!note.trim()) throw new AuthoringError('incomplete', 'Tell the instructor what to change.');
-  await transition(session, courseId, 'IN_REVIEW', {
-    status: 'DRAFT',
-    reviewNote: note.trim(),
-    submittedAt: null,
-  });
+  await transition(
+    session,
+    courseId,
+    'IN_REVIEW',
+    { status: 'DRAFT', reviewNote: note.trim(), submittedAt: null },
+    { action: 'course.returned', verb: 'Returned for changes', note: note.trim() },
+  );
 }
 
 /** Take a live course back to draft so its instructor can change it. */
 export async function unpublishCourse(session: Session, courseId: string, note?: string) {
-  await transition(session, courseId, 'PUBLISHED', {
-    status: 'DRAFT',
-    reviewNote: note?.trim() || null,
-    submittedAt: null,
-  });
+  await transition(
+    session,
+    courseId,
+    'PUBLISHED',
+    { status: 'DRAFT', reviewNote: note?.trim() || null, submittedAt: null },
+    { action: 'course.unpublished', verb: 'Unpublished', note: note?.trim() || undefined },
+  );
 }

@@ -16,8 +16,12 @@ export default async function setup() {
 
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
   try {
+    // Every application table, so new tables never need adding here.
+    const tables = await db.$queryRaw<{ tablename: string }[]>`
+      SELECT tablename FROM pg_tables
+      WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
     await db.$executeRawUnsafe(
-      'TRUNCATE TABLE lesson_progress, enrollments, instructor_applications, contact_messages, users, lessons, sections, courses, categories RESTART IDENTITY CASCADE',
+      `TRUNCATE TABLE ${tables.map((t) => `"${t.tablename}"`).join(', ')} RESTART IDENTITY CASCADE`,
     );
   } finally {
     await db.$disconnect();

@@ -1,5 +1,5 @@
 // Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
-// enrollments and progress (Phase 5).
+// enrollments and progress (Phase 5), account security and audit log.
 
 generator client {
   provider = "prisma-client"
@@ -121,11 +121,24 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  // Cognito groups as last seen or set by an admin. Tokens issued before `rolesChangedAt`
+  // carry outdated groups, so these roles apply to them instead (changes take effect at once).
+  roles              String[]  @default([])
+  rolesChangedAt     DateTime? @map("roles_changed_at")
+  // Tokens issued before this moment are rejected (signed out everywhere, disabled, password
+  // changed on another device).
+  sessionsValidAfter DateTime? @map("sessions_valid_after")
+  // Authenticator-app two-step verification, mirrored from Cognito. Required for admin tools.
+  mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
+  // Set while an admin has disabled the account (Cognito refuses sign-in too).
+  disabledAt         DateTime? @map("disabled_at")
+
   coursesTaught          Course[]                @relation("taught")
   enrollments            Enrollment[]
   lessonProgress         LessonProgress[]
   instructorApplications InstructorApplication[] @relation("applicant")
   reviewedApplications   InstructorApplication[] @relation("reviewer")
+  auditEvents            AuditEvent[]            @relation("actor")
 
   @@index([email])
   @@map("users")
@@ -165,7 +178,7 @@ enum ApplicationStatus {
 model InstructorApplication {
   id                 String            @id @default(uuid(7)) @db.Uuid
   userId             String            @map("user_id") @db.Uuid
-  user               User              @relation("applicant", fields: [userId], references: [id])
+  user               User              @relation("applicant", fields: [userId], references: [id], onDelete: Cascade)
   fullName           String            @map("full_name")
   initiatedName      String?           @map("initiated_name")
   email              String
@@ -186,7 +199,7 @@ model InstructorApplication {
   status             ApplicationStatus @default(PENDING)
   reviewNote         String?           @map("review_note")
   reviewedById       String?           @map("reviewed_by_id") @db.Uuid
-  reviewedBy         User?             @relation("reviewer", fields: [reviewedById], references: [id])
+  reviewedBy         User?             @relation("reviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedAt         DateTime?         @map("reviewed_at")
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
@@ -227,4 +240,37 @@ model LessonProgress {
   @@id([userId, lessonId])
   @@index([lessonId])
   @@map("lesson_progress")
+}
+
+// Who did what to whom, for admins. Written by the service layer for security-relevant
+// actions (role changes, account status, review decisions, deletions).
+model AuditEvent {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  actor      User?    @relation("actor", fields: [actorId], references: [id], onDelete: SetNull)
+  // Kept when the actor's account is deleted.
+  actorName  String   @map("actor_name")
+  // Dotted verb, e.g. "user.role.granted".
+  action     String
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  summary    String
+  details    Json?
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([actorId])
+  @@map("audit_events")
+}
+
+// Fixed-window counters for rate limiting (per IP or per user and action).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime @map("reset_at")
+
+  @@index([resetAt])
+  @@map("rate_limits")
 }

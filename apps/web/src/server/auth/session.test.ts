@@ -1,6 +1,13 @@
 import { createSign, generateKeyPairSync, type KeyObject, randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { createSessionVerifier, hasRole, type Session } from './session';
+import {
+  type AccountState,
+  applyAccountState,
+  createSessionVerifier,
+  hasRole,
+  type Session,
+  type TokenIdentity,
+} from './session';
 
 const userPoolId = 'af-south-1_Test123';
 const clientId = 'test-client';
@@ -76,6 +83,7 @@ describe('session verifier', () => {
       email: 'learner@example.org',
       name: 'Test Learner',
       roles: [],
+      issuedAt: expect.any(Number),
     });
   });
 
@@ -108,12 +116,85 @@ describe('session verifier', () => {
   });
 });
 
+describe('applyAccountState', () => {
+  const issuedAt = 1_800_000_000;
+  const identity = (roles: TokenIdentity['roles'] = []): TokenIdentity => ({
+    userId: 'u',
+    email: 'e',
+    name: 'n',
+    roles,
+    issuedAt,
+  });
+  const account = (overrides: Partial<AccountState> = {}): AccountState => ({
+    roles: [],
+    rolesChangedAt: null,
+    sessionsValidAfter: null,
+    mfaEnabled: false,
+    disabledAt: null,
+    ...overrides,
+  });
+  const at = (seconds: number) => new Date(seconds * 1000);
+  const options = { requireAdminMfa: true };
+
+  it('uses the token as it is for an account without overrides (or no row yet)', () => {
+    expect(applyAccountState(identity(['instructor']), account(), options)?.roles).toEqual([
+      'instructor',
+    ]);
+    expect(applyAccountState(identity(['instructor']), null, options)?.roles).toEqual([
+      'instructor',
+    ]);
+  });
+
+  it('rejects disabled accounts and tokens issued before a sign-out everywhere', () => {
+    expect(
+      applyAccountState(identity(), account({ disabledAt: at(issuedAt - 10) }), options),
+    ).toBeNull();
+    expect(
+      applyAccountState(identity(), account({ sessionsValidAfter: at(issuedAt + 1) }), options),
+    ).toBeNull();
+    // A token issued in the same second as (or after) the sign-out is a new session.
+    expect(
+      applyAccountState(identity(), account({ sessionsValidAfter: at(issuedAt) }), options),
+    ).not.toBeNull();
+  });
+
+  it('applies role changes made after the token was issued', () => {
+    const revoked = account({ roles: [], rolesChangedAt: at(issuedAt + 5) });
+    expect(applyAccountState(identity(['instructor']), revoked, options)?.roles).toEqual([]);
+
+    const granted = account({ roles: ['instructor', 'unknown'], rolesChangedAt: at(issuedAt + 5) });
+    expect(applyAccountState(identity(), granted, options)?.roles).toEqual(['instructor']);
+
+    // A token issued after the change already carries the new groups.
+    const older = account({ roles: [], rolesChangedAt: at(issuedAt - 5) });
+    expect(applyAccountState(identity(['instructor']), older, options)?.roles).toEqual([
+      'instructor',
+    ]);
+  });
+
+  it('locks admin tools until two-step verification is on', () => {
+    const locked = applyAccountState(identity(['admin']), account(), options);
+    expect(locked).toMatchObject({ roles: [], adminNeedsMfa: true, mfaEnabled: false });
+
+    const unlocked = applyAccountState(identity(['admin']), account({ mfaEnabled: true }), options);
+    expect(unlocked).toMatchObject({ roles: ['admin'], adminNeedsMfa: false, mfaEnabled: true });
+
+    const notRequired = applyAccountState(identity(['admin']), account(), {
+      requireAdminMfa: false,
+    });
+    expect(notRequired).toMatchObject({ roles: ['admin'], adminNeedsMfa: false });
+  });
+});
+
 describe('hasRole', () => {
   const session = (roles: Session['roles']): Session => ({
     userId: 'u',
     email: 'e',
     name: 'n',
     roles,
+    issuedAt: 0,
+    mfaEnabled: true,
+    adminNeedsMfa: false,
   });
 
   it('grants a role to its members and everything to admins', () => {

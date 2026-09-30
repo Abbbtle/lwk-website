@@ -1,7 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import * as oidc from 'openid-client';
 import { getAuthConfig, getOidcConfig } from '@/server/auth/config';
-import { AUTH_COOKIES, clearTokenCookies, secondsUntilExpiry } from '@/server/auth/cookies';
+import { revokeSessions } from '@/server/account';
+import {
+  AUTH_COOKIES,
+  clearTokenCookies,
+  secondsUntilExpiry,
+  unverifiedSubject,
+} from '@/server/auth/cookies';
 import { globalSignOut } from '@/server/cognito';
 
 /** A current access token for global sign-out, refreshing it first if it has (nearly) expired. */
@@ -28,6 +34,10 @@ export async function POST(request: NextRequest) {
       if (accessToken) {
         await globalSignOut(accessToken);
         signedOutEverywhere = true;
+        // Cognito just accepted the token, so its subject is this user. Other devices' access
+        // tokens stop working now instead of when they expire.
+        const userId = unverifiedSubject(accessToken);
+        if (userId) await revokeSessions(userId);
       }
     } catch (error) {
       console.error('Global sign-out failed', error);
