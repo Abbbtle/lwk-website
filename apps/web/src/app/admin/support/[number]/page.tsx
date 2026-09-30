@@ -72,8 +72,6 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
           <section className="bg-white p-5 shadow-md">
             <h2 className="mb-4 font-bold">Request</h2>
             <TicketDetailsForm
-              // Start afresh whenever the saved values change (e.g. a reply set the status).
-              key={`${ticket.status}-${ticket.priority}-${ticket.assigneeId}`}
               ticketNumber={ticket.number}
               values={{
                 status: ticket.status,

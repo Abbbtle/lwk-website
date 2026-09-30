@@ -91,15 +91,13 @@ export default async function AdminExplorePage() {
                   confirmLabel="Load samples"
                   action={loadSamples}
                 />
-                {hasSamples && (
-                  <ConfirmAction
-                    label="Remove all sample content"
-                    question="Remove every sample course and resource, including learners' enrollments in them? Do this before launch."
-                    confirmLabel="Remove samples"
-                    tone="danger"
-                    action={removeSamples}
-                  />
-                )}
+                <ConfirmAction
+                  label="Remove all sample content"
+                  question="Remove every sample course and resource, including learners' enrollments in them? Do this before launch."
+                  confirmLabel="Remove samples"
+                  tone="danger"
+                  action={removeSamples}
+                />
               </div>
             ) : (
               <p className="text-sm text-gray-600">Sample content is turned off on this site.</p>
