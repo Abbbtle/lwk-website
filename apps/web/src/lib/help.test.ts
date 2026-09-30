@@ -50,6 +50,10 @@ describe('finding help', () => {
     expect(searchHelp('video not playing', learner)[0].slug).toBe('video-or-pdf-will-not-load');
     expect(searchHelp('delete my account', learner)[0].slug).toBe('your-data-and-privacy');
     expect(searchHelp('become a teacher', learner)[0].slug).toBe('becoming-an-instructor');
+    expect(searchHelp('How do I create an account?', learner)[0].slug).toBe(
+      'creating-your-account',
+    );
+    expect(searchHelp('deleting my account', learner)[0].slug).toBe('your-data-and-privacy');
     expect(searchHelp('the', learner)).toEqual([]);
   });
 });

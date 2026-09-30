@@ -55,12 +55,23 @@ const STOP_WORDS = new Set(
   ),
 );
 
+/** A rough stem, so "create" also finds "creating" and "deleting" finds "delete". */
+function stem(word: string) {
+  for (const suffix of ['ing', 'ed', 'es', 's', 'e']) {
+    if (word.length - suffix.length >= 4 && word.endsWith(suffix)) {
+      return word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
 function terms(text: string) {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, ' ')
     .split(/\s+/)
-    .filter((term) => term.length > 1 && !STOP_WORDS.has(term));
+    .filter((term) => term.length > 1 && !STOP_WORDS.has(term))
+    .map(stem);
 }
 
 /** Ranks articles by how well they match the question; best first. */

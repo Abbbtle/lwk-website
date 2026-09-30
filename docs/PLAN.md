@@ -470,6 +470,51 @@ Status: DONE (the `support` Cognito group is deployed with the auth stack, see b
 - Deploy: `npx cdk deploy lwk-dev-auth --exclusively` (adds the `support` group). Until then
   the Support role cannot be given; admins can already answer requests.
 
+**Phase 10 - AI assistant**
+An assistant in the help panel on every page, built so it is useful, safe and cannot overspend.
+
+Status: DONE in code; switching it on needs the AWS account upgrade (see "Turning AI on").
+
+- Claude on Amazon Bedrock through the Converse streaming API, called from `af-south-1` with
+  global cross-Region inference profiles and the instance role (no API keys). Models and
+  settings are Parameter Store values (`AI_ENABLED`, `AI_ASSISTANT_MODEL` = Claude Haiku 4.5,
+  `AI_WRITER_MODEL` = Claude Sonnet 5, `AI_MONTHLY_BUDGET_USD` = 5) from `infra/lib/config.ts`.
+  The instance role gets the three-part IAM policy AWS documents for global inference.
+- The assistant (`src/server/ai/assistant.ts`) answers from the help centre (all articles the
+  person may see are in its prompt, cached), knows the current page (course, lesson text for
+  people allowed to read it, course editor checklist, and so on) and uses tools that respect
+  the person's access: catalogue search, course details, my learning, my support requests,
+  my courses as instructor, staff overview, and a hand-over to support. It is told to stay
+  brief, link to real pages, never invent scripture quotations, never ask for passwords,
+  reply in the person's language and treat page and tool text as information, not orders.
+- Cost control: every call is metered (`ai_usage`, estimated from token counts at list
+  prices, prompt caching included); calls stop for the month at the cap. Daily question
+  limits (visitors 20 per IP, learners 50, instructors 80, staff 150) and at most 6 a minute.
+  After errors that will not clear by themselves (no model access, zero quota) the app stops
+  calling Bedrock for ten minutes.
+- Without AI (switched off, over budget, no access) the same box answers with the best help
+  articles and a route to support, so it is never a dead end.
+- Privacy: conversations stay in the browser tab. The server keeps token counts only, plus
+  the question and answer when someone rates an answer (`ai_feedback`) or sends the chat to
+  support (it becomes a support request with the conversation included).
+- Admin > AI: spend against the cap, use by feature and day, outcomes, rated answers, and a
+  Check AI access button that makes a tiny real call to each model.
+- Verified: 10 unit tests with a scripted Bedrock (streamed answers and sources, tool calls,
+  role-scoped tools, hand-over, fallback and circuit breaker, budget cap, lesson text only for
+  permitted readers) and 17 browser checks of the panel, fallback answers, metering, limits,
+  hand-over, ratings and the admin page.
+
+**Turning AI on** (one time):
+
+1. Upgrade the AWS account to the Paid plan (Billing console, "Upgrade plan"). The Free plan
+   blocks AWS Marketplace models such as Claude ("not available for this account", zero
+   quotas). Remaining credits carry over, and the budget alarm still applies.
+2. Deploy `lwk-dev-app` (Bedrock permissions and the AI settings).
+3. Enable each model once with an admin identity (AWS Marketplace subscribes the account on
+   the first call), for example by using the assistant on a local development server that runs
+   with the `lwk` profile, or with `aws bedrock-runtime converse` for each model ID.
+4. On the site: Admin > AI > Check AI access.
+
 **Roadmap after UAT started (Sept 2026)**
 
 Friends are testing on the dev site. The remaining work is delivered in stages, one pull

@@ -1,9 +1,19 @@
 'use client';
 
-import { BookOpen, ChevronRight, CircleHelp, Flag, LifeBuoy, Search, X } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronRight,
+  CircleHelp,
+  Flag,
+  LifeBuoy,
+  Search,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
+import { AssistantChat } from '@/components/assistant-chat';
 
 type ArticleSummary = { slug: string; title: string; summary: string };
 type HelpData = { forPage: ArticleSummary[]; results: ArticleSummary[]; popular: ArticleSummary[] };
@@ -43,11 +53,23 @@ function ArticleList({ articles }: { articles: ArticleSummary[] }) {
  * The Help button on every page. Opens a panel with help for the current page, search across
  * the help centre, and routes to a person when articles are not enough.
  */
-export function HelpPanel({ signedIn }: { signedIn: boolean }) {
+export function HelpPanel({
+  signedIn,
+  name,
+  assistant,
+}: {
+  signedIn: boolean;
+  name?: string;
+  /** Whether the AI assistant is switched on. */
+  assistant: boolean;
+}) {
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [open, setOpen] = useState(false);
+  // The chat mounts on first open (it restores the conversation from this browser tab).
+  const [opened, setOpened] = useState(false);
+  const [tab, setTab] = useState<'ask' | 'browse'>(assistant ? 'ask' : 'browse');
   const [page, setPage] = useState<HelpData | null>(null);
   const [query, setQuery] = useState('');
   // Search results, kept with the question they answer so stale ones are never shown.
@@ -96,6 +118,7 @@ export function HelpPanel({ signedIn }: { signedIn: boolean }) {
         onClick={() => {
           dialog.current?.showModal();
           setOpen(true);
+          setOpened(true);
         }}
         aria-haspopup="dialog"
         className="fixed right-4 bottom-4 z-40 flex cursor-pointer items-center gap-2 rounded-full bg-black px-4 py-3 font-bold text-white shadow-lg hover:bg-[#282828] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none print:hidden"
@@ -126,7 +149,48 @@ export function HelpPanel({ signedIn }: { signedIn: boolean }) {
             </button>
           </div>
 
-          <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          {assistant && (
+            <div
+              role="tablist"
+              aria-label="Help"
+              className="grid grid-cols-2 border-b border-gray-200 text-sm font-semibold"
+            >
+              {(
+                [
+                  ['ask', 'Ask the assistant', Sparkles],
+                  ['browse', 'Browse help', BookOpen],
+                ] as const
+              ).map(([value, label, Icon]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === value}
+                  onClick={() => setTab(value)}
+                  className={`flex cursor-pointer items-center justify-center gap-2 px-3 py-3 ${
+                    tab === value
+                      ? 'border-b-2 border-black text-black'
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {assistant && opened && (
+            <div role="tabpanel" hidden={tab !== 'ask'} className="min-h-0 flex-1">
+              <AssistantChat signedIn={signedIn} name={name} />
+            </div>
+          )}
+
+          <div
+            role={assistant ? 'tabpanel' : undefined}
+            hidden={assistant && tab !== 'browse'}
+            className="flex-1 space-y-6 overflow-y-auto px-5 py-5"
+          >
             <div className="relative">
               <label htmlFor={`${titleId}-search`} className="sr-only">
                 Search help
