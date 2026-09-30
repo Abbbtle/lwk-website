@@ -22,7 +22,7 @@ export default async function CategoriesPage() {
         {categories.map((category) => (
           <li key={category.slug}>
             <Link
-              href={`/explore?category=${category.slug}`}
+              href={`/courses?category=${category.slug}`}
               className="group flex h-full flex-col bg-white shadow-md transition-shadow hover:shadow-lg"
             >
               <CourseCover categorySlug={category.slug} />

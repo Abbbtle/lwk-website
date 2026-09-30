@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { z } from 'zod';
 import { enrollInCourse } from '@/app/courses/[slug]/actions';
+import { RichText } from '@/components/rich-text';
 import { formatDuration, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
 import { getPlayer, LearningError, type PlayerLesson } from '@/server/learning';
@@ -149,9 +150,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
               </p>
             )
           ) : (
-            <div className="max-w-3xl text-lg leading-relaxed whitespace-pre-line text-gray-800">
-              {lesson.body}
-            </div>
+            <RichText text={lesson.body ?? ''} className="max-w-3xl" />
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-300 pt-6">

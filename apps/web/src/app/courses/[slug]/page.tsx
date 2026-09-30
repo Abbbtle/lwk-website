@@ -3,7 +3,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { RichText } from '@/components/rich-text';
 import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
@@ -39,14 +41,20 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
           <div className="space-y-4 lg:col-span-2">
             <nav aria-label="Breadcrumb" className="text-sm text-gray-300">
-              <Link href="/explore" className="hover:text-brand">
+              <Link href="/courses" className="hover:text-brand">
                 Courses
               </Link>
               {' / '}
-              <Link href={`/explore?category=${course.categorySlug}`} className="hover:text-brand">
+              <Link href={`/courses?category=${course.categorySlug}`} className="hover:text-brand">
                 {course.category.name}
               </Link>
             </nav>
+            {(course.isFree || course.isSample) && (
+              <div className="flex gap-2">
+                {course.isFree && <FreeBadge />}
+                {course.isSample && <SampleBadge />}
+              </div>
+            )}
             <h1 className="text-3xl font-extrabold md:text-5xl">{course.title}</h1>
             <p className="text-lg text-gray-200">{course.subtitle}</p>
             <p className="text-sm text-gray-300">
@@ -66,6 +74,12 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
         <div className="space-y-12 lg:col-span-2">
+          {course.isSample && (
+            <p className="border-l-4 border-gray-400 bg-white p-4 text-sm text-gray-700">
+              This is a sample course used to test the platform. It will be replaced by courses from
+              our instructors.
+            </p>
+          )}
           <section className="border border-gray-300 p-6">
             <h2 className="text-2xl font-bold">What you&apos;ll learn</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -106,7 +120,11 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
 
           <section>
             <h2 className="text-2xl font-bold">Description</h2>
-            <p className="mt-4 text-gray-700">{course.description}</p>
+            <RichText
+              text={course.description}
+              size="sm"
+              className="mt-4 text-base text-gray-700"
+            />
           </section>
         </div>
 
@@ -125,15 +143,24 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               ) : (
                 <>
-                  {course.priceUsd !== null && (
-                    <p className="text-3xl font-extrabold">
-                      <span className="text-gray-400 line-through">
-                        {formatPrice(course.priceUsd)}
-                      </span>{' '}
-                      Free
-                    </p>
+                  {course.isFree ? (
+                    <>
+                      <p className="text-3xl font-extrabold">Free</p>
+                      <p className="text-sm text-gray-600">This course is free for everyone.</p>
+                    </>
+                  ) : (
+                    <>
+                      {course.priceUsd !== null && (
+                        <p className="text-3xl font-extrabold">
+                          <span className="text-gray-400 line-through">
+                            {formatPrice(course.priceUsd)}
+                          </span>{' '}
+                          Free
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-600">Free during early access.</p>
+                    </>
                   )}
-                  <p className="text-sm text-gray-600">Free during early access.</p>
                   {session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand w-full">

@@ -11,25 +11,25 @@ const slides: HeroSlide[] = [
     kicker: 'Rediscover Devotion',
     image: '/images/hero-devotion.jpg',
     alt: 'Devotees gathered in kirtan around a garlanded seat',
-    href: '/explore',
+    href: '/courses',
   },
   {
     kicker: 'Rediscover Kirtan',
     image: '/images/hero-kirtan.jpg',
     alt: 'A kirtan leader singing with devotees',
-    href: '/explore?category=kirtan',
+    href: '/courses?category=kirtan',
   },
   {
     kicker: 'Rediscover Prasadam',
     image: '/images/hero-prasadam.jpg',
     alt: 'A prasadam feast laid out on leaves',
-    href: '/explore?category=prasadam',
+    href: '/courses?category=prasadam',
   },
   {
     kicker: 'Rediscover Sastra',
     image: '/images/hero-sastra.jpg',
     alt: 'Volumes of Vedic literature',
-    href: '/explore?category=sastra-study',
+    href: '/courses?category=sastra-study',
   },
 ];
 
@@ -52,7 +52,7 @@ export default async function HomePage() {
           <CourseTabs categories={categories} courses={courses} />
           {courses.length > 0 && (
             <div className="mt-10 text-center">
-              <Link href="/explore" className="btn-solid">
+              <Link href="/courses" className="btn-solid">
                 View all courses
               </Link>
             </div>
