@@ -19,6 +19,7 @@ import { formatDuration, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
 import { getPlayer, LearningError, type PlayerLesson } from '@/server/learning';
 import { CompleteButton } from './complete-button';
+import { StudyHelp } from './study-help';
 import { VideoPlayer } from './video-player';
 
 const load = cache(async (slug: string, lessonId: string) => {
@@ -152,6 +153,17 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
             )
           ) : (
             <RichText text={lesson.body ?? ''} className="max-w-3xl" />
+          )}
+
+          {lesson.type !== 'TEXT' && lesson.unlocked && lesson.body?.trim() && (
+            <section className="max-w-3xl">
+              <h2 className="text-lg font-bold">Lesson notes</h2>
+              <RichText text={lesson.body} size="sm" className="mt-2 text-base text-gray-800" />
+            </section>
+          )}
+
+          {session && lesson.unlocked && (lesson.body?.trim().length ?? 0) >= 150 && (
+            <StudyHelp lessonId={lesson.id} lessonTitle={lesson.title} />
           )}
 
           {lesson.type !== 'TEXT' && lesson.unlocked && (

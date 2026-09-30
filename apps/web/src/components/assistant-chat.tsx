@@ -70,7 +70,16 @@ function loadSaved(): Entry[] {
 }
 
 /** The assistant in the help panel. The conversation stays in this browser tab only. */
-export function AssistantChat({ signedIn, name }: { signedIn: boolean; name?: string }) {
+export function AssistantChat({
+  signedIn,
+  name,
+  incoming,
+}: {
+  signedIn: boolean;
+  name?: string;
+  /** A question sent from elsewhere on the page, asked once. */
+  incoming?: { text: string; id: number } | null;
+}) {
   const pathname = usePathname();
   const [entries, setEntries] = useState<Entry[]>(loadSaved);
   const [input, setInput] = useState('');
@@ -86,6 +95,15 @@ export function AssistantChat({ signedIn, name }: { signedIn: boolean; name?: st
     }
     log.current?.lastElementChild?.scrollIntoView({ block: 'end' });
   }, [entries]);
+
+  const asked = useRef<number | null>(null);
+  useEffect(() => {
+    if (!incoming || asked.current === incoming.id) return;
+    asked.current = incoming.id;
+    // Asked after this render, like a question typed by the person.
+    void Promise.resolve().then(() => ask(incoming.text));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per incoming question
+  }, [incoming]);
 
   function update(
     id: number,

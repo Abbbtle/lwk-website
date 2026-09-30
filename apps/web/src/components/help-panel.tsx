@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
+import { ASK_EVENT } from '@/components/ai-label';
 import { AssistantChat } from '@/components/assistant-chat';
 
 type ArticleSummary = { slug: string; title: string; summary: string };
@@ -70,6 +71,23 @@ export function HelpPanel({
   // The chat mounts on first open (it restores the conversation from this browser tab).
   const [opened, setOpened] = useState(false);
   const [tab, setTab] = useState<'ask' | 'browse'>(assistant ? 'ask' : 'browse');
+  // A question sent from elsewhere on the page (e.g. "Summarise" under a lesson).
+  const [question, setQuestion] = useState<{ text: string; id: number } | null>(null);
+
+  useEffect(() => {
+    if (!assistant) return;
+    const onAsk = (event: Event) => {
+      const text = (event as CustomEvent<unknown>).detail;
+      if (typeof text !== 'string') return;
+      dialog.current?.showModal();
+      setOpen(true);
+      setOpened(true);
+      setTab('ask');
+      setQuestion({ text, id: Date.now() });
+    };
+    window.addEventListener(ASK_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_EVENT, onAsk);
+  }, [assistant]);
   const [page, setPage] = useState<HelpData | null>(null);
   const [query, setQuery] = useState('');
   // Search results, kept with the question they answer so stale ones are never shown.
@@ -182,7 +200,7 @@ export function HelpPanel({
 
           {assistant && opened && (
             <div role="tabpanel" hidden={tab !== 'ask'} className="min-h-0 flex-1">
-              <AssistantChat signedIn={signedIn} name={name} />
+              <AssistantChat signedIn={signedIn} name={name} incoming={question} />
             </div>
           )}
 
