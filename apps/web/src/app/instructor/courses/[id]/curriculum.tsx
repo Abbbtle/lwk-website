@@ -215,13 +215,22 @@ export function Curriculum({
                           </label>
                         </div>
                         <label className="block">
-                          <span className="text-sm font-medium">Text (text lessons only)</span>
+                          <span className="text-sm font-medium">
+                            {lesson.type === 'TEXT'
+                              ? 'Lesson text'
+                              : 'Notes or transcript (optional)'}
+                          </span>
                           <textarea
                             name="body"
-                            rows={5}
+                            rows={lesson.type === 'TEXT' ? 8 : 4}
                             defaultValue={lesson.body ?? ''}
                             className={input}
                           />
+                          <span className="block text-xs text-gray-500">
+                            {lesson.type === 'TEXT'
+                              ? 'Blank lines separate paragraphs; ## makes a heading, - a list, **bold**.'
+                              : 'Shown below the video or PDF, for people who prefer to read, and used by the AI study help.'}
+                          </span>
                         </label>
                         <div className="flex flex-wrap items-end gap-6">
                           <label>

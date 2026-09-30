@@ -84,8 +84,8 @@ export async function describePage(path: string, session: Session | null): Promi
           enrolled ||
           (session && (hasRole(session, 'admin') || course.instructorId === session.userId));
         const text =
-          canRead && lesson.type === 'TEXT' && lesson.body
-            ? `\nThe lesson text (for questions about it):\n<lesson>\n${clip(lesson.body, 4000)}\n</lesson>`
+          canRead && lesson.body
+            ? `\nThe lesson ${lesson.type === 'TEXT' ? 'text' : 'notes'} (for questions about it):\n<lesson>\n${clip(lesson.body, 4000)}\n</lesson>`
             : '';
         return `The lesson player: lesson "${lesson.title}" (${lesson.type.toLowerCase()}) in the course "${course.title}".${text}`;
       }

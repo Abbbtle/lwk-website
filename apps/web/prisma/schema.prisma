@@ -1,6 +1,6 @@
 // Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
 // enrollments and progress (Phase 5), account security and audit log (Phase 7),
-// free resources for Explore (Phase 8), help and support (Phase 9), AI usage (Phase 10).
+// free resources for Explore (Phase 8), help and support (Phase 9), AI (Phases 10 and 11).
 
 generator client {
   provider = "prisma-client"
@@ -112,6 +112,7 @@ model Lesson {
   // Body for text lessons.
   body            String?
   progress        LessonProgress[]
+  quiz            LessonQuiz?
 
   @@unique([sectionId, position])
   @@map("lessons")
@@ -477,4 +478,19 @@ model AiFeedback {
 
   @@index([createdAt])
   @@map("ai_feedback")
+}
+
+// Practice questions the AI made from a lesson's text, shared by everyone taking the lesson and
+// made again when the lesson changes or someone asks for new ones.
+model LessonQuiz {
+  lessonId  String   @id @map("lesson_id") @db.Uuid
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  // [{ question, options[4], answer, explanation }]
+  questions Json
+  // Hash of the lesson text the questions were made from.
+  sourceKey String   @map("source_key")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("lesson_quizzes")
 }
