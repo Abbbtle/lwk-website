@@ -245,6 +245,10 @@ af-south-1_vNL5Ybi4T --username <email> --group-name admin --profile lwk` (takes
   pages: SRP in the browser (password never reaches the server), tokens handed to
   `POST /auth/session` (same-origin only) and kept in HttpOnly cookies; branded
   verification email.
+- Log out asks for confirmation in an accessible dialog (Cancel has focus; Esc or a click
+  outside closes it; without JavaScript the button logs out directly). An optional "also
+  log me out on my other devices" calls Cognito `GlobalSignOut`; otherwise only this
+  device's refresh token is revoked. Both end on a `/logged-out` page.
 - Follow-ups: send Cognito email through SES before launch (the built-in sender has a low
   daily limit); in-app MFA enrollment page; Content Security Policy with nonces (Phase 6);
   bearer-token support in `/api/v1` for the mobile apps; decide whether admins must use MFA.

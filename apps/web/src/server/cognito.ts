@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   AdminAddUserToGroupCommand,
+  GlobalSignOutCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { getAuthConfig } from './auth/config';
@@ -26,4 +27,12 @@ export async function addUserToGroup(userId: string, role: Role) {
       GroupName: role,
     }),
   );
+}
+
+/**
+ * End every session of the signed-in user (all devices). Uses the user's own access token, so
+ * no AWS credentials are involved; Cognito invalidates all of the user's refresh tokens.
+ */
+export async function globalSignOut(accessToken: string) {
+  await getClient().send(new GlobalSignOutCommand({ AccessToken: accessToken }));
 }
