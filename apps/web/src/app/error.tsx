@@ -15,7 +15,7 @@ export default function PageError({
   const report = `/support/new?category=TECHNICAL&from=${encodeURIComponent(pathname)}`;
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
-      <p className="text-5xl font-extrabold text-brand">Oops</p>
+      <p className="text-5xl font-extrabold text-brand-ink">Oops</p>
       <h1 className="mt-4 text-3xl font-extrabold">Something went wrong</h1>
       <p className="mt-3 text-gray-700">
         This page could not be shown just now. Please try again; if it keeps happening, let us know
