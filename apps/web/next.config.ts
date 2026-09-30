@@ -26,13 +26,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
-  async redirects() {
-    // Earlier placeholder URLs for signing in.
-    return [
-      { source: '/login', destination: '/auth/login', permanent: false },
-      { source: '/sign-up', destination: '/auth/signup', permanent: false },
-    ];
-  },
 };
 
 export default nextConfig;

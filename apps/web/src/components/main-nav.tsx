@@ -84,10 +84,10 @@ export function MainNav({ user }: { user: NavUser | null }) {
           </details>
         ) : (
           <>
-            <a href={`/auth/login?returnTo=${returnTo}`} className="btn-outline">
+            <a href={`/login?returnTo=${returnTo}`} className="btn-outline">
               Log In
             </a>
-            <a href={`/auth/signup?returnTo=${returnTo}`} className="btn-solid">
+            <a href={`/sign-up?returnTo=${returnTo}`} className="btn-solid">
               Sign Up
             </a>
           </>
@@ -139,10 +139,10 @@ export function MainNav({ user }: { user: NavUser | null }) {
             </div>
           ) : (
             <div className="flex gap-3 px-4 pb-4 lg:hidden">
-              <a href={`/auth/login?returnTo=${returnTo}`} className="btn-outline flex-1">
+              <a href={`/login?returnTo=${returnTo}`} className="btn-outline flex-1">
                 Log In
               </a>
-              <a href={`/auth/signup?returnTo=${returnTo}`} className="btn-solid flex-1">
+              <a href={`/sign-up?returnTo=${returnTo}`} className="btn-solid flex-1">
                 Sign Up
               </a>
             </div>

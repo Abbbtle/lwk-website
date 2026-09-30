@@ -22,12 +22,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Also end the hosted sign-in session, otherwise the next sign-in would skip the password.
-  const logoutUrl = new URL(`${domain}/logout`);
-  logoutUrl.searchParams.set('client_id', clientId);
-  logoutUrl.searchParams.set('logout_uri', `${appUrl}/`);
-
-  const response = NextResponse.redirect(logoutUrl, 303);
+  const response = NextResponse.redirect(`${appUrl}/`, 303);
   response.headers.set('Cache-Control', 'no-store');
   clearTokenCookies(response.cookies);
   return response;

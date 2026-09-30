@@ -94,7 +94,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
       </ul>
       <div className="mt-8 text-center">
         <a
-          href="/auth/signup?returnTo=%2Fexplore"
+          href="/sign-up?returnTo=%2Fexplore"
           className={
             featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
           }

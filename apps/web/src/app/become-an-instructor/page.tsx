@@ -28,10 +28,10 @@ export default async function BecomeAnInstructorPage() {
       <Notice>
         <p className="text-lg">Please sign in or create an account to apply.</p>
         <div className="flex flex-wrap gap-3">
-          <a href="/auth/signup?returnTo=%2Fbecome-an-instructor" className="btn-solid">
+          <a href="/sign-up?returnTo=%2Fbecome-an-instructor" className="btn-solid">
             Create an account
           </a>
-          <a href="/auth/login?returnTo=%2Fbecome-an-instructor" className="btn-outline">
+          <a href="/login?returnTo=%2Fbecome-an-instructor" className="btn-outline">
             Log In
           </a>
         </div>
