@@ -4,6 +4,7 @@ import { ChevronDown, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { SearchBar } from '@/components/search-bar';
 import { mainNav } from '@/lib/site';
 
 export type NavUser = {
@@ -43,7 +44,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
 
   return (
     <>
-      <ul className="hidden items-center gap-6 lg:flex">
+      <ul className="hidden shrink-0 items-center gap-6 xl:flex">
         {mainNav.map((item) => (
           <li key={item.href}>
             <Link href={item.href} className={linkClass(item.href)}>
@@ -53,7 +54,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
         ))}
       </ul>
 
-      <div className="hidden items-center gap-3 lg:flex">
+      <div className="hidden shrink-0 items-center gap-3 lg:flex">
         {user ? (
           <details className="group relative">
             <summary className="btn-outline list-none">
@@ -95,7 +96,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
 
       <button
         type="button"
-        className="p-2 lg:hidden"
+        className="shrink-0 p-2 xl:hidden"
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -110,8 +111,9 @@ export function MainNav({ user }: { user: NavUser | null }) {
       {open && (
         <div
           id="mobile-menu"
-          className="absolute inset-x-0 top-full z-40 border-b border-gray-300 bg-white lg:hidden"
+          className="absolute inset-x-0 top-full z-40 border-b border-gray-300 bg-white shadow-md xl:hidden"
         >
+          <SearchBar id="mobile-search" className="px-4 pt-4 md:hidden" />
           <ul className="flex flex-col px-4 py-2">
             {mainNav.map((item) => (
               <li key={item.href}>
@@ -122,7 +124,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
             ))}
           </ul>
           {user ? (
-            <div className="border-t border-gray-300 px-4 py-2">
+            <div className="border-t border-gray-300 px-4 py-2 lg:hidden">
               <p className="py-2 text-sm text-gray-600">Signed in as {user.name}</p>
               <ul>
                 {user.links.map((link) => (
@@ -136,7 +138,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
               <LogoutButton className="btn-outline mb-2 w-full" />
             </div>
           ) : (
-            <div className="flex gap-3 px-4 pb-4">
+            <div className="flex gap-3 px-4 pb-4 lg:hidden">
               <a href={`/auth/login?returnTo=${returnTo}`} className="btn-outline flex-1">
                 Log In
               </a>
