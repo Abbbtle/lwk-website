@@ -1,18 +1,23 @@
-import { Check, ChevronDown, User, Users, UsersRound } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Faq } from '@/components/faq';
 
 export const metadata: Metadata = {
   title: 'Plans & Pricing',
   description: 'Subscription plans for individuals, groups and classrooms.',
 };
 
-// Prices are decided in the payments phase (see docs/PLAN.md), so none are shown yet.
-const plans = [
+// Layout from the POC. Prices are decided in the payments phase (see docs/PLAN.md).
+type Plan = {
+  name: string;
+  audience: string;
+  features: string[];
+  featured?: boolean;
+};
+
+const plans: Plan[] = [
   {
     name: 'Solo Learning',
-    icon: User,
-    audience: 'For individual learners',
+    audience: 'Personal use',
     features: [
       'Access to every course',
       'Learn at your own pace',
@@ -22,8 +27,8 @@ const plans = [
   },
   {
     name: 'Group Learning',
-    icon: Users,
-    audience: 'For families and small study groups',
+    audience: 'Best for 1-3 users',
+    featured: true,
     features: [
       'Everything in Solo Learning',
       'Multiple learners on one plan',
@@ -33,8 +38,7 @@ const plans = [
   },
   {
     name: 'Classroom',
-    icon: UsersRound,
-    audience: 'For temples, schools and study circles',
+    audience: 'Best for 4-6 users',
     features: [
       'Everything in Group Learning',
       'Seats for a whole class',
@@ -71,68 +75,72 @@ const faqs = [
   },
 ];
 
+function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
+  const featured = plan.featured;
+  return (
+    <li
+      className={`flex flex-col border p-6 ${
+        featured ? 'border-brand bg-brand text-white' : 'border-gray-600 bg-gray-100'
+      }`}
+    >
+      <h3 className="text-2xl font-semibold">{plan.name}</h3>
+      <p className="mt-4 text-lg">Price coming soon</p>
+      <p className={`mt-4 text-sm ${featured ? '' : 'text-gray-700'}`}>{plan.audience}</p>
+      <p className={`mt-1 text-sm ${featured ? '' : 'text-gray-700'}`}>{billing}</p>
+      <ul className="mt-8 flex-grow space-y-2">
+        {plan.features.map((feature) => (
+          <li key={feature}>{feature}</li>
+        ))}
+      </ul>
+      <div className="mt-8 text-center">
+        <a
+          href="/auth/signup?returnTo=%2Fexplore"
+          className={
+            featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
+          }
+        >
+          Get started
+        </a>
+      </div>
+    </li>
+  );
+}
+
+function PlanGroup({ title, billing }: { title: string; billing: string }) {
+  return (
+    <section className="mx-auto max-w-6xl px-6 pt-12">
+      <h2 className="text-center text-3xl font-semibold">{title}</h2>
+      <p className="mt-2 mb-8 text-center">
+        Access any of our courses with our {billing.toLowerCase().replace(' billing', '')}{' '}
+        subscription plans
+      </p>
+      <ul className="grid gap-8 md:grid-cols-3 md:gap-10">
+        {plans.map((plan) => (
+          <PlanCard key={plan.name} plan={plan} billing={billing} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function PlansAndPricingPage() {
   return (
     <>
-      <section className="mx-auto max-w-7xl px-4 pt-12 text-center sm:px-6 lg:px-8">
+      <section className="px-6 pt-12 text-center">
         <h1 className="text-3xl font-bold md:text-5xl">
           Elevate Your Spiritual Practice with Tailored Plans
         </h1>
-        <p className="mx-auto mt-4 max-w-3xl text-base md:text-lg">
+        <p className="mx-auto mt-4 max-w-3xl md:text-lg">
           Select the path that aligns with your spiritual journey and unlock deeper insights, tools,
           and guidance.
         </p>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <p className="mb-8 text-center text-sm font-semibold text-gray-600">
-          Monthly and annual billing · Pricing will be announced when subscriptions open
+        <p className="mt-4 text-sm font-semibold text-gray-600">
+          Subscriptions open soon. Every course is free during early access.
         </p>
-        <ul className="flex flex-col gap-8 md:flex-row md:gap-14">
-          {plans.map(({ name, icon: Icon, audience, features }) => (
-            <li
-              key={name}
-              className="flex flex-1 flex-col border border-gray-600 bg-gray-100 p-6 hover:shadow-xl"
-            >
-              <Icon className="size-8 text-brand" aria-hidden />
-              <h2 className="mt-4 text-xl font-semibold md:text-2xl">{name}</h2>
-              <p className="mt-1 text-sm text-gray-600">{audience}</p>
-              <p className="mt-4 text-lg font-medium">Coming soon</p>
-              <ul className="mt-6 flex-grow space-y-2">
-                {features.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <Check className="mt-0.5 size-5 shrink-0" aria-hidden />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/explore" className="btn-outline mt-8">
-                Browse courses
-              </Link>
-            </li>
-          ))}
-        </ul>
       </section>
-
-      <section className="bg-surface py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-bold md:text-3xl">Frequently Asked Questions</h2>
-          <div className="mt-8 divide-y divide-gray-300 border-y border-gray-300">
-            {faqs.map(({ question, answer }) => (
-              <details key={question} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
-                  {question}
-                  <ChevronDown
-                    className="size-5 shrink-0 transition-transform group-open:rotate-180"
-                    aria-hidden
-                  />
-                </summary>
-                <p className="mt-3 text-gray-700">{answer}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PlanGroup title="Monthly Deals" billing="Monthly billing" />
+      <PlanGroup title="Annual Deals" billing="Annual billing" />
+      <Faq items={faqs} />
     </>
   );
 }

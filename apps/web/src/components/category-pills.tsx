@@ -3,8 +3,8 @@ import type { Category } from '@/lib/catalog/types';
 
 function pillClass(active: boolean) {
   return active
-    ? 'border border-black bg-black px-4 py-2 text-sm font-semibold text-white'
-    : 'border border-gray-300 px-4 py-2 text-sm font-semibold hover:border-black';
+    ? 'rounded-lg border-2 border-black px-4 py-2 font-medium text-black shadow-[0_3px_0_0_black]'
+    : 'rounded-lg border-2 border-transparent px-4 py-2 font-medium text-gray-600 hover:text-black';
 }
 
 /** Category filter links that keep the current search query. */

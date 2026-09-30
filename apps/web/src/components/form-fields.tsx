@@ -1,8 +1,15 @@
 import type { ReactNode } from 'react';
 import type { FormState } from '@/lib/forms/form-state';
 
-const inputClass =
-  'w-full border border-gray-300 bg-white px-4 py-2.5 focus:border-black focus:outline-none aria-invalid:border-red-600';
+const inputClasses = {
+  // Boxed inputs on the light page background (instructor application, editors).
+  boxed:
+    'w-full border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600',
+  // Underlined inputs with the label as placeholder (POC contact form).
+  underline:
+    'w-full border-0 border-b border-black bg-transparent px-2 py-3 text-lg placeholder:text-gray-400 focus:border-brand focus:outline-none aria-invalid:border-red-600',
+};
+type Variant = keyof typeof inputClasses;
 
 type FieldProps = {
   name: string;
@@ -10,6 +17,7 @@ type FieldProps = {
   state: FormState;
   required?: boolean;
   hint?: string;
+  variant?: Variant;
 };
 
 function Field({
@@ -18,17 +26,23 @@ function Field({
   state,
   required,
   hint,
+  variant = 'boxed',
   children,
 }: FieldProps & { children: (props: FieldAria) => ReactNode }) {
   const error = state.errors?.[name]?.[0];
   const describedBy = [hint && `${name}-hint`, error && `${name}-error`].filter(Boolean).join(' ');
   return (
     <div className="space-y-1.5">
-      <label htmlFor={name} className="block font-medium">
+      <label
+        htmlFor={name}
+        className={variant === 'underline' ? 'sr-only' : 'block text-sm font-medium'}
+      >
         {label}
-        {!required && <span className="font-normal text-gray-500"> (optional)</span>}
+        {!required && <span className="font-normal"> (optional)</span>}
       </label>
       {children({
+        className: inputClasses[variant],
+        placeholder: variant === 'underline' ? label : undefined,
         id: name,
         name,
         required,
@@ -52,6 +66,8 @@ function Field({
 }
 
 type FieldAria = {
+  className: string;
+  placeholder?: string;
   id: string;
   name: string;
   required?: boolean;
@@ -67,15 +83,13 @@ export function TextField({
 }: FieldProps & { type?: string; autoComplete?: string }) {
   return (
     <Field {...props}>
-      {(aria) => <input type={type} autoComplete={autoComplete} className={inputClass} {...aria} />}
+      {(aria) => <input type={type} autoComplete={autoComplete} {...aria} />}
     </Field>
   );
 }
 
 export function TextAreaField({ rows = 4, ...props }: FieldProps & { rows?: number }) {
-  return (
-    <Field {...props}>{(aria) => <textarea rows={rows} className={inputClass} {...aria} />}</Field>
-  );
+  return <Field {...props}>{(aria) => <textarea rows={rows} {...aria} />}</Field>;
 }
 
 export function SelectField({
@@ -88,10 +102,10 @@ export function SelectField({
 }) {
   return (
     <Field {...props}>
-      {({ defaultValue, ...aria }) => (
-        <select className={inputClass} defaultValue={defaultValue ?? ''} {...aria}>
+      {({ defaultValue, placeholder: labelAsPlaceholder, ...aria }) => (
+        <select defaultValue={defaultValue ?? ''} {...aria}>
           <option value="" disabled>
-            {placeholder}
+            {labelAsPlaceholder ?? placeholder}
           </option>
           {options.map((option) => {
             const { value, label } =

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { config } from 'dotenv';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 config({ path: ['.env.local', '.env'], quiet: true });
 
@@ -16,6 +16,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // The production build copies files into .next/standalone; never test those copies.
+    exclude: [...configDefaults.exclude, '.next/**'],
     globalSetup: ['test/global-setup.ts'],
     // All test files share one database, so run them one at a time.
     fileParallelism: false,

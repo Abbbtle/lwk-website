@@ -11,7 +11,11 @@ export const metadata: Metadata = {
 };
 
 function Notice({ children }: { children: React.ReactNode }) {
-  return <div className="space-y-4 bg-surface p-8">{children}</div>;
+  return (
+    <div className="mx-auto max-w-2xl space-y-4 bg-white p-8 text-center shadow-md [&>div]:justify-center">
+      {children}
+    </div>
+  );
 }
 
 export default async function BecomeAnInstructorPage() {
@@ -71,11 +75,9 @@ export default async function BecomeAnInstructorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="text-3xl font-extrabold md:text-5xl">
-        Become An <span className="text-brand">Instructor</span>
-      </h1>
-      <p className="mt-4 text-lg text-gray-700">
+    <div className="mx-auto max-w-5xl px-6 py-12">
+      <h1 className="text-center text-3xl font-semibold md:text-4xl">Become An Instructor</h1>
+      <p className="mx-auto mt-8 max-w-2xl text-center text-lg">
         We are looking for passionate and knowledgeable instructors from around the world. Fill out
         the form below to get started.
       </p>

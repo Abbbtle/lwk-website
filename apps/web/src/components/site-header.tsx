@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MainNav, type NavUser } from '@/components/main-nav';
+import { SearchBar } from '@/components/search-bar';
 import { site } from '@/lib/site';
 import { getSession, hasRole } from '@/server/auth/session';
 
@@ -16,11 +17,8 @@ async function getNavUser(): Promise<NavUser | null> {
 export async function SiteHeader() {
   const user = await getNavUser();
   return (
-    <header className="relative border-b border-gray-300 bg-white">
-      <nav
-        aria-label="Main"
-        className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-8"
-      >
+    <header className="relative z-30 bg-white shadow-md">
+      <nav aria-label="Main" className="flex items-center gap-4 px-4 py-2 sm:px-6 lg:gap-6">
         <Link href="/" className="shrink-0">
           <Image
             src="/logo-black.png"
@@ -28,9 +26,11 @@ export async function SiteHeader() {
             width={1417}
             height={790}
             preload
-            className="h-14 w-auto"
+            className="h-12 w-auto"
           />
         </Link>
+        <SearchBar id="header-search" className="hidden min-w-0 flex-1 md:block" />
+        <span className="flex-1 md:hidden" />
         <MainNav user={user} />
       </nav>
     </header>
