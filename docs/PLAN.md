@@ -531,6 +531,28 @@ Status: DONE in code (works once AI is on; until then each tool says AI is unava
   instructors and admins, application summary without contact details, reply drafts) and 11
   browser checks of where each tool appears and how it degrades.
 
+**Phase 12 - Polish: accessibility, search engines, resilience**
+
+Status: DONE.
+
+- Accessibility: an automated audit (axe-core, WCAG 2.1 A and AA plus best practices) of 35
+  pages as a visitor, learner and admin, and the help panel, now finds no violations. Fixes:
+  readable contrast (orange text on light backgrounds uses `brand-ink`, orange-700; filled
+  orange buttons and badges use black text; the saffron stays for fills, borders and text on
+  black), heading order (Markdown `#`/`##` become section headings), unique names for search
+  areas, no ARIA attributes on links that do not allow them, and a proper list inside the chat
+  log.
+- Search engines: `/sitemap.xml` (public pages, published courses and free resources, help
+  articles), `/robots.txt` (keeps accounts, dashboards, lessons and APIs out), canonical links,
+  Open Graph and Twitter previews, and schema.org `Course` data on course pages.
+- Resilience: friendly error pages (retry, home, report a problem with the page filled in) and
+  a last-resort page when the whole layout fails; hourly clean-up of expired rate limits, old
+  read notifications and old AI and feedback records, started by the health check.
+- Performance: the first row of course images loads eagerly (largest content on the page).
+- Fixed along the way: the staff request form keeps its "Saved." message while its fields
+  follow changes made by replies; the remove-samples button stays, so its confirmation shows.
+- The browser tests of Phases 7 to 11 (106 checks) and 119 unit and integration tests pass.
+
 **Turning AI on** (one time):
 
 1. Upgrade the AWS account to the Paid plan (Billing console, "Upgrade plan"). The Free plan
@@ -560,7 +582,8 @@ request each:
 5. Phase 11 - AI tools per role: study help for students (explain, summarise, practise),
    writing and pre-review help for instructors, summaries and triage for admins. People
    review anything that is published.
-6. Phase 12 - Polish: accessibility and performance audits, SEO, operations.
+6. Phase 12 - Polish: accessibility audit, search engines, error pages and clean-up jobs
+   (above).
 
 **AI access (checked 2026-09-30):** Bedrock lists the current Claude models in
 `af-south-1`, but the account cannot call them yet. The Anthropic use-case form has been

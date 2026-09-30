@@ -21,15 +21,27 @@ npm run dev                                     # http://localhost:3000
 ```
 
 Useful endpoints: `/api/v1/health`, `/api/v1/categories`, `/api/v1/courses?q=&category=`,
-`/api/v1/courses/:slug`, `/api/v1/me`.
+`/api/v1/courses/:slug`, `/api/v1/resources?type=&q=` (Explore), `/api/v1/help?q=&path=`,
+`/api/v1/me`, `/api/v1/me/export`, and `POST /api/v1/assistant` (streams the assistant's answer).
+
+## Where things live
+
+- Help centre articles: `apps/web/src/content/help.ts` (the assistant answers from these too).
+- Sample content for testing: Admin > Explore > Load sample content (`SAMPLE_CONTENT=off`
+  disables it).
+- AI: `apps/web/src/server/ai/` (assistant, tools, metering). Admin > AI shows spend against the
+  monthly cap and has a Check AI access button. See "Turning AI on" in docs/PLAN.md.
+- Security: `apps/web/src/proxy.ts` (origin check, Content Security Policy, token refresh) and
+  `apps/web/src/server/security/`. Admin actions are recorded in Admin > Activity log.
 
 Sign-in uses the dev Cognito user pool (values in `apps/web/.env.example`). AWS access for
 CDK and the CLI: `aws login --profile lwk`, then run commands with `--profile lwk` or
 `AWS_PROFILE=lwk`. The app uses the same profile for Cognito and S3 calls, so run
 `aws login --profile lwk` again when the 12-hour session expires.
 
-After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web`; the running dev
-server picks up the regenerated client automatically.
+After changing `prisma/schema.prisma`, run `npm run db:migrate -w @lwk/web` and then
+`npm run db:generate -w @lwk/web` (Prisma 7 no longer regenerates the client when migrating),
+and restart the dev server.
 
 ## Deploying
 
