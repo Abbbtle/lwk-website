@@ -4,19 +4,26 @@ import { requireRole } from '@/server/auth/session';
 import { countOpenMessages } from '@/server/contact-messages';
 import { countCoursesInReview } from '@/server/course-review';
 import { countPendingApplications } from '@/server/instructor-applications';
+import { countUsers } from '@/server/user-admin';
 import { AdminHeading, AdminNav } from './admin-nav';
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 
 export default async function AdminPage() {
   const session = await requireRole('admin', '/admin');
-  const [coursesInReview, pendingApplications, openMessages] = await Promise.all([
+  const [coursesInReview, pendingApplications, openMessages, users] = await Promise.all([
     countCoursesInReview(),
     countPendingApplications(),
     countOpenMessages(),
+    countUsers(),
   ]);
 
   const cards = [
+    {
+      href: '/admin/users',
+      label: `People signed up (${users.newThisWeek} new this week)`,
+      count: users.total,
+    },
     { href: '/admin/courses', label: 'Courses awaiting review', count: coursesInReview },
     {
       href: '/admin/applications',
@@ -30,7 +37,7 @@ export default async function AdminPage() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <AdminHeading title="Administration" greeting={session.name} />
       <AdminNav current="/admin" />
-      <ul className="grid gap-6 sm:grid-cols-3">
+      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
           <li key={card.href}>
             <Link
