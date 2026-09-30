@@ -504,6 +504,33 @@ Status: DONE in code; switching it on needs the AWS account upgrade (see "Turnin
   permitted readers) and 17 browser checks of the panel, fallback answers, metering, limits,
   hand-over, ratings and the admin page.
 
+**Phase 11 - AI tools for each role**
+Drafts and second opinions for learners, instructors and staff; people stay in charge.
+
+Status: DONE in code (works once AI is on; until then each tool says AI is unavailable).
+
+- Learners: **Study help** under lessons with text (text lessons, or notes and transcripts on
+  video and PDF lessons, which instructors can now add): "Quiz me" makes four practice
+  questions with answers and explanations (shared per lesson in `lesson_quizzes` and made
+  again when the lesson changes), and "Summarise" and "Explain simply" ask the assistant.
+- Instructors, in the course editor: suggest an outline from a short brief and add its
+  sections and lessons to the draft; suggest a better subtitle, description and outcomes
+  (each used only when chosen); and a read-through before submitting (must / should / could
+  suggestions, including flagging quotations to check against a source).
+- Admins: the same read-through on the course review page, and a neutral summary of an
+  instructor application (strengths, open questions, questions to ask; no decision, and no
+  contact details sent to the model).
+- Support staff: "Draft a reply with AI" fills the reply box from the conversation and the
+  relevant help articles, with a separate note for staff.
+- All tools use structured output (the model must fill a JSON schema that is validated),
+  the writing model (Sonnet 5) except reply drafts (Haiku 4.5), shared writing rules (accurate,
+  respectful, never invent quotations or references, material is data not instructions),
+  per-person daily limits, the monthly cap and metering, and are labelled as AI drafts.
+- Verified: 8 tests with a scripted Bedrock (access rules, shared quizzes and regeneration,
+  malformed output, unavailable and budget cases, outline apply, drafts only, review for
+  instructors and admins, application summary without contact details, reply drafts) and 11
+  browser checks of where each tool appears and how it degrades.
+
 **Turning AI on** (one time):
 
 1. Upgrade the AWS account to the Paid plan (Billing console, "Upgrade plan"). The Free plan
