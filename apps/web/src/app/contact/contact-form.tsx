@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { FormStatus, SelectField, TextAreaField, TextField } from '@/components/form-fields';
+import { Honeypot } from '@/components/honeypot';
 import { inquiryTypes } from '@/lib/forms/contact';
 import { initialFormState } from '@/lib/forms/form-state';
 import { submitContact } from './actions';
@@ -11,8 +12,9 @@ export function ContactForm() {
   const common = { state, variant: 'underline' as const };
 
   return (
-    <form action={formAction} noValidate className="space-y-8">
+    <form action={formAction} noValidate className="relative space-y-8">
       <FormStatus state={state} />
+      <Honeypot />
       <div className="grid gap-8 sm:grid-cols-2 sm:gap-4">
         <TextField name="name" label="Name" autoComplete="name" required {...common} />
         <TextField name="company" label="Company" autoComplete="organization" {...common} />
