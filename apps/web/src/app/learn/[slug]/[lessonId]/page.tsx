@@ -103,7 +103,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
                 </form>
               ) : (
                 <a
-                  href={`/auth/signup?returnTo=${encodeURIComponent(lessonHref(lesson))}`}
+                  href={`/sign-up?returnTo=${encodeURIComponent(lessonHref(lesson))}`}
                   className="btn-brand"
                 >
                   Sign up to enroll

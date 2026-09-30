@@ -61,6 +61,12 @@ export function createSessionVerifier({
 
 let verifier: ReturnType<typeof createSessionVerifier> | undefined;
 
+/** Verify an access and ID token pair issued by this app's user pool and client. */
+export function verifyTokens(accessToken: string, idToken: string): Promise<Session | null> {
+  verifier ??= createSessionVerifier(getAuthConfig());
+  return verifier.verify(accessToken, idToken);
+}
+
 /** The signed-in user for this request, or null. Verified on every request. */
 export const getSession = cache(async (): Promise<Session | null> => {
   const jar = await cookies();
@@ -68,8 +74,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   const idToken = jar.get(AUTH_COOKIES.id)?.value;
   // Visitors without tokens never need the auth settings (e.g. pages prerendered at build time).
   if (!accessToken || !idToken) return null;
-  verifier ??= createSessionVerifier(getAuthConfig());
-  return verifier.verify(accessToken, idToken);
+  return verifyTokens(accessToken, idToken);
 });
 
 /** Admins can do everything an instructor can. */
@@ -80,7 +85,7 @@ export function hasRole(session: Session, role: Role): boolean {
 /** For pages that need a signed-in user: sends visitors to sign in, then back here. */
 export async function requireSession(returnTo: string): Promise<Session> {
   const session = await getSession();
-  if (!session) redirect(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
+  if (!session) redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   return session;
 }
 

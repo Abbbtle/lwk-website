@@ -4,8 +4,12 @@ import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-sec
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@/generated/prisma/client';
 
-// Reuse one client across hot reloads in development.
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+// One client per PrismaClient class, reused across hot reloads in development. Keying by class
+// means a regenerated client (new tables or columns) gets a fresh instance, while separate
+// module copies (e.g. pages and route handlers) never close each other's connection pools.
+const globalForPrisma = globalThis as unknown as {
+  prismaClients?: WeakMap<typeof PrismaClient, PrismaClient>;
+};
 
 // How long a fetched password is reused. RDS rotates the master password every 7 days;
 // new connections pick up a rotated password within this window.
@@ -56,14 +60,11 @@ function createAdapter() {
 
 /** Lazily created so importing this module never needs a database (e.g. during `next build`). */
 export function getDb(): PrismaClient {
-  // After `prisma generate` the dev server reloads this module with a new PrismaClient class;
-  // replace the cached client so it knows about new tables and columns.
-  if (globalForPrisma.prisma && !(globalForPrisma.prisma instanceof PrismaClient)) {
-    void (globalForPrisma.prisma as { $disconnect(): Promise<void> }).$disconnect();
-    globalForPrisma.prisma = undefined;
+  globalForPrisma.prismaClients ??= new WeakMap();
+  let client = globalForPrisma.prismaClients.get(PrismaClient);
+  if (!client) {
+    client = new PrismaClient({ adapter: createAdapter() });
+    globalForPrisma.prismaClients.set(PrismaClient, client);
   }
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient({ adapter: createAdapter() });
-  }
-  return globalForPrisma.prisma;
+  return client;
 }
