@@ -95,9 +95,7 @@ export class AppStack extends cdk.Stack {
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       securityGroup: props.securityGroup,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux2023({
-        cpuType: ec2.AmazonLinuxCpuType.ARM_64,
-      }),
+      machineImage: ec2.MachineImage.genericLinux({ [config.region]: config.webServerAmi }),
       role,
       userData,
       userDataCausesReplacement: true,
