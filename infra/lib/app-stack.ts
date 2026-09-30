@@ -111,6 +111,12 @@ export class AppStack extends cdk.Stack {
       ],
     });
 
+    cdk.Validations.of(this.instance).acknowledge({
+      id: 'CloudFormation-Validate::W9010',
+      reason:
+        'The AMI is pinned on purpose (config.webServerAmi) so new images never replace the server.',
+    });
+
     // A fixed address, so the CloudFront origin survives instance replacement.
     const eip = new ec2.CfnEIP(this, 'WebAddress', {
       tags: [{ key: 'Name', value: `lwk-${stage}-web` }],
