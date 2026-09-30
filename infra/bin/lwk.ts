@@ -5,6 +5,7 @@ import { AuthStack } from '../lib/auth-stack';
 import { config, stages } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
+import { MonitoringStack } from '../lib/monitoring-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { StorageStack } from '../lib/storage-stack';
 
@@ -58,7 +59,18 @@ for (const stageConfig of Object.values(stages)) {
     instance: web.instance,
   });
 
-  for (const stack of [auth, storage, network, data, web, deployAccess]) {
+  const monitoring = new MonitoringStack(app, `lwk-${stage}-monitoring`, {
+    ...common,
+    description: `LWK ${stage} - alarms, uptime check and alerts`,
+    instance: web.instance,
+    database: data.database,
+    logGroup: web.logGroup,
+    appUrl: web.appUrl,
+    // Personal address: supplied when deploying (ALERT_EMAIL), not stored in the public repo.
+    alertEmail: process.env.ALERT_EMAIL,
+  });
+
+  for (const stack of [auth, storage, network, data, web, deployAccess, monitoring]) {
     cdk.Tags.of(stack).add('stage', stage);
   }
 }
