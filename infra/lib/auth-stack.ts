@@ -46,6 +46,21 @@ export class AuthStack extends cdk.Stack {
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       // Cognito's built-in email sender (low daily limit) until SES is set up.
       email: cognito.UserPoolEmail.withCognito(),
+      // Used for both the sign-up code and the password reset code.
+      userVerification: {
+        emailStyle: cognito.VerificationEmailStyle.CODE,
+        emailSubject: 'Your Living With Krishna code',
+        emailBody: [
+          '<div style="font-family:Arial,sans-serif;font-size:16px;color:#111">',
+          '<p>Hare Krishna,</p>',
+          '<p>Your Living With Krishna verification code is:</p>',
+          '<p style="font-size:28px;font-weight:bold;letter-spacing:4px;color:#f97316">{####}</p>',
+          '<p>Enter it on the page where you signed up or asked to reset your password.',
+          ' The code expires soon. If you did not request it, you can ignore this email.</p>',
+          '<p>Living With Krishna</p>',
+          '</div>',
+        ].join(''),
+      },
       deletionProtection: true,
       // The pool holds user accounts: never delete it with the stack.
       removalPolicy: cdk.RemovalPolicy.RETAIN,
