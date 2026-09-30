@@ -11,7 +11,8 @@ export const AUTH_COOKIES = {
   transaction: 'lwk_auth_tx',
 } as const;
 
-type ResponseCookies = NextResponse['cookies'];
+/** A response's cookies, or the cookie store of a server action (both can set cookies). */
+type ResponseCookies = Pick<NextResponse['cookies'], 'set'>;
 
 const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // Matches the app client's refresh token validity.
 const TRANSACTION_MAX_AGE = 10 * 60;
@@ -72,13 +73,22 @@ export function readTransaction(value: string | undefined): SignInTransaction | 
   return undefined;
 }
 
+function unverifiedClaims(jwt: string): Record<string, unknown> | undefined {
+  try {
+    return JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
+  } catch {
+    return undefined;
+  }
+}
+
 /** Seconds until a JWT expires, read without verifying it (used only to decide when to refresh). */
 export function secondsUntilExpiry(jwt: string | undefined): number {
-  if (!jwt) return 0;
-  try {
-    const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
-    return typeof payload.exp === 'number' ? payload.exp - Math.floor(Date.now() / 1000) : 0;
-  } catch {
-    return 0;
-  }
+  const exp = jwt ? unverifiedClaims(jwt)?.exp : undefined;
+  return typeof exp === 'number' ? exp - Math.floor(Date.now() / 1000) : 0;
+}
+
+/** The `sub` of a token Cognito has just accepted (never use this to authorize anything). */
+export function unverifiedSubject(jwt: string): string | undefined {
+  const sub = unverifiedClaims(jwt)?.sub;
+  return typeof sub === 'string' ? sub : undefined;
 }

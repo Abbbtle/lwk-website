@@ -4,6 +4,7 @@ import { type FormState, invalid, parseForm } from '@/lib/forms/form-state';
 import { instructorApplicationSchema } from '@/lib/forms/instructor-application';
 import { getSession } from '@/server/auth/session';
 import { ApplicationError, submitInstructorApplication } from '@/server/instructor-applications';
+import { RATE_LIMITS, rateLimit, retryMessage } from '@/server/rate-limit';
 
 export async function submitApplication(_prev: FormState, formData: FormData): Promise<FormState> {
   const session = await getSession();
@@ -13,6 +14,11 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
 
   const { result, values } = parseForm(instructorApplicationSchema, formData);
   if (!result.success) return invalid(result.error, values);
+
+  const limit = await rateLimit(`application:${session.userId}`, RATE_LIMITS.instructorApplication);
+  if (!limit.ok) {
+    return { status: 'invalid', message: retryMessage(limit.retryAfterSeconds), values };
+  }
 
   try {
     await submitInstructorApplication(session.userId, result.data);

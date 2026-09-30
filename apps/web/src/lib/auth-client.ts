@@ -51,10 +51,16 @@ function user(config: CognitoClientConfig, email: string) {
 export function authErrorMessage(error: unknown): string {
   const code = (error as { code?: string; name?: string })?.code ?? (error as Error)?.name;
   switch (code) {
-    case 'NotAuthorizedException':
-      return (error as Error).message?.includes('attempts exceeded')
-        ? 'Too many attempts. Please wait a few minutes and try again.'
-        : 'Incorrect email or password.';
+    case 'NotAuthorizedException': {
+      const message = (error as Error).message ?? '';
+      if (message.includes('attempts exceeded')) {
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      }
+      if (message.includes('disabled')) {
+        return 'This account has been disabled. Please contact support if you think this is a mistake.';
+      }
+      return 'Incorrect email or password.';
+    }
     case 'UserNotFoundException':
       return 'Incorrect email or password.';
     case 'UsernameExistsException':
@@ -62,7 +68,8 @@ export function authErrorMessage(error: unknown): string {
     case 'InvalidPasswordException':
       return 'Choose a password of at least 12 characters with upper and lower case letters and a number.';
     case 'CodeMismatchException':
-      return 'That code is not correct. Check the email and try again.';
+    case 'EnableSoftwareTokenMFAException':
+      return 'That code is not correct. Please check it and try again.';
     case 'ExpiredCodeException':
       return 'That code has expired. Request a new one.';
     case 'LimitExceededException':
@@ -180,6 +187,9 @@ export async function createSession(tokens: Tokens, returnTo: string): Promise<s
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...tokens, returnTo }),
   });
+  if (response.status === 429) {
+    throw Object.assign(new Error('Too many sign-ins'), { code: 'TooManyRequestsException' });
+  }
   if (!response.ok) throw new Error('Session could not be created');
   const { redirectTo } = (await response.json()) as { redirectTo: string };
   return redirectTo;
@@ -191,4 +201,93 @@ export async function createSession(tokens: Tokens, returnTo: string): Promise<s
  */
 export function goAfterSignIn(path: string) {
   window.location.assign(new URL(path, window.location.origin).toString());
+}
+
+// ---- Account security (re-authentication, password, two-step verification) ------------------
+
+/**
+ * Proof that the person at the keyboard knows the password (and code, with two-step on), for
+ * sensitive account changes. Holds a short-lived Cognito session in memory only.
+ */
+export type Reauthenticated = { user: CognitoUser; accessToken: string };
+
+export type ReauthResult =
+  | { kind: 'ok'; session: Reauthenticated }
+  | { kind: 'mfa'; submit: (code: string) => Promise<ReauthResult> };
+
+export function reauthenticate(
+  config: CognitoClientConfig,
+  email: string,
+  password: string,
+): Promise<ReauthResult> {
+  const cognitoUser = user(config, email);
+  return new Promise<ReauthResult>((resolve, reject) => {
+    const callbacks = (done: (r: ReauthResult) => void, fail: (e: unknown) => void) => ({
+      onSuccess: (session: CognitoUserSession) =>
+        done({
+          kind: 'ok',
+          session: { user: cognitoUser, accessToken: session.getAccessToken().getJwtToken() },
+        }),
+      onFailure: fail,
+      totpRequired: () =>
+        done({
+          kind: 'mfa',
+          submit: (code) =>
+            new Promise((ok, err) =>
+              cognitoUser.sendMFACode(code, callbacks(ok, err), 'SOFTWARE_TOKEN_MFA'),
+            ),
+        }),
+      newPasswordRequired: () => fail(new Error('A new password is required. Log in again.')),
+    });
+    cognitoUser.authenticateUser(
+      new AuthenticationDetails({ Username: email.trim().toLowerCase(), Password: password }),
+      callbacks(resolve, reject),
+    );
+  });
+}
+
+export function changePassword(auth: Reauthenticated, oldPassword: string, newPassword: string) {
+  return new Promise<void>((resolve, reject) =>
+    auth.user.changePassword(oldPassword, newPassword, (error) =>
+      error ? reject(error) : resolve(),
+    ),
+  );
+}
+
+/** Start authenticator setup; returns the shared secret to show as a QR code and as text. */
+export function startTotpSetup(auth: Reauthenticated) {
+  return new Promise<string>((resolve, reject) =>
+    auth.user.associateSoftwareToken({
+      associateSecretCode: (secret: string) => resolve(secret),
+      onFailure: reject,
+    }),
+  );
+}
+
+/** Confirm the first code from the authenticator app and make it required at sign-in. */
+export function finishTotpSetup(auth: Reauthenticated, code: string) {
+  return new Promise<void>((resolve, reject) =>
+    auth.user.verifySoftwareToken(code.trim(), 'Authenticator app', {
+      onSuccess: () =>
+        auth.user.setUserMfaPreference(null, { PreferredMfa: true, Enabled: true }, (error) =>
+          error ? reject(error) : resolve(),
+        ),
+      onFailure: reject,
+    }),
+  );
+}
+
+export function turnOffTotp(auth: Reauthenticated) {
+  return new Promise<void>((resolve, reject) =>
+    auth.user.setUserMfaPreference(null, { PreferredMfa: false, Enabled: false }, (error) =>
+      error ? reject(error) : resolve(),
+    ),
+  );
+}
+
+/** The otpauth:// link authenticator apps read from the QR code. */
+export function totpUri(secret: string, email: string) {
+  const issuer = 'Living With Krishna';
+  const label = encodeURIComponent(`${issuer}:${email}`);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
 }

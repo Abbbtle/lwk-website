@@ -7,6 +7,7 @@ import {
   readTransaction,
   setTokenCookies,
 } from '@/server/auth/cookies';
+import { ROLES } from '@/server/auth/session';
 import { recordSignIn } from '@/server/users';
 
 // Cognito redirects here after sign-in. Checks state, nonce and PKCE, exchanges the code for
@@ -43,10 +44,12 @@ export async function GET(request: NextRequest) {
 
   const claims = tokens.claims();
   if (!claims || typeof claims.email !== 'string') return fail('failed');
+  const groups = Array.isArray(claims['cognito:groups']) ? claims['cognito:groups'] : [];
   await recordSignIn({
     id: claims.sub,
     email: claims.email,
     name: typeof claims.name === 'string' ? claims.name : claims.email,
+    roles: ROLES.filter((role) => groups.includes(role)),
   });
 
   const response = NextResponse.redirect(`${appUrl}${tx.returnTo}`, 303);

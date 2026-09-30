@@ -11,6 +11,13 @@ async function getNavUser(): Promise<NavUser | null> {
   const links = [{ href: '/my-learning', label: 'My Learning' }];
   if (hasRole(session, 'instructor')) links.push({ href: '/instructor', label: 'Instructor' });
   if (hasRole(session, 'admin')) links.push({ href: '/admin', label: 'Admin' });
+  if (session.adminNeedsMfa) {
+    links.push({
+      href: '/account/security?required=admin',
+      label: 'Admin (set up two-step verification)',
+    });
+  }
+  links.push({ href: '/account', label: 'Account' });
   return { name: session.name, email: session.email, links };
 }
 

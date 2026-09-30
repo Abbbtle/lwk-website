@@ -1,13 +1,15 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
 
-// Baseline security headers for every response. A Content Security Policy needs per-request
-// nonces for Next.js scripts and is added with the production deployment (Phase 6).
+// Baseline security headers for every response. The Content Security Policy needs a nonce per
+// request, so src/proxy.ts adds it.
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+  // Pages opened from here (or that open us) cannot reach into this window.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
   // Ignored by browsers over plain HTTP (local development).
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
 ];

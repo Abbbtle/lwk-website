@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import type { Session } from './auth/session';
 import * as authoring from './authoring';
 import { getDb } from './db';
+import { testSession } from '../../test/sessions';
 
 afterAll(async () => {
   // Remove courses created here (seeded courses have no owner) so other test files see only
@@ -20,7 +21,7 @@ async function person(roles: Session['roles'], name = 'Person'): Promise<Session
       lastSignInAt: new Date(),
     },
   });
-  return { userId: user.id, email: user.email, name, roles };
+  return testSession(user, roles);
 }
 
 const details = {

@@ -1,8 +1,11 @@
 import 'server-only';
 import type { ApplicationStatus } from '@/generated/prisma/client';
 import type { InstructorApplication as ApplicationInput } from '@/lib/forms/instructor-application';
-import { addUserToGroup } from './cognito';
+import { recordAudit } from './audit';
 import { getDb } from './db';
+import { grantRole } from './user-admin';
+
+type Reviewer = { userId: string; name: string };
 
 export class ApplicationError extends Error {
   constructor(
@@ -71,29 +74,41 @@ async function getPending(id: string) {
 }
 
 /** Grant the instructor role first, so an application is never marked approved without it. */
-export async function approveApplication(id: string, reviewerId: string, note?: string) {
+export async function approveApplication(id: string, reviewer: Reviewer, note?: string) {
   const application = await getPending(id);
-  await addUserToGroup(application.userId, 'instructor');
+  await grantRole(application.userId, 'instructor');
   await getDb().instructorApplication.update({
     where: { id },
     data: {
       status: 'APPROVED',
       reviewNote: note || null,
-      reviewedById: reviewerId,
+      reviewedById: reviewer.userId,
       reviewedAt: new Date(),
     },
   });
+  await recordAudit(reviewer, {
+    action: 'application.approved',
+    target: { type: 'user', id: application.userId },
+    summary: `Approved the instructor application of ${application.fullName}`,
+    details: { applicationId: id },
+  });
 }
 
-export async function rejectApplication(id: string, reviewerId: string, note?: string) {
-  await getPending(id);
+export async function rejectApplication(id: string, reviewer: Reviewer, note?: string) {
+  const application = await getPending(id);
   await getDb().instructorApplication.update({
     where: { id },
     data: {
       status: 'REJECTED',
       reviewNote: note || null,
-      reviewedById: reviewerId,
+      reviewedById: reviewer.userId,
       reviewedAt: new Date(),
     },
+  });
+  await recordAudit(reviewer, {
+    action: 'application.rejected',
+    target: { type: 'user', id: application.userId },
+    summary: `Declined the instructor application of ${application.fullName}`,
+    details: { applicationId: id },
   });
 }

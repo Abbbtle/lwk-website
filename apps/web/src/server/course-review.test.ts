@@ -5,6 +5,7 @@ import * as authoring from './authoring';
 import { getCourse } from './catalog';
 import { publishCourse, returnCourse, unpublishCourse } from './course-review';
 import { getDb } from './db';
+import { testSession } from '../../test/sessions';
 
 afterAll(async () => {
   // Remove courses created here (seeded courses have no owner) so other test files see only
@@ -22,7 +23,7 @@ async function person(roles: Session['roles']): Promise<Session> {
       lastSignInAt: new Date(),
     },
   });
-  return { userId: user.id, email: user.email, name: 'P', roles };
+  return testSession(user, roles);
 }
 
 /** A complete course submitted for review. */
