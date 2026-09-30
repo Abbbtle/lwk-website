@@ -4,6 +4,7 @@ import { HelpPanel } from '@/components/help-panel';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { site } from '@/lib/site';
+import { aiConfig } from '@/server/ai/config';
 import { getSession } from '@/server/auth/session';
 import './globals.css';
 
@@ -37,7 +38,11 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           {children}
         </main>
         <SiteFooter />
-        <HelpPanel signedIn={Boolean(session)} />
+        <HelpPanel
+          signedIn={Boolean(session)}
+          name={session?.name}
+          assistant={aiConfig().enabled}
+        />
       </body>
     </html>
   );
