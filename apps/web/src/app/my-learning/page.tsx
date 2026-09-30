@@ -1,20 +1,31 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CourseCover } from '@/components/course-cover';
+import { GettingStarted } from '@/components/getting-started';
 import { plural } from '@/lib/format';
 import { requireSession } from '@/server/auth/session';
 import { listMyLearning } from '@/server/learning';
+import { learnerChecklist } from '@/server/onboarding';
 
 export const metadata: Metadata = { title: 'My Learning', robots: { index: false } };
 
 export default async function MyLearningPage() {
   const session = await requireSession('/my-learning');
-  const courses = await listMyLearning(session.userId);
+  const [courses, checklist] = await Promise.all([
+    listMyLearning(session.userId),
+    learnerChecklist(session.userId, session.mfaEnabled),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <p className="text-sm font-semibold text-brand uppercase">Hare Krishna, {session.name}</p>
       <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">My Learning</h1>
+
+      {checklist && (
+        <div className="mt-8">
+          <GettingStarted checklist={checklist} />
+        </div>
+      )}
 
       {courses.length === 0 ? (
         <div className="mt-8 bg-white p-10 text-center shadow-md">

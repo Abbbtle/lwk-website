@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
+import { HelpPanel } from '@/components/help-panel';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { site } from '@/lib/site';
+import { getSession } from '@/server/auth/session';
 import './globals.css';
 
 const poppins = Poppins({
@@ -19,13 +21,23 @@ export const metadata: Metadata = {
   description: site.description,
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  const session = await getSession();
   return (
     <html lang="en" className={`${poppins.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans">
+        <a
+          href="#main"
+          className="sr-only z-50 bg-black px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        >
+          Skip to content
+        </a>
         <SiteHeader />
-        <main className="flex-1">{children}</main>
+        <main id="main" className="flex-1">
+          {children}
+        </main>
         <SiteFooter />
+        <HelpPanel signedIn={Boolean(session)} />
       </body>
     </html>
   );

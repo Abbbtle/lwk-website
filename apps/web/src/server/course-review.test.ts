@@ -67,6 +67,15 @@ describe('course review', () => {
 
     // Deciding twice fails instead of silently changing a live course.
     await expect(publishCourse(admin, course.id)).rejects.toMatchObject({ code: 'locked' });
+
+    // The instructor hears about it.
+    const notification = await getDb().notification.findFirst({
+      where: { userId: teacher.userId, kind: 'course.published' },
+    });
+    expect(notification).toMatchObject({
+      title: '"Festival Sweets" is published',
+      href: `/courses/${course.slug}`,
+    });
   });
 
   it('returning requires a note and sends the course back to draft', async () => {
@@ -77,6 +86,11 @@ describe('course review', () => {
       code: 'incomplete',
     });
     await returnCourse(admin, course.id, 'Please add a second recipe.');
+    expect(
+      await getDb().notification.findFirst({
+        where: { userId: teacher.userId, kind: 'course.returned' },
+      }),
+    ).toMatchObject({ body: 'Please add a second recipe.' });
     const back = await authoring.getCourseForEditing(teacher, course.id);
     expect(back).toMatchObject({ status: 'DRAFT', reviewNote: 'Please add a second recipe.' });
     await authoring.addSection(teacher, course.id, 'More recipes'); // editable again

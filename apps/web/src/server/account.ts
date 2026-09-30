@@ -78,12 +78,33 @@ export async function exportAccountData(userId: string) {
       coursesTaught: { select: { title: true, slug: true, status: true, createdAt: true } },
     },
   });
-  const [contactMessages, activity] = await Promise.all([
+  const [contactMessages, activity, supportRequests, notifications] = await Promise.all([
     db.contactMessage.findMany({ where: { email: { equals: user.email, mode: 'insensitive' } } }),
     db.auditEvent.findMany({
       where: { OR: [{ actorId: userId }, { targetType: 'user', targetId: userId }] },
       orderBy: { createdAt: 'asc' },
       select: { action: true, summary: true, actorName: true, createdAt: true },
+    }),
+    db.supportTicket.findMany({
+      where: { requesterId: userId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        number: true,
+        subject: true,
+        category: true,
+        status: true,
+        createdAt: true,
+        messages: {
+          where: { internal: false },
+          orderBy: { createdAt: 'asc' },
+          select: { authorName: true, fromStaff: true, body: true, createdAt: true },
+        },
+      },
+    }),
+    db.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { title: true, body: true, createdAt: true, readAt: true },
     }),
   ]);
   return {
@@ -113,6 +134,8 @@ export async function exportAccountData(userId: string) {
     ),
     coursesTaught: user.coursesTaught,
     contactMessages: contactMessages.map((m) => omit(m, 'id')),
+    supportRequests,
+    notifications,
     accountActivity: activity,
   };
 }
@@ -123,7 +146,7 @@ export async function deletionBlocker(session: Session): Promise<string | null> 
   if (courses > 0) {
     return 'You teach courses on Living With Krishna. Contact support so we can hand them over or remove them before your account is deleted.';
   }
-  if (session.roles.includes('admin') || session.adminNeedsMfa) {
+  if ([...session.roles, ...session.lockedRoles].includes('admin')) {
     // If the admins cannot be counted, assume this is the last one rather than risk a lockout.
     const admins = await countAdmins().catch((error) => {
       console.error('Counting admins failed', error);

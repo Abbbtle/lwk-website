@@ -69,16 +69,17 @@ export function SecuritySettings({
   config,
   email,
   mfaEnabled,
-  isAdmin,
-  adminRequired,
+  isStaff,
+  staffRequired,
   returnTo,
 }: {
   config: CognitoClientConfig;
   email: string;
   mfaEnabled: boolean;
-  isAdmin: boolean;
-  /** Arrived from an admin page that needs two-step verification first. */
-  adminRequired: boolean;
+  /** Holds the admin or support role. */
+  isStaff: boolean;
+  /** Arrived from a staff page that needs two-step verification first. */
+  staffRequired: boolean;
   returnTo: string;
 }) {
   const router = useRouter();
@@ -168,11 +169,11 @@ export function SecuritySettings({
       <>
         Two-step verification is on. We will ask for a code from your authenticator app each time
         you log in.
-        {adminRequired && (
+        {staffRequired && (
           <>
             {' '}
             <Link href={returnTo} className="font-semibold underline">
-              Continue to the admin area
+              Continue where you were going
             </Link>
           </>
         )}
@@ -209,11 +210,12 @@ export function SecuritySettings({
 
   return (
     <div className="space-y-8">
-      {adminRequired && !mfaEnabled && (
+      {staffRequired && !mfaEnabled && (
         <Notice tone="warning">
-          <strong>Admin tools need two-step verification.</strong> Admin accounts can change other
-          people&apos;s access, so they must be protected by a code from an authenticator app as
-          well as a password. Turn it on below; it takes about two minutes.
+          <strong>Admin and support tools need two-step verification.</strong> Staff accounts can
+          see and change other people&apos;s accounts and messages, so they must be protected by a
+          code from an authenticator app as well as a password. Turn it on below; it takes about two
+          minutes.
         </Notice>
       )}
       {done && <Notice tone="success">{done}</Notice>}
@@ -236,7 +238,7 @@ export function SecuritySettings({
           {mfaEnabled
             ? 'When you log in, we ask for your password and a code from your authenticator app.'
             : 'Protect your account with a code from an authenticator app (such as Google Authenticator, Microsoft Authenticator or 1Password) as well as your password.'}
-          {isAdmin && ' Required for admin accounts.'}
+          {isStaff && ' Required for admin and support accounts.'}
         </p>
 
         {flow.name === 'idle' &&
@@ -302,7 +304,7 @@ export function SecuritySettings({
             <h3 className="font-bold">Turn off two-step verification?</h3>
             <p className="text-sm text-gray-700">
               Anyone who learns your password will be able to log in as you.
-              {isAdmin && ' Admin tools will be locked until you turn it on again.'}
+              {isStaff && ' Admin and support tools will be locked until you turn it on again.'}
             </p>
             <AuthError message={error} />
             <div className="flex flex-wrap gap-3">

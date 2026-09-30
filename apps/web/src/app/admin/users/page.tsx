@@ -11,6 +11,7 @@ const filterLabels: Record<UserFilter, string> = {
   all: 'Everyone',
   admin: 'Admins',
   instructor: 'Instructors',
+  support: 'Support staff',
   learner: 'Learners only',
   disabled: 'Disabled',
 };

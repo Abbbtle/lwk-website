@@ -4,6 +4,7 @@ import { countries } from '@/lib/countries';
 import { getSession, hasRole } from '@/server/auth/session';
 import { getLatestApplication } from '@/server/instructor-applications';
 import { InstructorForm } from './instructor-form';
+import { HelpLink } from '@/components/help-link';
 
 export const metadata: Metadata = {
   title: 'Become an Instructor',
@@ -51,8 +52,8 @@ export default async function BecomeAnInstructorPage() {
       <Notice>
         <p className="text-lg font-semibold">Your application is under review.</p>
         <p className="text-gray-700">
-          Submitted on {latest.createdAt.toLocaleDateString('en-GB', { dateStyle: 'long' })}. We
-          will be in touch by email.
+          Submitted on {latest.createdAt.toLocaleDateString('en-GB', { dateStyle: 'long' })}. You
+          will get a notification in your account when an admin has decided.
         </p>
       </Notice>
     );
@@ -80,6 +81,9 @@ export default async function BecomeAnInstructorPage() {
       <p className="mx-auto mt-8 max-w-2xl text-center text-lg">
         We are looking for passionate and knowledgeable instructors from around the world. Fill out
         the form below to get started.
+      </p>
+      <p className="mt-4 text-center">
+        <HelpLink slug="becoming-an-instructor">How applying works</HelpLink>
       </p>
       <div className="mt-10">{content}</div>
     </div>

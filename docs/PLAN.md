@@ -381,8 +381,8 @@ Status: DONE (the infrastructure part is deployed separately, see below).
   before `sessions_valid_after` (sign-out everywhere, disabled account) are rejected. Role
   grants no longer wait for the 15-minute token refresh.
 - Admins must use two-step verification (authenticator app): without it the admin role is
-  held but locked, and admin pages send them to set it up. Only turned off with
-  `REQUIRE_ADMIN_MFA=false` for local experiments.
+  held but locked, and admin pages send them to set it up (Phase 9 extends this to the
+  support role; `REQUIRE_STAFF_MFA=false` turns it off for local experiments only).
 - Admin area: Users (search, filters, detail page with roles, disable/enable, sign out
   everywhere, reset two-step verification; guards against removing your own admin role or
   the last admin) and an append-only Activity log (`audit_events`) covering role and
@@ -431,6 +431,44 @@ Status: DONE.
   formatted articles and lessons, the catalogue move, free course page, publishing a PDF and
   a video with real S3 uploads, public API, phone layout, removing samples, deleting files,
   no CSP violations); test data removed.
+
+**Phase 9 - Help and support**
+Help wherever people are, and a person when they need one.
+
+Status: DONE (the `support` Cognito group is deployed with the auth stack, see below).
+
+- Help centre (`/help`): 27 short articles in `src/content/help.ts` (reviewed like code),
+  grouped in six topics, with search (`src/lib/help.ts`), related articles and "Was this
+  helpful?" feedback (`help_feedback`; the support inbox shows the least helpful articles and
+  what people were looking for). Staff-only articles are hidden from others.
+- Help panel on every page (the Help button): articles about the current page (each article
+  lists the paths it covers), instant search, popular questions, and links to the help
+  centre, "Report a problem" (prefilled category and page) and "Contact support". The AI
+  assistant joins this panel in Phase 10.
+- Support requests (`support_tickets`, `support_messages`; references start at #1001):
+  people choose a category and describe the problem, see matching articles while typing,
+  and follow the conversation at `/support`. Staff work from Admin > Support: views (open,
+  waiting for them, assigned to me, resolved, closed), search by number, subject, name or
+  email, replies (with templates) that notify the person, internal notes, status, priority
+  and assignment. A reply from the person reopens the request.
+- New `support` role (Cognito group, precedence 15): the support inbox without the rest of
+  the admin area. Admin and support are staff roles and both require two-step verification
+  (`REQUIRE_STAFF_MFA=false` turns this off for local experiments only).
+- In-app notifications (`notifications`, the bell in the header and `/notifications`):
+  support replies and resolutions, instructor application decisions, course published /
+  returned / unpublished, roles given or removed, requests assigned to staff.
+- Getting-started checklists worked out from real progress, for learners (My Learning),
+  instructors (dashboard) and admins (overview); each can be hidden (`users.dismissed_tips`).
+- Contextual help links in the lesson player, course editor, instructor dashboard and
+  application page; a skip-to-content link; the contact form can open with Feedback chosen.
+- Account export includes support requests and notifications; deleting an account deletes
+  its requests.
+- Verified in headless Chrome (23 checks: help panel suggestions and search, help centre and
+  feedback, checklist, reporting a problem with suggestions, staff reply and internal note,
+  notification bell and read state, reopening and resolving, phone layout, no CSP
+  violations); test data removed.
+- Deploy: `npx cdk deploy lwk-dev-auth --exclusively` (adds the `support` group). Until then
+  the Support role cannot be given; admins can already answer requests.
 
 **Roadmap after UAT started (Sept 2026)**
 

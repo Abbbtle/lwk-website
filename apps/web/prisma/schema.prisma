@@ -1,6 +1,6 @@
 // Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
 // enrollments and progress (Phase 5), account security and audit log (Phase 7),
-// free resources for Explore (Phase 8).
+// free resources for Explore (Phase 8), help and support (Phase 9).
 
 generator client {
   provider = "prisma-client"
@@ -139,6 +139,8 @@ model User {
   mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
   // Set while an admin has disabled the account (Cognito refuses sign-in too).
   disabledAt         DateTime? @map("disabled_at")
+  // Getting-started checklists and tips the user chose to hide (e.g. "learner-start").
+  dismissedTips      String[]  @default([]) @map("dismissed_tips")
 
   coursesTaught          Course[]                @relation("taught")
   enrollments            Enrollment[]
@@ -147,6 +149,11 @@ model User {
   reviewedApplications   InstructorApplication[] @relation("reviewer")
   auditEvents            AuditEvent[]            @relation("actor")
   resourcesCreated       Resource[]              @relation("resourceCreator")
+  supportRequests        SupportTicket[]         @relation("requester")
+  assignedTickets        SupportTicket[]         @relation("assignee")
+  supportMessages        SupportMessage[]
+  notifications          Notification[]
+  helpFeedback           HelpFeedback[]
 
   @@index([email])
   @@map("users")
@@ -325,4 +332,105 @@ model Resource {
   @@index([status, publishedAt])
   @@index([categoryId])
   @@map("resources")
+}
+
+enum TicketStatus {
+  OPEN
+  // Waiting for the person who asked.
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketCategory {
+  ACCOUNT
+  LEARNING
+  TEACHING
+  TECHNICAL
+  FEEDBACK
+  OTHER
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// A support request from a signed-in person, answered by admins and support staff in-app.
+model SupportTicket {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  // Short reference shown to people ("#1001").
+  number         Int              @unique @default(autoincrement())
+  requesterId    String           @map("requester_id") @db.Uuid
+  requester      User             @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  subject        String
+  category       TicketCategory
+  status         TicketStatus     @default(OPEN)
+  priority       TicketPriority   @default(NORMAL)
+  // Where the person was when they asked, and their browser, for technical problems.
+  pageUrl        String?          @map("page_url")
+  userAgent      String?          @map("user_agent")
+  assigneeId     String?          @map("assignee_id") @db.Uuid
+  assignee       User?            @relation("assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages       SupportMessage[]
+  lastActivityAt DateTime         @default(now()) @map("last_activity_at")
+  resolvedAt     DateTime?        @map("resolved_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@index([status, lastActivityAt])
+  @@index([requesterId, lastActivityAt])
+  @@index([assigneeId])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  ticketId   String        @map("ticket_id") @db.Uuid
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   String?       @map("author_id") @db.Uuid
+  author     User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  // Kept if the author's account is deleted.
+  authorName String        @map("author_name")
+  fromStaff  Boolean       @map("from_staff")
+  // Internal notes are only shown to staff.
+  internal   Boolean       @default(false)
+  body       String
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
+}
+
+// In-app notifications (the bell). Email follows once outgoing email is set up.
+model Notification {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Dotted kind, e.g. "support.reply", for icons and later email preferences.
+  kind      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+// "Was this article helpful?" answers, to improve the help centre.
+model HelpFeedback {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  articleSlug String   @map("article_slug")
+  helpful     Boolean
+  comment     String?
+  userId      String?  @map("user_id") @db.Uuid
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([articleSlug, createdAt])
+  @@map("help_feedback")
 }

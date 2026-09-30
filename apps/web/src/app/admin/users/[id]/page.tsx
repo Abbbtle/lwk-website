@@ -16,6 +16,7 @@ const roleHelp: Record<(typeof ROLES)[number], string> = {
   admin:
     'Full access: users, reviews, applications and messages. Needs two-step verification to use.',
   instructor: 'Can create courses and submit them for review.',
+  support: 'Can answer support requests in the admin area. Needs two-step verification to use.',
 };
 
 const dateTime = (date: Date) =>

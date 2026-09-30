@@ -4,6 +4,7 @@ import { MainNav, type NavUser } from '@/components/main-nav';
 import { SearchBar } from '@/components/search-bar';
 import { site } from '@/lib/site';
 import { getSession, hasRole } from '@/server/auth/session';
+import { unreadCount } from '@/server/notifications';
 
 async function getNavUser(): Promise<NavUser | null> {
   const session = await getSession();
@@ -11,14 +12,25 @@ async function getNavUser(): Promise<NavUser | null> {
   const links = [{ href: '/my-learning', label: 'My Learning' }];
   if (hasRole(session, 'instructor')) links.push({ href: '/instructor', label: 'Instructor' });
   if (hasRole(session, 'admin')) links.push({ href: '/admin', label: 'Admin' });
-  if (session.adminNeedsMfa) {
+  else if (hasRole(session, 'support'))
+    links.push({ href: '/admin/support', label: 'Support inbox' });
+  if (session.lockedRoles.length > 0) {
     links.push({
-      href: '/account/security?required=admin',
-      label: 'Admin (set up two-step verification)',
+      href: '/account/security?required=staff',
+      label: 'Staff tools (set up two-step verification)',
     });
   }
-  links.push({ href: '/account', label: 'Account' });
-  return { name: session.name, email: session.email, links };
+  links.push(
+    { href: '/notifications', label: 'Notifications' },
+    { href: '/support', label: 'Help & support' },
+    { href: '/account', label: 'Account' },
+  );
+  return {
+    name: session.name,
+    email: session.email,
+    links,
+    unread: await unreadCount(session.userId),
+  };
 }
 
 export async function SiteHeader() {

@@ -7,8 +7,11 @@ import { inquiryTypes } from '@/lib/forms/contact';
 import { initialFormState } from '@/lib/forms/form-state';
 import { submitContact } from './actions';
 
-export function ContactForm() {
-  const [state, formAction, pending] = useActionState(submitContact, initialFormState);
+export function ContactForm({ inquiryType }: { inquiryType?: string }) {
+  const [state, formAction, pending] = useActionState(submitContact, {
+    ...initialFormState,
+    values: inquiryType ? { inquiryType } : undefined,
+  });
   const common = { state, variant: 'underline' as const };
 
   return (

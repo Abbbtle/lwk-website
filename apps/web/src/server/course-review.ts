@@ -3,6 +3,7 @@ import { recordAudit } from './audit';
 import { hasRole, type Session } from './auth/session';
 import { AuthoringError } from './authoring';
 import { getDb } from './db';
+import { notify } from './notifications';
 
 // Admin decisions on submitted courses.
 
@@ -29,7 +30,12 @@ async function transition(
   courseId: string,
   from: 'IN_REVIEW' | 'PUBLISHED',
   data: Parameters<ReturnType<typeof getDb>['course']['update']>[0]['data'],
-  audit: { action: string; verb: string; note?: string },
+  audit: {
+    action: string;
+    verb: string;
+    note?: string;
+    tell?: 'published' | 'returned' | 'unpublished';
+  },
 ) {
   assertAdmin(session);
   // Conditional update: only succeeds if the course is still in the expected state.
@@ -42,8 +48,26 @@ async function transition(
   }
   const course = await getDb().course.findUnique({
     where: { id: courseId },
-    select: { title: true },
+    select: { title: true, slug: true, instructorId: true },
   });
+  if (course?.instructorId && audit.tell) {
+    const messages = {
+      published: { title: `"${course.title}" is published`, href: `/courses/${course.slug}` },
+      returned: {
+        title: `"${course.title}" needs changes before publishing`,
+        href: `/instructor/courses/${courseId}`,
+      },
+      unpublished: {
+        title: `"${course.title}" was unpublished`,
+        href: `/instructor/courses/${courseId}`,
+      },
+    };
+    await notify(course.instructorId, {
+      kind: `course.${audit.tell}`,
+      ...messages[audit.tell],
+      body: audit.note,
+    });
+  }
   await recordAudit(
     { userId: session.userId, name: session.name },
     {
@@ -62,7 +86,7 @@ export async function publishCourse(session: Session, courseId: string) {
     courseId,
     'IN_REVIEW',
     { status: 'PUBLISHED', reviewNote: null, publishedAt: course?.publishedAt ?? new Date() },
-    { action: 'course.published', verb: 'Published' },
+    { action: 'course.published', verb: 'Published', tell: 'published' },
   );
 }
 
@@ -73,7 +97,12 @@ export async function returnCourse(session: Session, courseId: string, note: str
     courseId,
     'IN_REVIEW',
     { status: 'DRAFT', reviewNote: note.trim(), submittedAt: null },
-    { action: 'course.returned', verb: 'Returned for changes', note: note.trim() },
+    {
+      action: 'course.returned',
+      verb: 'Returned for changes',
+      note: note.trim(),
+      tell: 'returned',
+    },
   );
 }
 
@@ -84,6 +113,11 @@ export async function unpublishCourse(session: Session, courseId: string, note?:
     courseId,
     'PUBLISHED',
     { status: 'DRAFT', reviewNote: note?.trim() || null, submittedAt: null },
-    { action: 'course.unpublished', verb: 'Unpublished', note: note?.trim() || undefined },
+    {
+      action: 'course.unpublished',
+      verb: 'Unpublished',
+      note: note?.trim() || undefined,
+      tell: 'unpublished',
+    },
   );
 }

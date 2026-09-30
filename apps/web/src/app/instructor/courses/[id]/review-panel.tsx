@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { type ReviewState, submitForReview, withdrawSubmission } from '../../actions';
+import { HelpLink } from '@/components/help-link';
 
 export function ReviewPanel({
   courseId,
@@ -81,6 +82,7 @@ export function ReviewPanel({
           This course is live. Contact an admin if it needs changes.
         </p>
       )}
+      <HelpLink slug="submitting-for-review">How reviews work</HelpLink>
     </div>
   );
 }

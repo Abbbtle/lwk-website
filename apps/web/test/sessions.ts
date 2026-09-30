@@ -12,6 +12,6 @@ export function testSession(
     roles,
     issuedAt: Math.floor(Date.now() / 1000),
     mfaEnabled: true,
-    adminNeedsMfa: false,
+    lockedRoles: [],
   };
 }

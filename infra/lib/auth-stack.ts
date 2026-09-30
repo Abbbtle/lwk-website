@@ -79,6 +79,12 @@ export class AuthStack extends cdk.Stack {
       description: 'Approved course instructors',
       precedence: 20,
     });
+    new cognito.CfnUserPoolGroup(this, 'SupportGroup', {
+      userPoolId: userPool.userPoolId,
+      groupName: 'support',
+      description: 'Support staff who answer support requests',
+      precedence: 15,
+    });
 
     const domain = userPool.addDomain('Domain', {
       cognitoDomain: { domainPrefix: authDomainPrefix },

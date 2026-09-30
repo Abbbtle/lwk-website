@@ -7,7 +7,7 @@ import { getDb } from '../db';
 import { getAuthConfig } from './config';
 import { AUTH_COOKIES } from './cookies';
 
-export const ROLES = ['admin', 'instructor'] as const;
+export const ROLES = ['admin', 'instructor', 'support'] as const;
 export type Role = (typeof ROLES)[number];
 
 /** What a verified token pair says about the user. */
@@ -21,14 +21,17 @@ export type TokenIdentity = {
   issuedAt: number;
 };
 
+/** Roles that act on other people's accounts and data; they require two-step verification. */
+export const STAFF_ROLES: readonly Role[] = ['admin', 'support'];
+
 export type Session = TokenIdentity & {
   /** Two-step verification (authenticator app) is on. */
   mfaEnabled: boolean;
   /**
-   * The user is an admin but has not turned on two-step verification yet. Admin tools stay
-   * locked (the admin role is left out of `roles`) until they do.
+   * Staff roles the user holds but cannot use until they turn on two-step verification. They
+   * are left out of `roles` meanwhile.
    */
-  adminNeedsMfa: boolean;
+  lockedRoles: Role[];
 };
 
 type Jwks = Parameters<ReturnType<typeof CognitoJwtVerifier.create>['cacheJwks']>[0];
@@ -138,7 +141,7 @@ const epochSeconds = (date: Date) => Math.floor(date.getTime() / 1000);
 export function applyAccountState(
   identity: TokenIdentity,
   account: AccountState | null,
-  { requireAdminMfa }: { requireAdminMfa: boolean },
+  { requireStaffMfa }: { requireStaffMfa: boolean },
 ): Session | null {
   if (account?.disabledAt) return null;
   if (account?.sessionsValidAfter && identity.issuedAt < epochSeconds(account.sessionsValidAfter)) {
@@ -149,18 +152,19 @@ export function applyAccountState(
       ? ROLES.filter((role) => account.roles.includes(role))
       : identity.roles;
   const mfaEnabled = account?.mfaEnabled ?? false;
-  const adminNeedsMfa = requireAdminMfa && roles.includes('admin') && !mfaEnabled;
+  const lockedRoles =
+    requireStaffMfa && !mfaEnabled ? roles.filter((role) => STAFF_ROLES.includes(role)) : [];
   return {
     ...identity,
-    roles: adminNeedsMfa ? roles.filter((role) => role !== 'admin') : roles,
+    roles: roles.filter((role) => !lockedRoles.includes(role)),
     mfaEnabled,
-    adminNeedsMfa,
+    lockedRoles,
   };
 }
 
-/** Admins must use two-step verification. Only turned off for local experiments. */
-export function adminMfaRequired() {
-  return process.env.REQUIRE_ADMIN_MFA !== 'false';
+/** Staff must use two-step verification. Only turned off for local experiments. */
+export function staffMfaRequired() {
+  return process.env.REQUIRE_STAFF_MFA !== 'false';
 }
 
 /** The signed-in user for this request, or null. Verified on every request. */
@@ -182,10 +186,10 @@ export const getSession = cache(async (): Promise<Session | null> => {
       disabledAt: true,
     },
   });
-  return applyAccountState(identity, account, { requireAdminMfa: adminMfaRequired() });
+  return applyAccountState(identity, account, { requireStaffMfa: staffMfaRequired() });
 });
 
-/** Admins can do everything an instructor can. */
+/** Admins can do everything instructors and support staff can. */
 export function hasRole(session: Session, role: Role): boolean {
   return session.roles.includes('admin') || session.roles.includes(role);
 }
@@ -199,12 +203,12 @@ export async function requireSession(returnTo: string): Promise<Session> {
 
 /**
  * For role-restricted pages: users without the role get a 404, so the page's existence isn't
- * revealed. Admins without two-step verification are sent to set it up first.
+ * revealed. Staff without two-step verification are sent to set it up first.
  */
 export async function requireRole(role: Role, returnTo: string): Promise<Session> {
   const session = await requireSession(returnTo);
-  if (session.adminNeedsMfa && !hasRole(session, role)) {
-    redirect(`/account/security?required=admin&returnTo=${encodeURIComponent(returnTo)}`);
+  if (session.lockedRoles.length > 0 && !hasRole(session, role)) {
+    redirect(`/account/security?required=staff&returnTo=${encodeURIComponent(returnTo)}`);
   }
   if (!hasRole(session, role)) notFound();
   return session;

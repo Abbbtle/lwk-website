@@ -16,7 +16,9 @@ export default async function ProfilePage() {
   const roles = [
     'Learner',
     ...session.roles.map((role) => ROLE_LABELS[role]),
-    ...(session.adminNeedsMfa ? ['Admin (locked until two-step verification is on)'] : []),
+    ...session.lockedRoles.map(
+      (role) => `${ROLE_LABELS[role]} (locked until two-step verification is on)`,
+    ),
   ];
 
   return (
