@@ -27,6 +27,10 @@ export const courseDetailsSchema = z.object({
   categorySlug: slug,
   level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED'], { error: 'Choose a level.' }),
   instructorName: requiredText('Instructor name', 120),
+  isFree: z
+    .string()
+    .optional()
+    .transform((v) => v === 'on'),
   // One outcome per line in the form.
   outcomes: z
     .string()

@@ -22,3 +22,9 @@ export function plural(count: number, noun: string): string {
 export function joinParts(parts: (string | null | false | undefined)[]): string {
   return parts.filter(Boolean).join(' · ');
 }
+
+/** Rough reading time of a text in minutes (200 words a minute, at least 1). */
+export function readingMinutes(text: string): number {
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}

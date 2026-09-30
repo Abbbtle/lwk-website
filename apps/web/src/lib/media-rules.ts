@@ -7,6 +7,12 @@ export const MEDIA_RULES = {
     maxBytes: 2 * 1024 ** 3,
     accept: 'video/mp4,video/webm,video/quicktime',
   },
+  audio: {
+    label: 'recording',
+    types: ['audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'],
+    maxBytes: 500 * 1024 ** 2,
+    accept: 'audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,.mp3,.m4a,.ogg',
+  },
   pdf: {
     label: 'PDF',
     types: ['application/pdf'],
@@ -27,6 +33,10 @@ export const EXTENSIONS: Record<string, string> = {
   'video/mp4': 'mp4',
   'video/webm': 'webm',
   'video/quicktime': 'mov',
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/x-m4a': 'm4a',
+  'audio/ogg': 'ogg',
   'application/pdf': 'pdf',
   'image/jpeg': 'jpg',
   'image/png': 'png',

@@ -36,6 +36,7 @@ async function submittedCourse(teacher: Session, title: string) {
     categorySlug: 'prasadam',
     level: 'BEGINNER',
     instructorName: 'Teacher',
+    isFree: false,
     outcomes: ['Cook'],
   });
   await authoring.addSection(teacher, course.id, 'Section');
@@ -98,6 +99,7 @@ describe('course review', () => {
       categorySlug: 'prasadam',
       level: 'BEGINNER',
       instructorName: 'Teacher',
+      isFree: false,
       outcomes: ['Cook'],
     });
     expect((await authoring.getCourseForEditing(teacher, course.id)).slug).toBe(course.slug);

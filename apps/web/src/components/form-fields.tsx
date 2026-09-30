@@ -122,6 +122,39 @@ export function SelectField({
   );
 }
 
+/** A yes/no option; submits "on" when ticked (like any checkbox). */
+export function CheckboxField({
+  name,
+  label,
+  hint,
+  state,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  state: FormState;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <input
+        type="checkbox"
+        name={name}
+        defaultChecked={state.values?.[name] === 'on'}
+        aria-describedby={hint ? `${name}-hint` : undefined}
+        className="mt-1 size-4 accent-black"
+      />
+      <span>
+        <span className="font-medium">{label}</span>
+        {hint && (
+          <span id={`${name}-hint`} className="block text-sm text-gray-500">
+            {hint}
+          </span>
+        )}
+      </span>
+    </label>
+  );
+}
+
 export function FormStatus({ state }: { state: FormState }) {
   if (state.status === 'idle') return <div aria-live="polite" />;
   const tone =

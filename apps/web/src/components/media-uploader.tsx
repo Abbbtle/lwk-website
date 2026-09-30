@@ -8,20 +8,20 @@ import { checkFile, formatBytes, MEDIA_RULES, type MediaKind } from '@/lib/media
 type Ticket = { url: string; fields: Record<string, string>; key: string };
 type Failure = { error: string };
 
-/** Read a video's length in the browser, so the lesson shows its duration. */
-function videoDuration(file: File): Promise<number | undefined> {
+/** Read a video's or recording's length in the browser, so it can be shown. */
+function mediaDuration(file: File, kind: 'video' | 'audio'): Promise<number | undefined> {
   return new Promise((resolve) => {
-    const video = document.createElement('video');
+    const media = document.createElement(kind);
     const url = URL.createObjectURL(file);
     const done = (value?: number) => {
       URL.revokeObjectURL(url);
       resolve(value);
     };
-    video.preload = 'metadata';
-    video.onloadedmetadata = () =>
-      done(Number.isFinite(video.duration) ? video.duration : undefined);
-    video.onerror = () => done(undefined);
-    video.src = url;
+    media.preload = 'metadata';
+    media.onloadedmetadata = () =>
+      done(Number.isFinite(media.duration) ? media.duration : undefined);
+    media.onerror = () => done(undefined);
+    media.src = url;
   });
 }
 
@@ -67,7 +67,8 @@ export function MediaUploader({
 
     setProgress(0);
     try {
-      const duration = kind === 'video' ? await videoDuration(file) : undefined;
+      const duration =
+        kind === 'video' || kind === 'audio' ? await mediaDuration(file, kind) : undefined;
       const ticket = await requestUpload({ contentType: file.type, size: file.size });
       if ('error' in ticket) throw new Error(ticket.error);
       await uploadToS3(ticket, file, setProgress);

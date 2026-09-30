@@ -61,6 +61,8 @@ async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
     previewLessonId: row.sections.flatMap((s) => s.lessons).find((l) => l.isPreview)?.id ?? null,
     lessonCount: sections.reduce((sum, s) => sum + s.lessonCount, 0),
     durationMinutes: sections.reduce((sum, s) => sum + s.durationMinutes, 0),
+    isFree: row.isFree,
+    isSample: row.isSample,
   };
 }
 
@@ -81,12 +83,14 @@ export async function getCategory(slug: string): Promise<Category | undefined> {
 export async function searchCourses({
   query,
   category,
-}: { query?: string; category?: string } = {}): Promise<CourseSummary[]> {
+  free,
+}: { query?: string; category?: string; free?: boolean } = {}): Promise<CourseSummary[]> {
   const terms = (query ?? '').split(/\s+/).filter(Boolean).slice(0, 10);
   const rows = await getDb().course.findMany({
     where: {
       ...published,
       ...(category && { category: { slug: category } }),
+      ...(free && { isFree: true }),
       AND: terms.map((term) => ({
         OR: [
           { title: { contains: term, mode: 'insensitive' } },
