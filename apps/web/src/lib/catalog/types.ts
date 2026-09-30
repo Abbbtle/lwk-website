@@ -36,4 +36,8 @@ export type CourseSummary = Course & {
   coverUrl: string | null;
   /** First free-preview lesson, if any. */
   previewLessonId: string | null;
+  /** Free for everyone (listed in Explore). */
+  isFree: boolean;
+  /** Sample content for testing. */
+  isSample: boolean;
 };

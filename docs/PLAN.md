@@ -402,6 +402,36 @@ Status: DONE (the infrastructure part is deployed separately, see below).
   (secret, CloudFront header and origin request policy, IAM). Safe before or after the app
   release: the app only checks the header once `ORIGIN_SECRET_ARN` is in Parameter Store.
 
+**Phase 8 - Explore: free content**
+A free-content hub, as the POC's Explore link intended, with admin tools and sample content
+for UAT.
+
+Status: DONE.
+
+- `/explore`: free courses plus free resources (videos, audio, articles, PDFs) open to
+  everyone without signing in; search, type and category filters, rows for Free courses /
+  Watch / Listen / Read, empty rows hidden. Resource pages (`/explore/<slug>`) play video
+  and audio, show PDFs inline or render articles, with related content.
+- The full course catalogue moved from `/explore` to `/courses` (header search, category
+  links and the home page point there) with a "Free courses only" filter. Main menu: Explore,
+  Courses, Categories, Plans & Pricing, Become an Instructor, Contact.
+- Courses have `is_free` (instructors tick "Offer this course for free"; the admin review
+  shows it) and free courses say "Free for everyone". Resources are a new `resources` table
+  managed by admins in Admin > Explore (draft, uploads straight to S3 under `resources/`,
+  publish checklist, unpublish, delete with files). Audio uploads (MP3, M4A, OGG, 500 MB)
+  were added to the media rules. `GET /api/v1/resources` and `/api/v1/resources/:slug`.
+- Text lessons, course descriptions and articles use a small safe Markdown subset
+  (`src/components/rich-text.tsx`: headings, lists, quotes, code, bold, italics, links to
+  web addresses or site pages); it builds React elements, so text cannot inject HTML.
+- Sample content for UAT (`src/server/sample-content.ts`): four short text courses (two
+  free) and four articles, taught by "LWK Team" and marked "Sample" wherever they appear.
+  Admins load or remove all of it in Admin > Explore; `SAMPLE_CONTENT=off` disables the
+  tool (set it for production).
+- Verified in headless Chrome (27 checks: empty state, loading samples, filters and search,
+  formatted articles and lessons, the catalogue move, free course page, publishing a PDF and
+  a video with real S3 uploads, public API, phone layout, removing samples, deleting files,
+  no CSP violations); test data removed.
+
 **Roadmap after UAT started (Sept 2026)**
 
 Friends are testing on the dev site. The remaining work is delivered in stages, one pull

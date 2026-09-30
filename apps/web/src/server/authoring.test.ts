@@ -31,6 +31,7 @@ const details = {
   categorySlug: 'vaisnava-etiquette',
   level: 'BEGINNER' as const,
   instructorName: 'Japa Teacher',
+  isFree: false,
   outcomes: ['Chant sixteen rounds steadily'],
 };
 
@@ -59,6 +60,7 @@ describe('course authoring', () => {
       status: 'DRAFT',
       instructorId: teacher.userId,
       instructorName: 'Teacher One',
+      isFree: false,
     });
     // "kirtan-basics" is taken by the sample catalogue.
     expect(a.slug).toBe('kirtan-basics-2');

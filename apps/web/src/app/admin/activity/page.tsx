@@ -11,6 +11,7 @@ const categories = [
   { prefix: 'user.', label: 'Accounts and roles' },
   { prefix: 'course.', label: 'Course reviews' },
   { prefix: 'application.', label: 'Instructor applications' },
+  { prefix: 'resource.', label: 'Free resources' },
   { prefix: 'account.', label: 'Self-service changes' },
 ];
 
@@ -20,6 +21,7 @@ function targetLink(type: string, id: string | null) {
   if (!id) return null;
   if (type === 'user') return `/admin/users/${id}`;
   if (type === 'course') return `/admin/courses/${id}`;
+  if (type === 'resource') return `/admin/explore/${id}`;
   return null;
 }
 

@@ -176,6 +176,7 @@ export async function updateCourseDetails(
       outcomes: input.outcomes,
       level: input.level,
       instructorName: input.instructorName,
+      isFree: input.isFree,
       categoryId: await categoryId(input.categorySlug),
     },
   });

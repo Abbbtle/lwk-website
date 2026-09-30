@@ -17,13 +17,19 @@ export default async function MyLearningPage() {
       <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">My Learning</h1>
 
       {courses.length === 0 ? (
-        <div className="mt-8 bg-surface p-10 text-center">
+        <div className="mt-8 bg-white p-10 text-center shadow-md">
           <p className="text-lg text-gray-700">
-            You have not enrolled in a course yet. Courses are free during early access.
+            You have not enrolled in a course yet. Start with a free course, or browse the
+            catalogue: every course is free during early access.
           </p>
-          <Link href="/explore" className="btn-solid mt-6">
-            Explore courses
-          </Link>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/explore?type=courses" className="btn-solid">
+              Free courses
+            </Link>
+            <Link href="/courses" className="btn-outline">
+              Browse all courses
+            </Link>
+          </div>
         </div>
       ) : (
         <ul className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">

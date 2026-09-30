@@ -53,6 +53,12 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
               {course.category.name} · {levelOptions.find((l) => l.value === course.level)?.label} ·
               taught by {course.instructorName}
             </p>
+            {course.isFree && (
+              <p className="border-l-4 border-brand bg-orange-50 p-3 text-sm">
+                The instructor offers this course <strong>for free</strong>: once published it is
+                listed in Explore and stays free for everyone.
+              </p>
+            )}
             <p className="whitespace-pre-line">{course.description}</p>
             {course.outcomes.length > 0 && (
               <ul className="grid gap-2 sm:grid-cols-2">

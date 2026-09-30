@@ -1,5 +1,6 @@
 // Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
-// enrollments and progress (Phase 5), account security and audit log.
+// enrollments and progress (Phase 5), account security and audit log (Phase 7),
+// free resources for Explore (Phase 8).
 
 generator client {
   provider = "prisma-client"
@@ -30,15 +31,16 @@ enum LessonType {
 }
 
 model Category {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  slug        String   @unique
+  id          String     @id @default(uuid(7)) @db.Uuid
+  slug        String     @unique
   name        String
   headline    String
   description String
   position    Int
   courses     Course[]
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  resources   Resource[]
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
   @@map("categories")
 }
@@ -62,6 +64,10 @@ model Course {
   currency       String       @default("USD") @db.Char(3)
   // S3 key of the cover image, if uploaded.
   coverKey       String?      @map("cover_key")
+  // Free for everyone, also once paid plans exist; listed in Explore.
+  isFree         Boolean      @default(false) @map("is_free")
+  // Sample content for testing, removed in one step before launch.
+  isSample       Boolean      @default(false) @map("is_sample")
   categoryId     String       @map("category_id") @db.Uuid
   category       Category     @relation(fields: [categoryId], references: [id])
   sections       Section[]
@@ -76,6 +82,7 @@ model Course {
   @@index([categoryId])
   @@index([status])
   @@index([instructorId])
+  @@index([isFree, status])
   @@map("courses")
 }
 
@@ -139,6 +146,7 @@ model User {
   instructorApplications InstructorApplication[] @relation("applicant")
   reviewedApplications   InstructorApplication[] @relation("reviewer")
   auditEvents            AuditEvent[]            @relation("actor")
+  resourcesCreated       Resource[]              @relation("resourceCreator")
 
   @@index([email])
   @@map("users")
@@ -273,4 +281,48 @@ model RateLimit {
 
   @@index([resetAt])
   @@map("rate_limits")
+}
+
+enum ResourceType {
+  VIDEO
+  AUDIO
+  ARTICLE
+  PDF
+}
+
+enum ResourceStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// Free content in Explore (a single video, recording, article or PDF), open to everyone.
+// Managed by admins.
+model Resource {
+  id              String         @id @default(uuid(7)) @db.Uuid
+  slug            String         @unique
+  title           String
+  // One or two sentences for cards and search results.
+  summary         String
+  type            ResourceType
+  // Article text (simple Markdown); for other types an optional description.
+  body            String         @default("")
+  // S3 key of the video, audio or PDF file.
+  mediaKey        String?        @map("media_key")
+  durationSeconds Int            @default(0) @map("duration_seconds")
+  coverKey        String?        @map("cover_key")
+  categoryId      String?        @map("category_id") @db.Uuid
+  category        Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  // Name shown as the speaker or author.
+  authorName      String         @map("author_name")
+  createdById     String?        @map("created_by_id") @db.Uuid
+  createdBy       User?          @relation("resourceCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  status          ResourceStatus @default(DRAFT)
+  isSample        Boolean        @default(false) @map("is_sample")
+  publishedAt     DateTime?      @map("published_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@map("resources")
 }

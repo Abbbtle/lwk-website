@@ -65,6 +65,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
                 level: course.level,
                 instructorName: course.instructorName,
                 outcomes: course.outcomes.join('\n'),
+                isFree: course.isFree ? 'on' : '',
               }}
             />
           </section>

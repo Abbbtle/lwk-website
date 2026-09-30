@@ -20,6 +20,8 @@ export const socialLinks = [
 ] as const satisfies readonly { id: string; label: string; href: string | null }[];
 
 export const mainNav = [
+  { href: '/explore', label: 'Explore' },
+  { href: '/courses', label: 'Courses' },
   { href: '/categories', label: 'Categories' },
   { href: '/plans-and-pricing', label: 'Plans & Pricing' },
   { href: '/become-an-instructor', label: 'Become an Instructor' },
@@ -38,7 +40,8 @@ export const footerNav = [
   {
     title: 'Resources',
     links: [
-      { href: '/explore', label: 'Explore' },
+      { href: '/explore', label: 'Free content' },
+      { href: '/courses', label: 'All courses' },
       { href: '/plans-and-pricing', label: 'Plans & Pricing' },
       { href: '/become-an-instructor', label: 'Become an Instructor' },
     ],
