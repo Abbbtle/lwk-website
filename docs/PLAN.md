@@ -241,8 +241,11 @@ Status: DONE.
 - Grant a role: `aws cognito-idp admin-add-user-to-group --user-pool-id
 af-south-1_vNL5Ybi4T --username <email> --group-name admin --profile lwk` (takes effect
   on the next token refresh, within 15 minutes). An admin UI for this comes in Phase 4.
-- Follow-ups: brand the hosted sign-in pages (LWK logo and POC colours via managed login
-  branding); send Cognito email through SES before launch (the built-in sender has a low
+- Custom sign-in pages (`/login`, `/sign-up`, `/forgot-password`) replaced the hosted
+  pages: SRP in the browser (password never reaches the server), tokens handed to
+  `POST /auth/session` (same-origin only) and kept in HttpOnly cookies; branded
+  verification email.
+- Follow-ups: send Cognito email through SES before launch (the built-in sender has a low
   daily limit); in-app MFA enrollment page; Content Security Policy with nonces (Phase 6);
   bearer-token support in `/api/v1` for the mobile apps; decide whether admins must use MFA.
 
