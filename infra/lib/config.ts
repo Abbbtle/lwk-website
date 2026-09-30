@@ -31,6 +31,8 @@ export type StageConfig = {
   appOrigins: string[];
   /** Git branch that deploys to this stage. */
   deployBranch: string;
+  /** Claude on Amazon Bedrock (global inference profile IDs) and the monthly AI spending cap. */
+  ai: { assistantModel: string; writerModel: string; monthlyBudgetUsd: number };
 };
 
 // One AWS environment while on the Free plan (see docs/PLAN.md, "Branches and environments").
@@ -40,5 +42,10 @@ export const stages: Record<string, StageConfig> = {
     authDomainPrefix: 'livingwithkrishna-dev',
     appOrigins: ['http://localhost:3000', 'https://d1uih31m6ki5c2.cloudfront.net'],
     deployBranch: 'dev',
+    ai: {
+      assistantModel: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',
+      writerModel: 'global.anthropic.claude-sonnet-5',
+      monthlyBudgetUsd: 5,
+    },
   },
 };
