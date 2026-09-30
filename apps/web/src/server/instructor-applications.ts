@@ -3,6 +3,7 @@ import type { ApplicationStatus } from '@/generated/prisma/client';
 import type { InstructorApplication as ApplicationInput } from '@/lib/forms/instructor-application';
 import { recordAudit } from './audit';
 import { getDb } from './db';
+import { notify } from './notifications';
 import { grantRole } from './user-admin';
 
 type Reviewer = { userId: string; name: string };
@@ -86,6 +87,12 @@ export async function approveApplication(id: string, reviewer: Reviewer, note?: 
       reviewedAt: new Date(),
     },
   });
+  await notify(application.userId, {
+    kind: 'application.approved',
+    title: 'Your instructor application was approved',
+    body: note || 'Open Instructor in your menu to start your first course.',
+    href: '/instructor',
+  });
   await recordAudit(reviewer, {
     action: 'application.approved',
     target: { type: 'user', id: application.userId },
@@ -104,6 +111,12 @@ export async function rejectApplication(id: string, reviewer: Reviewer, note?: s
       reviewedById: reviewer.userId,
       reviewedAt: new Date(),
     },
+  });
+  await notify(application.userId, {
+    kind: 'application.rejected',
+    title: 'Your instructor application was not approved',
+    body: note || 'You are welcome to apply again.',
+    href: '/become-an-instructor',
   });
   await recordAudit(reviewer, {
     action: 'application.rejected',

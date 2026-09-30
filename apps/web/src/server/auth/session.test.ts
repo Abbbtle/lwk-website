@@ -134,7 +134,7 @@ describe('applyAccountState', () => {
     ...overrides,
   });
   const at = (seconds: number) => new Date(seconds * 1000);
-  const options = { requireAdminMfa: true };
+  const options = { requireStaffMfa: true };
 
   it('uses the token as it is for an account without overrides (or no row yet)', () => {
     expect(applyAccountState(identity(['instructor']), account(), options)?.roles).toEqual([
@@ -172,17 +172,24 @@ describe('applyAccountState', () => {
     ]);
   });
 
-  it('locks admin tools until two-step verification is on', () => {
-    const locked = applyAccountState(identity(['admin']), account(), options);
-    expect(locked).toMatchObject({ roles: [], adminNeedsMfa: true, mfaEnabled: false });
+  it('locks staff roles until two-step verification is on', () => {
+    const locked = applyAccountState(identity(['admin', 'instructor']), account(), options);
+    expect(locked).toMatchObject({
+      roles: ['instructor'],
+      lockedRoles: ['admin'],
+      mfaEnabled: false,
+    });
+
+    const support = applyAccountState(identity(['support']), account(), options);
+    expect(support).toMatchObject({ roles: [], lockedRoles: ['support'] });
 
     const unlocked = applyAccountState(identity(['admin']), account({ mfaEnabled: true }), options);
-    expect(unlocked).toMatchObject({ roles: ['admin'], adminNeedsMfa: false, mfaEnabled: true });
+    expect(unlocked).toMatchObject({ roles: ['admin'], lockedRoles: [], mfaEnabled: true });
 
     const notRequired = applyAccountState(identity(['admin']), account(), {
-      requireAdminMfa: false,
+      requireStaffMfa: false,
     });
-    expect(notRequired).toMatchObject({ roles: ['admin'], adminNeedsMfa: false });
+    expect(notRequired).toMatchObject({ roles: ['admin'], lockedRoles: [] });
   });
 });
 
@@ -194,7 +201,7 @@ describe('hasRole', () => {
     roles,
     issuedAt: 0,
     mfaEnabled: true,
-    adminNeedsMfa: false,
+    lockedRoles: [],
   });
 
   it('grants a role to its members and everything to admins', () => {

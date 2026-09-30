@@ -4,6 +4,7 @@ import { recordAudit } from './audit';
 import { hasRole, ROLES, type Role, type Session } from './auth/session';
 import * as cognito from './cognito';
 import { getDb } from './db';
+import { notify } from './notifications';
 
 // Admin management of other people's accounts. Cognito is the source of truth for roles and
 // whether an account can sign in; the database mirrors both so changes apply immediately
@@ -21,6 +22,20 @@ export class UserAdminError extends Error {
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Admin',
   instructor: 'Instructor',
+  support: 'Support',
+};
+
+/** What to tell someone who has just been given a role. */
+const ROLE_WELCOME: Record<Role, { body: string; href: string }> = {
+  admin: {
+    body: 'Turn on two-step verification in your account to use the admin tools.',
+    href: '/admin',
+  },
+  instructor: { body: 'Open Instructor in your menu to start a course.', href: '/instructor' },
+  support: {
+    body: 'Turn on two-step verification in your account, then open the support inbox.',
+    href: '/admin/support',
+  },
 };
 
 function assertAdmin(session: Session) {
@@ -34,7 +49,14 @@ export async function countAdmins() {
   return (await cognito.listRoleMembers('admin')).length;
 }
 
-export const USER_FILTERS = ['all', 'admin', 'instructor', 'learner', 'disabled'] as const;
+export const USER_FILTERS = [
+  'all',
+  'admin',
+  'instructor',
+  'support',
+  'learner',
+  'disabled',
+] as const;
 export type UserFilter = (typeof USER_FILTERS)[number];
 
 const PAGE_SIZE = 50;
@@ -58,6 +80,7 @@ export async function listUsers({
     })),
     ...(filter === 'admin' && { roles: { has: 'admin' } }),
     ...(filter === 'instructor' && { roles: { has: 'instructor' } }),
+    ...(filter === 'support' && { roles: { has: 'support' } }),
     ...(filter === 'learner' && { roles: { isEmpty: true } }),
     ...(filter === 'disabled' && { disabledAt: { not: null } }),
   };
@@ -199,6 +222,16 @@ export async function setUserRole(
     await cognito.removeUserFromGroup(userId, role);
     await mirrorRoles(userId, (stored) => stored.filter((r) => r !== role));
   }
+  await notify(
+    userId,
+    grant
+      ? {
+          kind: 'role.granted',
+          title: `You now have the ${ROLE_LABELS[role]} role`,
+          ...ROLE_WELCOME[role],
+        }
+      : { kind: 'role.revoked', title: `Your ${ROLE_LABELS[role]} role was removed` },
+  );
   await recordAudit(actorOf(session), {
     action: grant ? 'user.role.granted' : 'user.role.revoked',
     target: { type: 'user', id: userId },
