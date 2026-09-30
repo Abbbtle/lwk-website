@@ -4,6 +4,7 @@ const links = [
   { href: '/admin', label: 'Overview' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/courses', label: 'Courses' },
+  { href: '/admin/explore', label: 'Explore' },
   { href: '/admin/applications', label: 'Instructor applications' },
   { href: '/admin/messages', label: 'Messages' },
   { href: '/admin/activity', label: 'Activity log' },
