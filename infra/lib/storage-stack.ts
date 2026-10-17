@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
-import type { StageConfig } from './config';
+import { appOrigins, type StageConfig } from './config';
 
 export type StorageStackProps = cdk.StackProps & { stageConfig: StageConfig };
 
@@ -15,7 +15,7 @@ export class StorageStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: StorageStackProps) {
     super(scope, id, props);
-    const { stage, appOrigins } = props.stageConfig;
+    const { stage } = props.stageConfig;
 
     this.mediaBucket = new s3.Bucket(this, 'MediaBucket', {
       bucketName: `lwk-${stage}-media-${this.account}`,
@@ -27,7 +27,7 @@ export class StorageStack extends cdk.Stack {
       // Browser uploads (POST) and in-page previews (GET) from the app's origins.
       cors: [
         {
-          allowedOrigins: appOrigins,
+          allowedOrigins: appOrigins(props.stageConfig),
           allowedMethods: [s3.HttpMethods.POST, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
           allowedHeaders: ['*'],
           exposedHeaders: ['ETag'],

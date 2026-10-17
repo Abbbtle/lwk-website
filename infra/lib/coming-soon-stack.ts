@@ -8,8 +8,8 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import type { Construct } from 'constructs';
 import { CanonicalHostRedirect } from './canonical-host-redirect';
-import { config } from './config';
 import { DistributionAliasRecords } from './distribution-alias-records';
+import { assertInEdgeRegion } from './edge-region';
 
 export type ComingSoonStackProps = cdk.StackProps & {
   /** The shared zone (lwk-domain); the page is served at its apex and at www. */
@@ -25,11 +25,7 @@ export type ComingSoonStackProps = cdk.StackProps & {
 export class ComingSoonStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ComingSoonStackProps) {
     super(scope, id, props);
-    if (this.region !== config.edgeRegion) {
-      throw new Error(
-        `${id} must be deployed to ${config.edgeRegion}, where CloudFront reads certificates`,
-      );
-    }
+    assertInEdgeRegion(this);
     const apexHostName = props.hostedZone.zoneName;
     const wwwHostName = `www.${apexHostName}`;
 

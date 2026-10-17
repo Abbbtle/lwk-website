@@ -9,6 +9,8 @@ export const config = {
   apexDomainName: 'livingwithkrishna.com',
   // CloudFront only uses certificates (and web ACLs) from this region.
   edgeRegion: 'us-east-1',
+  // Git branch that publishes the main address (the coming-soon page until production launches).
+  productionBranch: 'main',
   // GitHub repository allowed to deploy (OIDC), see DeployAccessStack.
   githubRepository: 'Abbbtle/lwk-website',
   // AWS-managed prefix list of CloudFront origin-facing IPs in af-south-1
@@ -40,29 +42,28 @@ export type StageConfig = {
    */
   searchIndexing: boolean;
   /**
-   * Origins allowed to receive sign-in redirects and upload to the media bucket: the site, local
-   * development, and earlier addresses that now redirect (so sign-ins started there can finish).
+   * Origins allowed to receive sign-in redirects and upload to the media bucket besides the site
+   * itself, which `appOrigins()` always puts first: local development and, while the site moves
+   * to a new host name, the previous address.
    */
-  appOrigins: string[];
+  extraAppOrigins: string[];
   /** Git branch that deploys to this stage. */
   deployBranch: string;
   /** Claude on Amazon Bedrock (global inference profile IDs) and the monthly AI spending cap. */
   ai: { assistantModel: string; writerModel: string; monthlyBudgetUsd: number };
 };
 
-const devSiteHostName = `dev.${config.apexDomainName}`;
-
 // One AWS environment while on the Free plan (see docs/PLAN.md, "Branches and environments").
 export const stages: Record<string, StageConfig> = {
   dev: {
     stage: 'dev',
     authDomainPrefix: 'livingwithkrishna-dev',
-    siteHostName: devSiteHostName,
+    siteHostName: `dev.${config.apexDomainName}`,
     searchIndexing: false,
-    appOrigins: [
-      `https://${devSiteHostName}`,
+    extraAppOrigins: [
       'http://localhost:3000',
-      // The distribution's own address, used before the domain; it now redirects to the site.
+      // Rollout only: until the Deploy workflow has run after lwk-dev-app moved to the new host
+      // name, the server still sends sign-ins back to its old address. Remove after that run.
       'https://d1uih31m6ki5c2.cloudfront.net',
     ],
     deployBranch: 'dev',
@@ -73,3 +74,13 @@ export const stages: Record<string, StageConfig> = {
     },
   },
 };
+
+/** The stage's public address, which the app knows as APP_URL. */
+export function siteUrl(stageConfig: StageConfig): string {
+  return `https://${stageConfig.siteHostName}`;
+}
+
+/** Origins allowed to receive sign-in redirects and upload to the media bucket, the site first. */
+export function appOrigins(stageConfig: StageConfig): string[] {
+  return [siteUrl(stageConfig), ...stageConfig.extraAppOrigins];
+}

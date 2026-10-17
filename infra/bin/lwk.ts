@@ -31,7 +31,18 @@ const domain = new DomainStack(app, 'lwk-domain', {
   apexDomainName: config.apexDomainName,
 });
 
-// The main address (and www) shows a coming-soon page until production launches.
+// The main address (and www) shows a coming-soon page until production launches. A stage can only
+// take the main address over once this stack is removed (see "Domain and DNS" in docs/PLAN.md).
+const apexStage = Object.values(stages).find(
+  (stageConfig) => stageConfig.siteHostName === config.apexDomainName,
+);
+if (apexStage) {
+  throw new Error(
+    `Stage ${apexStage.stage} uses ${config.apexDomainName}, which lwk-coming-soon still serves. ` +
+      'Remove the coming-soon stack from bin/lwk.ts and destroy it (turn off its termination ' +
+      'protection first) before deploying that stage.',
+  );
+}
 new ComingSoonStack(app, 'lwk-coming-soon', {
   env: edgeEnv,
   terminationProtection: true,
@@ -81,7 +92,7 @@ for (const stageConfig of Object.values(stages)) {
     mediaBucket: storage.mediaBucket,
     userPool: auth.userPool,
     webClient: auth.webClient,
-    hostedDomainUrl: auth.hostedDomainUrl,
+    authDomainUrl: auth.authDomainUrl,
   });
   const deployAccess = new DeployAccessStack(app, `lwk-${stage}-deploy-access`, {
     ...common,

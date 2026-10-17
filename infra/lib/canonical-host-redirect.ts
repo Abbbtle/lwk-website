@@ -2,7 +2,11 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import { Construct } from 'constructs';
 
 export type CanonicalHostRedirectProps = {
-  /** The host name to serve, for example "dev.livingwithkrishna.com". */
+  /**
+   * The host name that every other host name is redirected to, and whose own requests pass
+   * through: a lowercase DNS name known at synth time (not a token), without scheme, port, path
+   * or trailing dot, for example "dev.livingwithkrishna.com". It is embedded in the function code.
+   */
   canonicalHostName: string;
   /** Describes the function in the CloudFront console. */
   comment: string;
@@ -22,13 +26,12 @@ export class CanonicalHostRedirect extends Construct {
 
   constructor(scope: Construct, id: string, props: CanonicalHostRedirectProps) {
     super(scope, id);
-    if (!HOST_NAME.test(props.canonicalHostName)) {
-      throw new Error(`Not a lowercase host name: ${props.canonicalHostName}`);
-    }
     const redirect = new cloudfront.Function(this, 'Function', {
       comment: props.comment,
       runtime: cloudfront.FunctionRuntime.JS_2_0,
-      code: cloudfront.FunctionCode.fromInline(handlerSource(props.canonicalHostName)),
+      code: cloudfront.FunctionCode.fromInline(
+        canonicalHostRedirectSource(props.canonicalHostName),
+      ),
     });
     this.functionAssociation = {
       function: redirect,
@@ -38,11 +41,19 @@ export class CanonicalHostRedirect extends Construct {
 }
 
 /**
- * The viewer-request handler. Query string values reach CloudFront Functions still URL-encoded,
- * so they are joined back unchanged (re-encoding would double-encode them), keeping every value
- * of a repeated parameter.
+ * Source of the viewer-request handler (CloudFront Functions, JavaScript runtime 2.0). Requests
+ * for the canonical host pass through; any other host, or none, gets a 301 to the same path and
+ * query string on it. Query string values reach CloudFront Functions still URL-encoded, so they
+ * are joined back unchanged (re-encoding would double-encode them), keeping every value of a
+ * repeated parameter in order. Tested in infra/test/canonical-host-redirect.test.ts.
  */
-function handlerSource(canonicalHostName: string): string {
+export function canonicalHostRedirectSource(canonicalHostName: string): string {
+  if (!HOST_NAME.test(canonicalHostName)) {
+    throw new Error(
+      'canonicalHostName must be a bare lowercase host name such as "dev.livingwithkrishna.com" ' +
+        `(no scheme, port, path or trailing dot; not a token), got "${canonicalHostName}"`,
+    );
+  }
   return `function handler(event) {
   var request = event.request;
   var host = request.headers.host ? request.headers.host.value.toLowerCase() : '';

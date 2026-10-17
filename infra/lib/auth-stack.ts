@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import type { Construct } from 'constructs';
-import type { StageConfig } from './config';
+import { appOrigins, type StageConfig } from './config';
 
 export type AuthStackProps = cdk.StackProps & { stageConfig: StageConfig };
 
@@ -13,11 +13,13 @@ export type AuthStackProps = cdk.StackProps & { stageConfig: StageConfig };
 export class AuthStack extends cdk.Stack {
   readonly userPool: cognito.UserPool;
   readonly webClient: cognito.UserPoolClient;
-  readonly hostedDomainUrl: string;
+  /** Cognito hosted sign-in domain, https://<authDomainPrefix>.auth.<region>.amazoncognito.com. */
+  readonly authDomainUrl: string;
 
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
-    const { stage, authDomainPrefix, appOrigins } = props.stageConfig;
+    const { stage, authDomainPrefix } = props.stageConfig;
+    const origins = appOrigins(props.stageConfig);
 
     const userPool = (this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `lwk-${stage}-users`,
@@ -100,8 +102,8 @@ export class AuthStack extends cdk.Stack {
       oAuth: {
         flows: { authorizationCodeGrant: true },
         scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL, cognito.OAuthScope.PROFILE],
-        callbackUrls: appOrigins.map((origin) => `${origin}/auth/callback`),
-        logoutUrls: appOrigins.map((origin) => `${origin}/`),
+        callbackUrls: origins.map((origin) => `${origin}/auth/callback`),
+        logoutUrls: origins.map((origin) => `${origin}/`),
       },
       supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
       preventUserExistenceErrors: true,
@@ -112,7 +114,7 @@ export class AuthStack extends cdk.Stack {
       idTokenValidity: cdk.Duration.minutes(15),
       refreshTokenValidity: cdk.Duration.days(30),
     }));
-    this.hostedDomainUrl = `https://${authDomainPrefix}.auth.${this.region}.amazoncognito.com`;
+    this.authDomainUrl = `https://${authDomainPrefix}.auth.${this.region}.amazoncognito.com`;
 
     // Managed login needs a branding style per app client; start from Cognito's defaults.
     const branding = new cognito.CfnManagedLoginBranding(this, 'WebClientBranding', {
@@ -125,7 +127,7 @@ export class AuthStack extends cdk.Stack {
     // Public identifiers the web app needs (none of these are secrets).
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'WebClientId', { value: webClient.userPoolClientId });
-    new cdk.CfnOutput(this, 'HostedDomain', { value: this.hostedDomainUrl });
+    new cdk.CfnOutput(this, 'HostedDomain', { value: this.authDomainUrl });
     new cdk.CfnOutput(this, 'Issuer', { value: userPool.userPoolProviderUrl });
   }
 }
