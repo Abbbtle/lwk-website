@@ -1,91 +1,109 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { CourseTabs } from '@/components/course-tabs';
-import { HeroCarousel, type HeroSlide } from '@/components/hero-carousel';
+import { CourseRow } from '@/components/course-card';
+import { beginnerCourses } from '@/lib/catalog/beginner-courses';
+import { plural } from '@/lib/format';
+import { site } from '@/lib/site';
 import { getCategories, searchCourses } from '@/server/catalog';
 
-// Slides and photos as in the POC.
-const slides: HeroSlide[] = [
-  {
-    kicker: 'Rediscover Devotion',
-    image: '/images/hero-devotion.jpg',
-    alt: 'Devotees gathered in kirtan around a garlanded seat',
-    href: '/courses',
-  },
-  {
-    kicker: 'Rediscover Kirtan',
-    image: '/images/hero-kirtan.jpg',
-    alt: 'A kirtan leader singing with devotees',
-    href: '/courses?category=kirtan',
-  },
-  {
-    kicker: 'Rediscover Prasadam',
-    image: '/images/hero-prasadam.jpg',
-    alt: 'A prasadam feast laid out on leaves',
-    href: '/courses?category=prasadam',
-  },
-  {
-    kicker: 'Rediscover Sastra',
-    image: '/images/hero-sastra.jpg',
-    alt: 'Volumes of Vedic literature',
-    href: '/courses?category=sastra-study',
-  },
-];
+/** Two rows of the course grid. */
+const BEGINNER_LIMIT = 6;
+
+const sectionHeading = 'text-3xl font-bold tracking-tight text-black md:text-4xl';
 
 export default async function HomePage() {
   await connection();
   const [categories, courses] = await Promise.all([getCategories(), searchCourses()]);
+  const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
 
   return (
     <>
-      <HeroCarousel slides={slides} />
-
-      <section className="px-6 py-12 md:px-9">
-        <h2 className="text-3xl font-extrabold md:text-4xl">
-          Transform Your Life with the Power of Bhakti Yoga
-        </h2>
-        <p className="mt-2 mb-8 text-lg md:text-2xl">
-          Explore our curated collection of transformative courses
-        </p>
-        <div className="md:px-10">
-          <CourseTabs categories={categories} courses={courses} />
-          {courses.length > 0 && (
-            <div className="mt-10 text-center">
-              <Link href="/courses" className="btn-solid">
-                View all courses
-              </Link>
-            </div>
-          )}
+      <section className="bg-white">
+        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:py-28">
+          <h1 className="text-5xl leading-[1.05] font-bold tracking-tight text-balance text-black sm:text-6xl lg:text-7xl">
+            {site.tagline}
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-gray-700 sm:text-xl">
+            Courses taught by experienced devotees, with lessons you can take at your own pace,
+            whether you are just starting out or deepening your practice.
+          </p>
+          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+            <Link href="/courses" className="btn-solid">
+              Browse courses
+            </Link>
+            <Link href="/explore" className="btn-outline">
+              Explore free content
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="px-6 py-16 lg:px-44 lg:py-20">
-        <div className="flex flex-col items-center gap-8 lg:flex-row">
-          <div className="w-full lg:w-1/2">
-            <Image
-              src="/images/become-instructor.jpg"
-              alt="A devotee singing kirtan"
-              width={400}
-              height={400}
-              sizes="(min-width: 1024px) 40vw, 100vw"
-              className="h-auto w-full"
-            />
-          </div>
-          <div className="w-full space-y-4 text-center lg:w-1/2 lg:text-left">
-            <h2 className="text-3xl font-extrabold md:text-4xl lg:text-5xl">
-              Become An Instructor
-            </h2>
-            <p className="md:text-lg">
-              Instructors from around the world teach millions of learners on LWK. We provide the
-              tools and skills to teach what you love.
-            </p>
-            <div className="flex justify-center lg:justify-start">
-              <Link href="/become-an-instructor" className="btn-outline">
-                Start teaching today
+      {beginners.length > 0 && (
+        <section aria-labelledby="beginner-courses">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <h2 id="beginner-courses" className={sectionHeading}>
+                Start with a beginner course
+              </h2>
+              <Link href="/courses" className="font-semibold underline-offset-4 hover:underline">
+                View all courses
               </Link>
             </div>
+            <CourseRow courses={beginners} />
           </div>
+        </section>
+      )}
+
+      {categories.length > 0 && (
+        <section aria-labelledby="categories" className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+            <h2 id="categories" className={`${sectionHeading} mb-8`}>
+              Browse by category
+            </h2>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {categories.map((category) => (
+                <li key={category.slug}>
+                  <Link
+                    href={`/courses?category=${category.slug}`}
+                    className="flex h-full flex-col border border-gray-300 p-6 transition-colors hover:border-black"
+                  >
+                    <span className="text-lg font-semibold text-black">{category.name}</span>
+                    <span className="mt-2 text-sm leading-relaxed text-gray-700">
+                      {category.description}
+                    </span>
+                    <span className="mt-auto pt-4 text-sm font-semibold text-gray-700">
+                      {category.courseCount > 0
+                        ? plural(category.courseCount, 'course')
+                        : 'Courses on their way'}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <section className="mx-auto grid max-w-7xl gap-x-12 gap-y-14 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-20">
+        <div>
+          <h2 className={sectionHeading}>Free for everyone</h2>
+          <p className="mt-3 max-w-[34em] text-lg leading-relaxed text-gray-700">
+            Explore has free courses, talks, recordings, articles and recipes. No subscription
+            needed.
+          </p>
+          <Link href="/explore" className="btn-outline mt-6">
+            Explore free content
+          </Link>
+        </div>
+        <div className="md:border-l md:border-gray-300 md:pl-12">
+          <h2 className={sectionHeading}>Teach what you know</h2>
+          <p className="mt-3 max-w-[34em] text-lg leading-relaxed text-gray-700">
+            Experienced in a devotional skill? Apply to teach. Once you are approved, you build your
+            course with video, PDF and text lessons, and we review it before it is published.
+          </p>
+          <Link href="/become-an-instructor" className="btn-outline mt-6">
+            Apply to teach
+          </Link>
         </div>
       </section>
     </>

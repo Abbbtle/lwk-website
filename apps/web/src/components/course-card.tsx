@@ -58,3 +58,16 @@ export function CourseGrid({ courses }: { courses: CourseSummary[] }) {
     </div>
   );
 }
+
+/** A row to swipe through on phones (as on Udemy); the usual grid from tablet width up. */
+export function CourseRow({ courses }: { courses: CourseSummary[] }) {
+  return (
+    <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3">
+      {courses.map((course, index) => (
+        <li key={course.slug} className="grid w-[82%] shrink-0 snap-start sm:w-auto">
+          <CourseCard course={course} eager={index < 3} />
+        </li>
+      ))}
+    </ul>
+  );
+}
