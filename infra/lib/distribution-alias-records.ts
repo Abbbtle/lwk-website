@@ -19,6 +19,7 @@ export class DistributionAliasRecords extends Construct {
     const zoneName = zone.zoneName;
     if (
       !cdk.Token.isUnresolved(zoneName) &&
+      !cdk.Token.isUnresolved(hostName) &&
       hostName !== zoneName &&
       !hostName.endsWith(`.${zoneName}`)
     ) {

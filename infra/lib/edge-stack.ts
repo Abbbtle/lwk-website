@@ -2,7 +2,8 @@ import * as cdk from 'aws-cdk-lib/core';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import type * as route53 from 'aws-cdk-lib/aws-route53';
 import type { Construct } from 'constructs';
-import { config, type StageConfig } from './config';
+import type { StageConfig } from './config';
+import { assertInEdgeRegion } from './edge-region';
 
 export type EdgeStackProps = cdk.StackProps & {
   stageConfig: StageConfig;
@@ -20,11 +21,7 @@ export class EdgeStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: EdgeStackProps) {
     super(scope, id, props);
-    if (this.region !== config.edgeRegion) {
-      throw new Error(
-        `${id} must be deployed to ${config.edgeRegion}, where CloudFront reads certificates`,
-      );
-    }
+    assertInEdgeRegion(this);
     const { stage, siteHostName } = props.stageConfig;
 
     this.certificate = new acm.Certificate(this, 'SiteCertificate', {

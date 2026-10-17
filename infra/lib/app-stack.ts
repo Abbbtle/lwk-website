@@ -13,7 +13,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import { CanonicalHostRedirect } from './canonical-host-redirect';
-import { config, type StageConfig } from './config';
+import { config, siteUrl, type StageConfig } from './config';
 import { DistributionAliasRecords } from './distribution-alias-records';
 
 export type AppStackProps = cdk.StackProps & {
@@ -30,7 +30,8 @@ export type AppStackProps = cdk.StackProps & {
   mediaBucket: s3.IBucket;
   userPool: cognito.IUserPool;
   webClient: cognito.IUserPoolClient;
-  hostedDomainUrl: string;
+  /** Cognito hosted sign-in domain, from the auth stack (COGNITO_DOMAIN). */
+  authDomainUrl: string;
 };
 
 /**
@@ -232,17 +233,19 @@ export class AppStack extends cdk.Stack {
             customHeaders: [{ header: 'X-Robots-Tag', value: 'noindex, nofollow', override: true }],
           },
         });
-    const siteHandling = {
+    // Every cache behavior is built here, so none can miss the redirect or the noindex header.
+    const siteBehavior = (behavior: cloudfront.BehaviorOptions): cloudfront.BehaviorOptions => ({
+      ...behavior,
       functionAssociations: [redirect.functionAssociation],
       responseHeadersPolicy,
-    };
+    });
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: `LWK ${stage}`,
       domainNames: [siteHostName],
       certificate: props.certificate,
       priceClass: cloudfront.PriceClass.PRICE_CLASS_200, // includes South Africa
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
-      defaultBehavior: {
+      defaultBehavior: siteBehavior({
         origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
@@ -252,17 +255,15 @@ export class AppStack extends cdk.Stack {
         // CloudFront's own headers (the viewer's IP address, used for rate limiting).
         originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
         compress: true,
-        ...siteHandling,
-      },
+      }),
       additionalBehaviors: {
         // Hashed build assets are safe to cache for a long time.
-        '/_next/static/*': {
+        '/_next/static/*': siteBehavior({
           origin,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
-          ...siteHandling,
-        },
+        }),
       },
     });
     new DistributionAliasRecords(this, 'SiteAddress', {
@@ -270,14 +271,14 @@ export class AppStack extends cdk.Stack {
       hostName: siteHostName,
       distribution: this.distribution,
     });
-    const appUrl = (this.appUrl = `https://${siteHostName}`);
+    const appUrl = (this.appUrl = siteUrl(props.stageConfig));
 
     // ---- Runtime configuration read by activate.sh (names are env var names; no secrets) ----
     const params: Record<string, string> = {
       APP_URL: appUrl,
       COGNITO_USER_POOL_ID: props.userPool.userPoolId,
       COGNITO_CLIENT_ID: props.webClient.userPoolClientId,
-      COGNITO_DOMAIN: props.hostedDomainUrl,
+      COGNITO_DOMAIN: props.authDomainUrl,
       MEDIA_BUCKET: props.mediaBucket.bucketName,
       DATABASE_HOST: props.database.dbInstanceEndpointAddress,
       DATABASE_PORT: props.database.dbInstanceEndpointPort,

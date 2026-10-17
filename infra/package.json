@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "typecheck": "tsc",
+    "test": "tsx --test test/*.test.ts",
     "synth": "cdk synth",
     "diff": "cdk diff",
     "deploy": "cdk deploy",

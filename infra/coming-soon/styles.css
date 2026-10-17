@@ -1,4 +1,7 @@
-/* Coming-soon page in the site's style: Poppins, black on white, saffron accents. */
+/*
+ * Coming-soon page in the site's style: Poppins, true black on white, and saffron only for the
+ * head bead and tassel of the japa mala around the logo.
+ */
 
 @font-face {
   font-family: Poppins;
@@ -18,12 +21,11 @@
 
 :root {
   color-scheme: light;
-  --ink: #000000;
+  --black: #000000;
+  --saffron: #f97316; /* orange-500: the head bead and tassel, never text */
+  --unlit: #d1d5db; /* gray-300: beads not yet counted */
   --muted: #374151; /* gray-700 */
-  --line: #e5e7eb; /* gray-200 */
   --paper: #ffffff;
-  --wash: #f9f9f9;
-  --saffron: #f97316; /* orange-500: fills and borders only */
 }
 
 * {
@@ -37,8 +39,8 @@ body {
 
 body {
   margin: 0;
-  background: var(--wash);
-  color: var(--ink);
+  background: var(--paper);
+  color: var(--black);
   font-family:
     Poppins,
     ui-sans-serif,
@@ -53,57 +55,425 @@ body {
 .page {
   min-height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 16px;
-}
-
-.card {
-  width: 100%;
-  max-width: 560px;
-  padding: 48px 24px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--saffron);
+  padding: 40px 16px 56px;
   text-align: center;
 }
 
-.logo {
+.emblem {
+  position: relative;
+  width: min(420px, 86vw);
+}
+
+.mala {
   display: block;
-  width: 240px;
-  max-width: 100%;
+  width: 100%;
   height: auto;
-  margin: 0 auto 40px;
+}
+
+.mala .beads circle {
+  fill: var(--black);
+}
+
+.mala .head-bead {
+  fill: var(--saffron);
+}
+
+.mala .tassel path {
+  fill: none;
+  stroke: var(--saffron);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.mala .tassel circle {
+  fill: var(--saffron);
+}
+
+/* The logo sits at the centre of the ring: (200, 200) in the 400 x 460 drawing. */
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 43.48%;
+  width: 60%;
+  height: auto;
+  transform: translate(-50%, -50%);
 }
 
 h1 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 1.2;
+  margin: 20px 0 0;
+  font-size: clamp(2.25rem, 1.6rem + 2.8vw, 3.5rem);
+  line-height: 1.1;
   font-weight: 700;
-}
-
-.accent {
-  display: block;
-  width: 48px;
-  height: 4px;
-  margin: 24px auto;
-  background: var(--saffron);
+  letter-spacing: -0.015em;
 }
 
 .tagline {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.6;
+  margin: 16px 0 0;
+  max-width: 30ch;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.3125rem);
+  line-height: 1.55;
   color: var(--muted);
+  text-wrap: balance;
 }
 
-@media (min-width: 640px) {
-  .card {
-    padding: 64px 48px;
+/* One round of japa when the page opens: each bead darkens in turn, then the tassel drops. */
+@media (prefers-reduced-motion: no-preference) {
+  .mala .beads circle {
+    animation: count 180ms ease-out both;
   }
 
-  h1 {
-    font-size: 40px;
+  .mala .tassel {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: tassel 480ms ease-out 3108ms both;
+  }
+
+  /* Bead n starts counting at 300 ms + (n - 1) x 26 ms. */
+  .mala .beads circle:nth-of-type(1) {
+    animation-delay: 300ms;
+  }
+  .mala .beads circle:nth-of-type(2) {
+    animation-delay: 326ms;
+  }
+  .mala .beads circle:nth-of-type(3) {
+    animation-delay: 352ms;
+  }
+  .mala .beads circle:nth-of-type(4) {
+    animation-delay: 378ms;
+  }
+  .mala .beads circle:nth-of-type(5) {
+    animation-delay: 404ms;
+  }
+  .mala .beads circle:nth-of-type(6) {
+    animation-delay: 430ms;
+  }
+  .mala .beads circle:nth-of-type(7) {
+    animation-delay: 456ms;
+  }
+  .mala .beads circle:nth-of-type(8) {
+    animation-delay: 482ms;
+  }
+  .mala .beads circle:nth-of-type(9) {
+    animation-delay: 508ms;
+  }
+  .mala .beads circle:nth-of-type(10) {
+    animation-delay: 534ms;
+  }
+  .mala .beads circle:nth-of-type(11) {
+    animation-delay: 560ms;
+  }
+  .mala .beads circle:nth-of-type(12) {
+    animation-delay: 586ms;
+  }
+  .mala .beads circle:nth-of-type(13) {
+    animation-delay: 612ms;
+  }
+  .mala .beads circle:nth-of-type(14) {
+    animation-delay: 638ms;
+  }
+  .mala .beads circle:nth-of-type(15) {
+    animation-delay: 664ms;
+  }
+  .mala .beads circle:nth-of-type(16) {
+    animation-delay: 690ms;
+  }
+  .mala .beads circle:nth-of-type(17) {
+    animation-delay: 716ms;
+  }
+  .mala .beads circle:nth-of-type(18) {
+    animation-delay: 742ms;
+  }
+  .mala .beads circle:nth-of-type(19) {
+    animation-delay: 768ms;
+  }
+  .mala .beads circle:nth-of-type(20) {
+    animation-delay: 794ms;
+  }
+  .mala .beads circle:nth-of-type(21) {
+    animation-delay: 820ms;
+  }
+  .mala .beads circle:nth-of-type(22) {
+    animation-delay: 846ms;
+  }
+  .mala .beads circle:nth-of-type(23) {
+    animation-delay: 872ms;
+  }
+  .mala .beads circle:nth-of-type(24) {
+    animation-delay: 898ms;
+  }
+  .mala .beads circle:nth-of-type(25) {
+    animation-delay: 924ms;
+  }
+  .mala .beads circle:nth-of-type(26) {
+    animation-delay: 950ms;
+  }
+  .mala .beads circle:nth-of-type(27) {
+    animation-delay: 976ms;
+  }
+  .mala .beads circle:nth-of-type(28) {
+    animation-delay: 1002ms;
+  }
+  .mala .beads circle:nth-of-type(29) {
+    animation-delay: 1028ms;
+  }
+  .mala .beads circle:nth-of-type(30) {
+    animation-delay: 1054ms;
+  }
+  .mala .beads circle:nth-of-type(31) {
+    animation-delay: 1080ms;
+  }
+  .mala .beads circle:nth-of-type(32) {
+    animation-delay: 1106ms;
+  }
+  .mala .beads circle:nth-of-type(33) {
+    animation-delay: 1132ms;
+  }
+  .mala .beads circle:nth-of-type(34) {
+    animation-delay: 1158ms;
+  }
+  .mala .beads circle:nth-of-type(35) {
+    animation-delay: 1184ms;
+  }
+  .mala .beads circle:nth-of-type(36) {
+    animation-delay: 1210ms;
+  }
+  .mala .beads circle:nth-of-type(37) {
+    animation-delay: 1236ms;
+  }
+  .mala .beads circle:nth-of-type(38) {
+    animation-delay: 1262ms;
+  }
+  .mala .beads circle:nth-of-type(39) {
+    animation-delay: 1288ms;
+  }
+  .mala .beads circle:nth-of-type(40) {
+    animation-delay: 1314ms;
+  }
+  .mala .beads circle:nth-of-type(41) {
+    animation-delay: 1340ms;
+  }
+  .mala .beads circle:nth-of-type(42) {
+    animation-delay: 1366ms;
+  }
+  .mala .beads circle:nth-of-type(43) {
+    animation-delay: 1392ms;
+  }
+  .mala .beads circle:nth-of-type(44) {
+    animation-delay: 1418ms;
+  }
+  .mala .beads circle:nth-of-type(45) {
+    animation-delay: 1444ms;
+  }
+  .mala .beads circle:nth-of-type(46) {
+    animation-delay: 1470ms;
+  }
+  .mala .beads circle:nth-of-type(47) {
+    animation-delay: 1496ms;
+  }
+  .mala .beads circle:nth-of-type(48) {
+    animation-delay: 1522ms;
+  }
+  .mala .beads circle:nth-of-type(49) {
+    animation-delay: 1548ms;
+  }
+  .mala .beads circle:nth-of-type(50) {
+    animation-delay: 1574ms;
+  }
+  .mala .beads circle:nth-of-type(51) {
+    animation-delay: 1600ms;
+  }
+  .mala .beads circle:nth-of-type(52) {
+    animation-delay: 1626ms;
+  }
+  .mala .beads circle:nth-of-type(53) {
+    animation-delay: 1652ms;
+  }
+  .mala .beads circle:nth-of-type(54) {
+    animation-delay: 1678ms;
+  }
+  .mala .beads circle:nth-of-type(55) {
+    animation-delay: 1704ms;
+  }
+  .mala .beads circle:nth-of-type(56) {
+    animation-delay: 1730ms;
+  }
+  .mala .beads circle:nth-of-type(57) {
+    animation-delay: 1756ms;
+  }
+  .mala .beads circle:nth-of-type(58) {
+    animation-delay: 1782ms;
+  }
+  .mala .beads circle:nth-of-type(59) {
+    animation-delay: 1808ms;
+  }
+  .mala .beads circle:nth-of-type(60) {
+    animation-delay: 1834ms;
+  }
+  .mala .beads circle:nth-of-type(61) {
+    animation-delay: 1860ms;
+  }
+  .mala .beads circle:nth-of-type(62) {
+    animation-delay: 1886ms;
+  }
+  .mala .beads circle:nth-of-type(63) {
+    animation-delay: 1912ms;
+  }
+  .mala .beads circle:nth-of-type(64) {
+    animation-delay: 1938ms;
+  }
+  .mala .beads circle:nth-of-type(65) {
+    animation-delay: 1964ms;
+  }
+  .mala .beads circle:nth-of-type(66) {
+    animation-delay: 1990ms;
+  }
+  .mala .beads circle:nth-of-type(67) {
+    animation-delay: 2016ms;
+  }
+  .mala .beads circle:nth-of-type(68) {
+    animation-delay: 2042ms;
+  }
+  .mala .beads circle:nth-of-type(69) {
+    animation-delay: 2068ms;
+  }
+  .mala .beads circle:nth-of-type(70) {
+    animation-delay: 2094ms;
+  }
+  .mala .beads circle:nth-of-type(71) {
+    animation-delay: 2120ms;
+  }
+  .mala .beads circle:nth-of-type(72) {
+    animation-delay: 2146ms;
+  }
+  .mala .beads circle:nth-of-type(73) {
+    animation-delay: 2172ms;
+  }
+  .mala .beads circle:nth-of-type(74) {
+    animation-delay: 2198ms;
+  }
+  .mala .beads circle:nth-of-type(75) {
+    animation-delay: 2224ms;
+  }
+  .mala .beads circle:nth-of-type(76) {
+    animation-delay: 2250ms;
+  }
+  .mala .beads circle:nth-of-type(77) {
+    animation-delay: 2276ms;
+  }
+  .mala .beads circle:nth-of-type(78) {
+    animation-delay: 2302ms;
+  }
+  .mala .beads circle:nth-of-type(79) {
+    animation-delay: 2328ms;
+  }
+  .mala .beads circle:nth-of-type(80) {
+    animation-delay: 2354ms;
+  }
+  .mala .beads circle:nth-of-type(81) {
+    animation-delay: 2380ms;
+  }
+  .mala .beads circle:nth-of-type(82) {
+    animation-delay: 2406ms;
+  }
+  .mala .beads circle:nth-of-type(83) {
+    animation-delay: 2432ms;
+  }
+  .mala .beads circle:nth-of-type(84) {
+    animation-delay: 2458ms;
+  }
+  .mala .beads circle:nth-of-type(85) {
+    animation-delay: 2484ms;
+  }
+  .mala .beads circle:nth-of-type(86) {
+    animation-delay: 2510ms;
+  }
+  .mala .beads circle:nth-of-type(87) {
+    animation-delay: 2536ms;
+  }
+  .mala .beads circle:nth-of-type(88) {
+    animation-delay: 2562ms;
+  }
+  .mala .beads circle:nth-of-type(89) {
+    animation-delay: 2588ms;
+  }
+  .mala .beads circle:nth-of-type(90) {
+    animation-delay: 2614ms;
+  }
+  .mala .beads circle:nth-of-type(91) {
+    animation-delay: 2640ms;
+  }
+  .mala .beads circle:nth-of-type(92) {
+    animation-delay: 2666ms;
+  }
+  .mala .beads circle:nth-of-type(93) {
+    animation-delay: 2692ms;
+  }
+  .mala .beads circle:nth-of-type(94) {
+    animation-delay: 2718ms;
+  }
+  .mala .beads circle:nth-of-type(95) {
+    animation-delay: 2744ms;
+  }
+  .mala .beads circle:nth-of-type(96) {
+    animation-delay: 2770ms;
+  }
+  .mala .beads circle:nth-of-type(97) {
+    animation-delay: 2796ms;
+  }
+  .mala .beads circle:nth-of-type(98) {
+    animation-delay: 2822ms;
+  }
+  .mala .beads circle:nth-of-type(99) {
+    animation-delay: 2848ms;
+  }
+  .mala .beads circle:nth-of-type(100) {
+    animation-delay: 2874ms;
+  }
+  .mala .beads circle:nth-of-type(101) {
+    animation-delay: 2900ms;
+  }
+  .mala .beads circle:nth-of-type(102) {
+    animation-delay: 2926ms;
+  }
+  .mala .beads circle:nth-of-type(103) {
+    animation-delay: 2952ms;
+  }
+  .mala .beads circle:nth-of-type(104) {
+    animation-delay: 2978ms;
+  }
+  .mala .beads circle:nth-of-type(105) {
+    animation-delay: 3004ms;
+  }
+  .mala .beads circle:nth-of-type(106) {
+    animation-delay: 3030ms;
+  }
+  .mala .beads circle:nth-of-type(107) {
+    animation-delay: 3056ms;
+  }
+  .mala .beads circle:nth-of-type(108) {
+    animation-delay: 3082ms;
+  }
+}
+
+@keyframes count {
+  from {
+    fill: var(--unlit);
+  }
+
+  to {
+    fill: var(--black);
+  }
+}
+
+@keyframes tassel {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
   }
 }

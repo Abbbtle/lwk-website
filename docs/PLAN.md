@@ -330,7 +330,8 @@ Status: infrastructure DEPLOYED; first release goes out when this phase is merge
   encrypted, private, deletion protection, final snapshot on delete, **RDS-managed
   master password in Secrets Manager (rotated by RDS)**. **Backups: 1 day** - the AWS
   Free plan rejects longer retention; raise to 7+ days after upgrading to the Paid plan.
-- `lwk-dev-app` (**server and CloudFront in one stack**, since each needs the other):
+- `lwk-dev-app` (**server and CloudFront in one stack**: the distribution needs the server's
+  address and origin secret, and moving the deployed distribution would replace its address):
   t4g.micro Amazon Linux 2023, IMDSv2, encrypted disk, no SSH (Session Manager), Elastic
   IP, CloudFront at `https://dev.livingwithkrishna.com` (certificate from `lwk-dev-edge` in
   us-east-1; the distribution's own address `https://d1uih31m6ki5c2.cloudfront.net` redirects
@@ -640,8 +641,15 @@ features fall back to non-AI help until access works.
   `X-Robots-Tag: noindex, nofollow` with every response, so dev stays out of search results.
 - The main address (and `www`) is kept for production. Until launch it shows a static
   coming-soon page (`infra/coming-soon`, stack `lwk-coming-soon` in us-east-1: private S3
-  bucket, its own CloudFront distribution, `www` redirects to the main address). Delete that
-  stack when production takes over the main address.
+  bucket, its own CloudFront distribution, `www` redirects to the main address). The page is
+  published from `main`: `.github/workflows/publish-main-site.yml` uploads it whenever it changes
+  there (role `lwk-main-github-publish`, usable only by workflows on `main`), so the main address
+  always shows the production branch.
+- Production taking over the main address: destroy `lwk-coming-soon` first (turn off its
+  termination protection), which removes the apex and `www` records and frees the CloudFront
+  aliases, then deploy the production stage. The main address is offline in between, and
+  `bin/lwk.ts` refuses to synthesize a stage on the main address while the coming-soon stack is
+  wired.
 - CloudFront certificates must be in `us-east-1`; stacks there validate them against the zone
   through weak cross-stack references (`Fn::GetStackOutput`), which work across regions. AWS
   recommends that the global STS endpoint issue session tokens valid in all Regions for
@@ -651,7 +659,9 @@ features fall back to non-AI help until access works.
   (adds the outputs the other stacks read), `lwk-dev-edge`, then `lwk-dev-auth` and
   `lwk-dev-storage` (new sign-in callback and upload origin), then `lwk-dev-app`; run the Deploy
   workflow so the server picks up the new `APP_URL`; deploy `lwk-dev-monitoring` with
-  `ALERT_EMAIL` set; deploy `lwk-coming-soon`.
+  `ALERT_EMAIL` set; deploy `lwk-coming-soon`, whose page appears once `main` publishes it (after
+  the promotion from `dev` through `uat`). Then remove the CloudFront address from the dev
+  stage's `extraAppOrigins`.
 - The zone's identity is fixed once GoDaddy points at it: the stack id `lwk-domain`, its region
   and the zone's logical ID (pinned as `HostedZone`) must not change, or a second zone with new
   name servers is created. Records live in the stacks that use them, not in `lwk-domain`.
