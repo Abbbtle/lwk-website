@@ -22,7 +22,6 @@ export const socialLinks = [
 export const mainNav = [
   { href: '/explore', label: 'Explore' },
   { href: '/courses', label: 'Courses' },
-  { href: '/categories', label: 'Categories' },
   { href: '/plans-and-pricing', label: 'Plans & Pricing' },
   { href: '/become-an-instructor', label: 'Become an Instructor' },
   { href: '/contact', label: 'Contact' },

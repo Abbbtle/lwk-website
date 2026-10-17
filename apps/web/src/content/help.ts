@@ -122,11 +122,10 @@ Too many attempts in a row are paused for a few minutes to protect your account.
     title: 'Finding your way around',
     summary: 'What each part of the site is for, from Explore to My Learning.',
     audience: 'everyone',
-    paths: ['/', '/categories'],
+    paths: ['/'],
     keywords: ['menu', 'navigation', 'where', 'overview', 'tour', 'site'],
     body: `- **Explore**: free courses, videos, audio, articles and PDFs, open to everyone.
-- **Courses**: the full course catalogue, with search and a free-only filter.
-- **Categories**: kirtan, prasadam, Vaisnava etiquette and sastra study.
+- **Courses**: the full course catalogue, which you can narrow by category, search or filter to free courses only.
 - **Plans & Pricing**: subscription plans (every course is free during early access).
 - **Become an Instructor**: apply to teach.
 
@@ -142,7 +141,7 @@ The **Help** button at the bottom of every page shows help for the page you are 
     title: 'Finding courses',
     summary: 'Search the catalogue, filter by category and find free courses.',
     audience: 'everyone',
-    paths: ['/courses', '/courses/*', '/categories'],
+    paths: ['/courses', '/courses/*'],
     keywords: ['search', 'catalogue', 'catalog', 'find a course', 'category', 'free courses'],
     body: `Open **Courses** in the menu, or type in the search box at the top of any page. Every word you type must appear in the course title, subtitle or category.
 
