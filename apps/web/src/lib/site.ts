@@ -3,7 +3,7 @@ export const site = {
   tagline: 'Learn devotional skills in the comfort of your home.',
   description:
     'Your one-stop platform for learning and mastering skills from the comfort of your home.',
-  supportEmail: 'support@livingwithkrishna.org',
+  supportEmail: 'support@livingwithkrishna.com',
   officeHours: ['Monday – Friday,', '08:00 – 18:00', '(UTC + 2)'],
 };
 

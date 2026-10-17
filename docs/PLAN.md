@@ -55,7 +55,8 @@ content reference: https://livingwithkrishna.netlify.app
   teaching experience, languages, motivation, teaching philosophy, strengths. This
   becomes the instructor onboarding flow (apply -> admin approves -> instructor role).
 - **Contact form:** name, email, company, nature of inquiry (general, support,
-  partnership, feedback, other), message; support@livingwithkrishna.org.
+  partnership, feedback, other), message; the POC listed support@livingwithkrishna.org, a
+  domain the project does not own, so the site uses support@livingwithkrishna.com.
 - The POC's photos (kirtan, sacred books, temple and prasadam scenes) need usage
   permission confirmed before they appear on the public site.
 
