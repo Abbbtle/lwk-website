@@ -7,14 +7,17 @@ import type * as route53 from 'aws-cdk-lib/aws-route53';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
 import { CanonicalHostRedirect } from './canonical-host-redirect';
-import { config } from './config';
 import { DistributionAliasRecords } from './distribution-alias-records';
 import { assertInEdgeRegion } from './edge-region';
+import { githubBranchPrincipal, githubOidcProviderArn } from './github-oidc';
 
 export type ComingSoonStackProps = cdk.StackProps & {
   /** The shared zone (lwk-domain); the page is served at its apex and at www. */
   hostedZone: route53.IHostedZone;
-  /** Git branch whose workflow publishes the page (GitHub Actions, OIDC). */
+  /**
+   * Git branch whose workflow may publish the page (GitHub Actions, OIDC). publish-main-site.yml
+   * must trigger on the same branch (checked by infra/test).
+   */
   publishBranch: string;
 };
 
@@ -27,7 +30,8 @@ export type ComingSoonStackProps = cdk.StackProps & {
  *
  * When production takes over the main address, destroy this stack first (turn off its
  * termination protection): that removes the apex and www records and frees the CloudFront
- * aliases for the production distribution. The main address is offline in between.
+ * aliases for the production distribution. Delete publish-main-site.yml and infra/coming-soon in
+ * the same change. The main address is offline in between.
  */
 export class ComingSoonStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ComingSoonStackProps) {
@@ -58,7 +62,10 @@ export class ComingSoonStack extends cdk.Stack {
       comment: `LWK - redirects www and other host names to ${apexHostName}`,
     });
 
-    // A static page with no scripts, so the content security policy can be strict.
+    // A static page with no scripts, so the content security policy can be strict. The page in
+    // infra/coming-soon must keep to it (styles, images and fonts from this site only, no scripts
+    // or inline styles; checked by infra/test). It is published separately, from main, so deploy
+    // this stack before main publishes a page that needs more.
     const securityHeaders = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
       comment: 'LWK coming-soon page - security headers',
       securityHeadersBehavior: {
@@ -96,7 +103,7 @@ export class ComingSoonStack extends cdk.Stack {
         responseHeadersPolicy: securityHeaders,
         functionAssociations: [redirect.functionAssociation],
       },
-      // The bucket answers 403 for files that do not exist: show the page with a 404 status.
+      // The bucket answers 403 for files that do not exist: index.html is also the 404 page.
       errorResponses: [403, 404].map((httpStatus) => ({
         httpStatus,
         responseHttpStatus: 404,
@@ -106,24 +113,13 @@ export class ComingSoonStack extends cdk.Stack {
     });
 
     // GitHub Actions publishes the page from the production branch with short-lived credentials
-    // (OIDC); no AWS keys are stored in GitHub. The account's GitHub identity provider is created
-    // by the deploy-access stack.
-    const github = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
-      this,
-      'GitHubOidc',
-      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
-    );
+    // (OIDC); no AWS keys are stored in GitHub. The workflow hard-codes this role's name (it needs
+    // the role before it can read this stack's outputs), so the name must not change.
     const publishRole = new iam.Role(this, 'PublishRole', {
-      roleName: `lwk-${props.publishBranch}-github-publish`,
+      roleName: `${this.stackName}-github-publish`,
       description: `GitHub Actions publishes ${apexHostName} from ${props.publishBranch}`,
       maxSessionDuration: cdk.Duration.hours(1),
-      assumedBy: new iam.WebIdentityPrincipal(github.openIdConnectProviderArn, {
-        StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
-        // Only workflows running for the production branch of this repository.
-        StringLike: {
-          'token.actions.githubusercontent.com:sub': `repo:${config.githubRepository}:ref:refs/heads/${props.publishBranch}`,
-        },
-      }),
+      assumedBy: githubBranchPrincipal(githubOidcProviderArn(this.account), props.publishBranch),
     });
     bucket.grantReadWrite(publishRole);
     distribution.grant(publishRole, 'cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation');
@@ -146,8 +142,10 @@ export class ComingSoonStack extends cdk.Stack {
       distribution,
     });
 
+    // publish-main-site.yml reads SiteUrl, PageBucketName and DistributionId by key (checked by
+    // infra/test); PublishRoleArn is for reference.
     new cdk.CfnOutput(this, 'SiteUrl', { value: `https://${apexHostName}` });
-    new cdk.CfnOutput(this, 'BucketName', { value: bucket.bucketName });
+    new cdk.CfnOutput(this, 'PageBucketName', { value: bucket.bucketName });
     new cdk.CfnOutput(this, 'DistributionId', { value: distribution.distributionId });
     new cdk.CfnOutput(this, 'PublishRoleArn', { value: publishRole.roleArn });
   }

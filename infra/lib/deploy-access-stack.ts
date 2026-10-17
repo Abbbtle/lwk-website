@@ -3,7 +3,8 @@ import type * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Construct } from 'constructs';
-import { config, type StageConfig } from './config';
+import type { StageConfig } from './config';
+import { GITHUB_OIDC_URL, githubBranchPrincipal } from './github-oidc';
 
 export type DeployAccessStackProps = cdk.StackProps & {
   stageConfig: StageConfig;
@@ -15,6 +16,9 @@ export type DeployAccessStackProps = cdk.StackProps & {
  * Lets GitHub Actions deploy the web app with short-lived credentials (OIDC): no AWS keys are
  * stored in GitHub. The role can only upload release bundles and run commands on the web server,
  * and only from the stage's deploy branch.
+ *
+ * This stack also creates the account-wide GitHub identity provider, which the coming-soon
+ * publish role (lwk-coming-soon) trusts as well: do not destroy it while that stack exists.
  */
 export class DeployAccessStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: DeployAccessStackProps) {
@@ -22,7 +26,7 @@ export class DeployAccessStack extends cdk.Stack {
     const { stage, deployBranch } = props.stageConfig;
 
     const provider = new iam.OpenIdConnectProvider(this, 'GitHubOidc', {
-      url: 'https://token.actions.githubusercontent.com',
+      url: GITHUB_OIDC_URL,
       clientIds: ['sts.amazonaws.com'],
     });
 
@@ -30,13 +34,7 @@ export class DeployAccessStack extends cdk.Stack {
       roleName: `lwk-${stage}-github-deploy`,
       description: `GitHub Actions deploys to LWK ${stage} from ${deployBranch}`,
       maxSessionDuration: cdk.Duration.hours(1),
-      assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
-        StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
-        // Only workflows running for the deploy branch of this repository.
-        StringLike: {
-          'token.actions.githubusercontent.com:sub': `repo:${config.githubRepository}:ref:refs/heads/${deployBranch}`,
-        },
-      }),
+      assumedBy: githubBranchPrincipal(provider.openIdConnectProviderArn, deployBranch),
     });
 
     props.artifactsBucket.grantPut(role, 'web/*');

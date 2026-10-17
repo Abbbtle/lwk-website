@@ -4,8 +4,9 @@ import { Construct } from 'constructs';
 export type CanonicalHostRedirectProps = {
   /**
    * The host name that every other host name is redirected to, and whose own requests pass
-   * through: a lowercase DNS name known at synth time (not a token), without scheme, port, path
-   * or trailing dot, for example "dev.livingwithkrishna.com". It is embedded in the function code.
+   * through: a fully qualified, lowercase DNS name (two or more labels) known at synth time (not
+   * a token), without scheme, port, path or trailing dot, for example "dev.livingwithkrishna.com".
+   * It is embedded in the function code.
    */
   canonicalHostName: string;
   /** Describes the function in the CloudFront console. */
@@ -50,8 +51,9 @@ export class CanonicalHostRedirect extends Construct {
 export function canonicalHostRedirectSource(canonicalHostName: string): string {
   if (!HOST_NAME.test(canonicalHostName)) {
     throw new Error(
-      'canonicalHostName must be a bare lowercase host name such as "dev.livingwithkrishna.com" ' +
-        `(no scheme, port, path or trailing dot; not a token), got "${canonicalHostName}"`,
+      'canonicalHostName must be a fully qualified lowercase host name (two or more labels) such ' +
+        'as "dev.livingwithkrishna.com", with no scheme, port, path or trailing dot and not a ' +
+        `token, got "${canonicalHostName}"`,
     );
   }
   return `function handler(event) {

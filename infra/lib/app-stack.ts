@@ -233,9 +233,16 @@ export class AppStack extends cdk.Stack {
             customHeaders: [{ header: 'X-Robots-Tag', value: 'noindex, nofollow', override: true }],
           },
         });
-    // Every cache behavior is built here, so none can miss the redirect or the noindex header.
-    const siteBehavior = (behavior: cloudfront.BehaviorOptions): cloudfront.BehaviorOptions => ({
+    // Every cache behavior is built here, so none can miss HTTPS, the redirect or the noindex
+    // header; callers cannot pass those settings, so changing the rule means changing this.
+    const siteBehavior = (
+      behavior: Omit<
+        cloudfront.BehaviorOptions,
+        'viewerProtocolPolicy' | 'functionAssociations' | 'responseHeadersPolicy'
+      >,
+    ): cloudfront.BehaviorOptions => ({
       ...behavior,
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       functionAssociations: [redirect.functionAssociation],
       responseHeadersPolicy,
     });
@@ -247,7 +254,6 @@ export class AppStack extends cdk.Stack {
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       defaultBehavior: siteBehavior({
         origin,
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         // Pages are per user (sign-in cookies): never cached at the edge.
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
@@ -260,7 +266,6 @@ export class AppStack extends cdk.Stack {
         // Hashed build assets are safe to cache for a long time.
         '/_next/static/*': siteBehavior({
           origin,
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
         }),

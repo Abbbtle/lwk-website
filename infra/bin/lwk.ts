@@ -40,9 +40,21 @@ if (apexStage) {
   throw new Error(
     `Stage ${apexStage.stage} uses ${config.apexDomainName}, which lwk-coming-soon still serves. ` +
       'Remove the coming-soon stack from bin/lwk.ts and destroy it (turn off its termination ' +
-      'protection first) before deploying that stage.',
+      'protection first), and delete .github/workflows/publish-main-site.yml and ' +
+      'infra/coming-soon in the same change, before deploying that stage.',
   );
 }
+
+// Each stage's deploy-access stack creates the GitHub identity provider, which IAM allows once per
+// account (see lib/github-oidc.ts): a second stage here needs an account-level owner for it first.
+if (Object.keys(stages).length > 1) {
+  throw new Error(
+    `All stages deploy to account ${config.account}, where only one GitHub identity provider can ` +
+      'exist. Move it from DeployAccessStack to an account-level stack (import it by ARN in each ' +
+      'consumer, as lwk-coming-soon does) before adding another stage.',
+  );
+}
+
 new ComingSoonStack(app, 'lwk-coming-soon', {
   env: edgeEnv,
   terminationProtection: true,
