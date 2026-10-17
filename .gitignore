@@ -15,3 +15,6 @@ cdk.out/
 next-env.d.ts
 coverage/
 **/src/generated/
+
+# notes that design-review agents keep between sessions (local to each machine)
+**/.claude/agent-memory-local/

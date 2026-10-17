@@ -46,7 +46,8 @@ and restart the dev server.
 ## Deploying
 
 Merging into `dev` deploys to AWS automatically (`.github/workflows/deploy.yml`):
-the site is at https://d1uih31m6ki5c2.cloudfront.net. Infrastructure changes are made
+the site is at https://dev.livingwithkrishna.com (the CloudFront address,
+https://d1uih31m6ki5c2.cloudfront.net, redirects there). Infrastructure changes are made
 with CDK from `infra/` (`npm run diff` first, then `npm run deploy -- <stack>`).
 
 Always deploy the monitoring stack with the alert address set, otherwise the email
@@ -54,7 +55,11 @@ subscription is removed: `ALERT_EMAIL=<address> npm run deploy -- lwk-dev-monito
 
 The domain `livingwithkrishna.com` is registered at GoDaddy. Its DNS is the Route 53 zone in
 the shared `lwk-domain` stack (`npm run deploy -- lwk-domain`), so the domain's nameservers at
-GoDaddy must be the four values in that stack's `NameServers` output.
+GoDaddy must be the four values in that stack's `NameServers` output. CloudFront certificates
+live in `us-east-1`: `lwk-dev-edge` for the dev site and `lwk-coming-soon`, the page on the
+main address until launch. That region needs a one-time `cdk bootstrap`, and the account's
+global STS endpoint should issue session tokens valid in all Regions (IAM > Account settings),
+which AWS recommends for references between `us-east-1` and opt-in Regions such as `af-south-1`.
 
 Open a shell on the web server (no SSH): `aws ssm start-session --target <instance-id>
 --profile lwk` (requires the Session Manager plugin). App logs: CloudWatch Logs group

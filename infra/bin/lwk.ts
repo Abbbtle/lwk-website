@@ -2,10 +2,12 @@
 import * as cdk from 'aws-cdk-lib/core';
 import { AppStack } from '../lib/app-stack';
 import { AuthStack } from '../lib/auth-stack';
+import { ComingSoonStack } from '../lib/coming-soon-stack';
 import { config, stages } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
 import { DomainStack } from '../lib/domain-stack';
+import { EdgeStack } from '../lib/edge-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { StorageStack } from '../lib/storage-stack';
@@ -16,14 +18,25 @@ const app = new cdk.App();
 cdk.Tags.of(app).add('project', config.project);
 
 const env: cdk.Environment = { account: config.account, region: config.region };
+// Where CloudFront reads certificates from; stacks here reference the zone and are referenced
+// by the app stacks through weak cross-region references.
+const edgeEnv: cdk.Environment = { account: config.account, region: config.edgeRegion };
 
 // Public DNS for the domain, shared by all stages (see "Domain and DNS" in docs/PLAN.md).
 // Keep the stack id and region: GoDaddy points at this zone's name servers.
-new DomainStack(app, 'lwk-domain', {
+const domain = new DomainStack(app, 'lwk-domain', {
   env,
   terminationProtection: true,
   description: `LWK - public DNS for ${config.apexDomainName} (Route 53)`,
   apexDomainName: config.apexDomainName,
+});
+
+// The main address (and www) shows a coming-soon page until production launches.
+new ComingSoonStack(app, 'lwk-coming-soon', {
+  env: edgeEnv,
+  terminationProtection: true,
+  description: `LWK - coming-soon page on ${config.apexDomainName} and www until launch`,
+  hostedZone: domain.hostedZone,
 });
 
 // See docs/PLAN.md. The account budget lives in cfn/budget.yaml (stack lwk-guardrails, us-east-1).
@@ -49,9 +62,17 @@ for (const stageConfig of Object.values(stages)) {
     vpc: network.vpc,
     securityGroup: network.databaseSecurityGroup,
   });
+  const edge = new EdgeStack(app, `lwk-${stage}-edge`, {
+    ...common,
+    env: edgeEnv,
+    description: `LWK ${stage} - CloudFront certificate for ${stageConfig.siteHostName} (us-east-1)`,
+    hostedZone: domain.hostedZone,
+  });
   const web = new AppStack(app, `lwk-${stage}-app`, {
     ...common,
     description: `LWK ${stage} - web server (EC2) and CloudFront`,
+    hostedZone: domain.hostedZone,
+    certificate: edge.certificate,
     vpc: network.vpc,
     securityGroup: network.webSecurityGroup,
     database: data.database,
@@ -80,7 +101,7 @@ for (const stageConfig of Object.values(stages)) {
     alertEmail: process.env.ALERT_EMAIL,
   });
 
-  for (const stack of [auth, storage, network, data, web, deployAccess, monitoring]) {
+  for (const stack of [auth, storage, network, data, edge, web, deployAccess, monitoring]) {
     cdk.Tags.of(stack).add('stage', stage);
   }
 }

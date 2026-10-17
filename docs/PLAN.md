@@ -55,7 +55,8 @@ content reference: https://livingwithkrishna.netlify.app
   teaching experience, languages, motivation, teaching philosophy, strengths. This
   becomes the instructor onboarding flow (apply -> admin approves -> instructor role).
 - **Contact form:** name, email, company, nature of inquiry (general, support,
-  partnership, feedback, other), message; support@livingwithkrishna.org.
+  partnership, feedback, other), message; the POC listed support@livingwithkrishna.org, a
+  domain the project does not own, so the site uses support@livingwithkrishna.com.
 - The POC's photos (kirtan, sacred books, temple and prasadam scenes) need usage
   permission confirmed before they appear on the public site.
 
@@ -331,8 +332,10 @@ Status: infrastructure DEPLOYED; first release goes out when this phase is merge
   Free plan rejects longer retention; raise to 7+ days after upgrading to the Paid plan.
 - `lwk-dev-app` (**server and CloudFront in one stack**, since each needs the other):
   t4g.micro Amazon Linux 2023, IMDSv2, encrypted disk, no SSH (Session Manager), Elastic
-  IP, CloudFront `https://d1uih31m6ki5c2.cloudfront.net` (pages uncached with all viewer
-  headers forwarded; `/_next/static/*` cached), artifacts bucket (30-day expiry), log group
+  IP, CloudFront at `https://dev.livingwithkrishna.com` (certificate from `lwk-dev-edge` in
+  us-east-1; the distribution's own address `https://d1uih31m6ki5c2.cloudfront.net` redirects
+  there; pages uncached with all viewer headers forwarded; `/_next/static/*` cached; every
+  response marked `X-Robots-Tag: noindex, nofollow`), artifacts bucket (30-day expiry), log group
   `/lwk/dev/web` (30 days), runtime config in Parameter Store `/lwk/dev/web/*`. The app
   reads the database password from Secrets Manager at connect time (cached 1 minute) and
   verifies the RDS TLS certificate.
@@ -630,10 +633,25 @@ features fall back to non-AI help until access works.
   auto-renew and the domain lock on). GoDaddy only holds the registration: its nameservers
   point to the Route 53 hosted zone in the shared `lwk-domain` stack, where all records live
   as code.
-- The dev stage moves to `dev.livingwithkrishna.com`. The main address (and `www`) is kept for
-  production and shows a coming-soon page until launch.
+- The dev stage is served at `dev.livingwithkrishna.com`: its certificate is in the per-stage
+  `lwk-dev-edge` stack (us-east-1) and its alias records in `lwk-dev-app`. A CloudFront Function
+  redirects every other host name, including the distribution's own address, to it with the
+  same path and query string (301). Stages with `searchIndexing: false` send
+  `X-Robots-Tag: noindex, nofollow` with every response, so dev stays out of search results.
+- The main address (and `www`) is kept for production. Until launch it shows a static
+  coming-soon page (`infra/coming-soon`, stack `lwk-coming-soon` in us-east-1: private S3
+  bucket, its own CloudFront distribution, `www` redirects to the main address). Delete that
+  stack when production takes over the main address.
 - CloudFront certificates must be in `us-east-1`; stacks there validate them against the zone
-  through weak cross-stack references (`Fn::GetStackOutput`), which work across regions.
+  through weak cross-stack references (`Fn::GetStackOutput`), which work across regions. AWS
+  recommends that the global STS endpoint issue session tokens valid in all Regions for
+  references between `us-east-1` and opt-in Regions such as `af-south-1` (IAM > Account
+  settings), and `us-east-1` needs a one-time `cdk bootstrap`.
+- First rollout, once GoDaddy points at the zone: bootstrap `us-east-1`; deploy `lwk-domain`
+  (adds the outputs the other stacks read), `lwk-dev-edge`, then `lwk-dev-auth` and
+  `lwk-dev-storage` (new sign-in callback and upload origin), then `lwk-dev-app`; run the Deploy
+  workflow so the server picks up the new `APP_URL`; deploy `lwk-dev-monitoring` with
+  `ALERT_EMAIL` set; deploy `lwk-coming-soon`.
 - The zone's identity is fixed once GoDaddy points at it: the stack id `lwk-domain`, its region
   and the zone's logical ID (pinned as `HostedZone`) must not change, or a second zone with new
   name servers is created. Records live in the stacks that use them, not in `lwk-domain`.
