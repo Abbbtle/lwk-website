@@ -26,17 +26,21 @@ const BEGINNER_LIMIT = 6;
 function heroSlides({
   hasBeginnerCourses,
   hasFreeContent,
+  signedIn,
 }: {
   hasBeginnerCourses: boolean;
   hasFreeContent: boolean;
+  signedIn: boolean;
 }): HeroBannerSlide[] {
   const slides: (HeroBannerSlide | false)[] = [
     {
       id: 'learn',
+      tag: 'Free during early access',
       heading: 'Grow in devotion, one lesson at a time',
-      text: 'Learn devotional skills at home from experienced devotees. Every course is free to join during early access.',
+      text: 'Learn devotional skills at home from experienced devotees, at your own pace.',
       action: { href: '/courses', label: 'Start learning' },
-      cardSide: 'right',
+      secondary: signedIn ? undefined : { href: '/sign-up', label: 'Create free account' },
+      align: 'right',
       image: {
         src: '/images/hero-devotion.jpg',
         alt: 'Devotees gathered in kirtan around a garlanded seat',
@@ -45,19 +49,17 @@ function heroSlides({
     },
     hasBeginnerCourses && {
       id: 'beginners',
+      tag: 'For beginners',
       heading: 'New here? Start with the basics',
       text: 'Beginner courses take you step by step, from your very first lesson.',
       action: { href: '#beginner-courses', label: 'See beginner courses' },
-      image: {
-        src: '/images/hero-sastra.jpg',
-        alt: 'Volumes of Vedic literature',
-        position: '50% 40%',
-      },
+      secondary: { href: '/courses', label: 'Browse all courses' },
     },
     hasFreeContent && {
       id: 'free',
+      tag: 'Free for everyone',
       heading: 'Begin today, for free',
-      text: 'Watch talks, listen to kirtan and take free courses, open to everyone. No subscription needed.',
+      text: 'Watch talks, listen to kirtan and take free courses. No subscription needed.',
       action: { href: '/explore', label: 'Explore free content' },
       image: {
         src: '/images/mission-hero.jpg',
@@ -67,9 +69,11 @@ function heroSlides({
     },
     {
       id: 'teach',
+      tag: 'For teachers',
       heading: 'Share what you know',
       text: 'Teach the devotional skills you love and help others grow. We review every course before it goes live.',
       action: { href: '/become-an-instructor', label: 'Apply to teach' },
+      secondary: { href: '/help/becoming-an-instructor', label: 'How teaching works' },
       image: {
         src: '/images/hero-kirtan.jpg',
         alt: 'A kirtan leader singing with devotees',
@@ -126,19 +130,21 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white">
-      <p className="bg-brand px-4 py-3 text-center text-sm font-semibold text-black sm:text-base">
+      <p className="border-b border-black/15 bg-brand px-4 py-3 text-center text-sm font-semibold text-black sm:text-base">
         Early access: every course is free to join.{' '}
         <Link href="/courses" className="underline underline-offset-4 hover:no-underline">
           Browse courses
         </Link>
       </p>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:pt-8 lg:px-8">
-        <HeroCarousel
-          label="Featured"
-          slides={heroSlides({ hasBeginnerCourses: beginners.length > 0, hasFreeContent })}
-        />
-      </div>
+      <HeroCarousel
+        label="Featured"
+        slides={heroSlides({
+          hasBeginnerCourses: beginners.length > 0,
+          hasFreeContent,
+          signedIn: Boolean(session),
+        })}
+      />
 
       {categories.length > 0 && <CategoryShowcase categories={categories} />}
 

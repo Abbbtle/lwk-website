@@ -65,6 +65,11 @@ body {
   @apply btn border-brand bg-brand text-black hover:border-brand-dark hover:bg-brand-dark;
 }
 
+/* White outline for dark backgrounds such as photos; fills white on hover. */
+@utility btn-light {
+  @apply btn border-white text-white hover:bg-white hover:text-black;
+}
+
 /*
  * A strand of japa beads, as on the coming-soon page, in the current text colour. `space`
  * keeps a whole number of beads in each strand, so strands stacked end to end stay evenly spaced.

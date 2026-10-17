@@ -5,11 +5,25 @@ import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
-export function CourseCard({ course, eager = false }: { course: CourseSummary; eager?: boolean }) {
+export function CourseCard({
+  course,
+  eager = false,
+  sizes,
+}: {
+  course: CourseSummary;
+  eager?: boolean;
+  /** How wide the cover shows, when it differs from the usual grid (see CourseCover). */
+  sizes?: string;
+}) {
   return (
     <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       <div className="relative">
-        <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} eager={eager} />
+        <CourseCover
+          categorySlug={course.categorySlug}
+          imageUrl={course.coverUrl}
+          eager={eager}
+          sizes={sizes}
+        />
         {(course.isFree || course.isSample) && (
           <div className="absolute top-3 left-3 flex gap-2">
             {course.isFree && <FreeBadge />}
@@ -69,7 +83,11 @@ export function CourseRow({ courses }: { courses: CourseSummary[] }) {
     <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3">
       {courses.map((course) => (
         <li key={course.slug} className="grid w-[82%] shrink-0 snap-start sm:w-auto">
-          <CourseCard course={course} />
+          {/* Cards are 82% of the screen wide on phones, so a smaller cover is enough. */}
+          <CourseCard
+            course={course}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 82vw"
+          />
         </li>
       ))}
     </ul>
