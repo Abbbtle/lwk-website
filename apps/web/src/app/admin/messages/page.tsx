@@ -17,7 +17,7 @@ export default async function MessagesPage({ searchParams }: PageProps<'/admin/m
   const messages = await listContactMessages({ handled });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="Messages" greeting={session.name} />
       <AdminNav current="/admin/messages" />
 

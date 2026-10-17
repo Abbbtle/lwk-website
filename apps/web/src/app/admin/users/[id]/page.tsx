@@ -33,7 +33,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
   const disabled = user.account ? !user.account.enabled : Boolean(user.disabledAt);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title={user.name} greeting="User" />
       <AdminNav current="/admin/users" />
       <Link

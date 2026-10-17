@@ -12,6 +12,11 @@ export const categoryImages: Record<string, { src: string; alt: string }> = {
 };
 const fallback = categoryImages['vaisnava-etiquette'];
 
+/** A category's artwork, or a general photo for categories without their own. */
+export function categoryImage(slug: string): { src: string; alt: string } {
+  return categoryImages[slug] ?? fallback;
+}
+
 export function CourseCover({
   categorySlug,
   imageUrl,
@@ -39,7 +44,7 @@ export function CourseCover({
       />
     );
   }
-  const image = categoryImages[categorySlug] ?? fallback;
+  const image = categoryImage(categorySlug);
   return (
     <div className={`relative aspect-video w-full overflow-hidden bg-gray-200 ${className}`}>
       <Image src={image.src} alt="" fill sizes={sizes} preload={eager} className="object-cover" />

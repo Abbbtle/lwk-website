@@ -37,13 +37,14 @@ export async function SiteHeader() {
   const user = await getNavUser();
   return (
     <header className="relative z-30 bg-white shadow-md">
-      <nav aria-label="Main" className="flex items-center gap-4 px-4 py-2 sm:px-6 lg:gap-6">
+      <nav aria-label="Main" className="page-width flex items-center gap-4 py-2 lg:gap-6">
         <Link href="/" className="shrink-0">
           <Image
             src="/logo-black.png"
             alt={site.name}
-            width={1417}
-            height={790}
+            // Its shown size (h-12), so phones download a small logo rather than the full image.
+            width={86}
+            height={48}
             preload
             className="h-12 w-auto"
           />

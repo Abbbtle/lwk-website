@@ -8,20 +8,41 @@
   --color-brand-ink: var(--color-orange-700);
   --color-surface: #f9f9f9;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --animate-marquee: marquee 40s linear infinite;
+  --animate-strand-count: strand-count 600ms linear both;
+  --animate-tassel-drop: tassel-drop 480ms ease-out both;
 
-  @keyframes marquee {
+  /* Beads darken from the top, like a round of japa being counted. */
+  @keyframes strand-count {
     from {
-      transform: translateX(0);
+      clip-path: inset(0 0 100% 0);
     }
     to {
-      transform: translateX(-50%);
+      clip-path: inset(0);
+    }
+  }
+
+  @keyframes tassel-drop {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
     }
   }
 }
 
 body {
   @apply bg-surface text-gray-900 antialiased;
+}
+
+/*
+ * The site's one content width and side margins. The header, the footer and every page section
+ * use it, so their left and right edges line up everywhere. Narrower reading columns sit inside
+ * it, starting at its left edge.
+ */
+@utility page-width {
+  /* max-w-360 is 1440px, about Udemy's content width; wide enough for the header's search. */
+  @apply mx-auto w-full max-w-360 px-4 sm:px-6 lg:px-8;
 }
 
 /* Square, bold buttons as in the POC. */
@@ -54,11 +75,23 @@ body {
   @apply btn border-brand bg-brand text-black hover:border-brand-dark hover:bg-brand-dark;
 }
 
+/* White outline for dark backgrounds such as photos; fills white on hover. */
+@utility btn-light {
+  @apply btn border-white text-white hover:bg-white hover:text-black;
+}
+
+/*
+ * A strand of japa beads, as on the coming-soon page, in the current text colour. `space`
+ * keeps a whole number of beads in each strand, so strands stacked end to end stay evenly spaced.
+ */
+@utility bead-strand {
+  background-image: radial-gradient(circle, currentColor 4.25px, transparent 4.75px);
+  background-size: 100% 12px;
+  background-repeat: no-repeat space;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn-outline {
     transition: none;
-  }
-  .animate-marquee {
-    animation: none;
   }
 }

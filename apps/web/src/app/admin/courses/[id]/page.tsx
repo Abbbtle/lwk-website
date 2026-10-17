@@ -36,7 +36,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
   const missing = reviewChecklist(course);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="Review course" greeting={session.name} />
       <AdminNav current="/admin/courses" />
       <Link href="/admin/courses" className="text-sm font-semibold hover:text-brand-ink">

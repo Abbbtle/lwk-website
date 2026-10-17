@@ -40,7 +40,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
     .join(', ');
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title={`Request ${ticketRef(ticket.number)}`} greeting="Support" />
       <AdminNav current="/admin/support" />
       <Link

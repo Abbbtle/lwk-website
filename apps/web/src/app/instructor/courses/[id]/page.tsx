@@ -37,7 +37,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
   const locked = course.status !== 'DRAFT' && !hasRole(session, 'admin');
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <Link href="/instructor" className="text-sm font-semibold hover:text-brand-ink">
         ← Instructor dashboard
       </Link>

@@ -61,7 +61,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
         }}
       />
       <section className="bg-black text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
+        <div className="page-width grid gap-10 py-12 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             <nav aria-label="Breadcrumb" className="text-sm text-gray-300">
               <Link href="/courses" className="hover:text-brand">
@@ -95,7 +95,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
+      <div className="page-width grid gap-10 py-12 lg:grid-cols-3">
         <div className="space-y-12 lg:col-span-2">
           {course.isSample && (
             <p className="border-l-4 border-gray-400 bg-white p-4 text-sm text-gray-700">

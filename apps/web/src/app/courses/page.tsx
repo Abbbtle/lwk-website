@@ -31,7 +31,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <h1 className="text-3xl font-extrabold md:text-4xl">
         {query ? (
           <>

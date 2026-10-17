@@ -6,13 +6,14 @@ import { footerNav, site } from '@/lib/site';
 export function SiteFooter() {
   return (
     <footer className="bg-black text-white">
-      <div className="grid gap-10 px-8 pt-12 pb-10 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/" className="justify-self-center sm:justify-self-start">
+      <div className="page-width grid gap-10 pt-12 pb-10 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/" className="justify-self-start">
           <Image
             src="/logo-white.png"
             alt={site.name}
-            width={1428}
-            height={793}
+            // Its largest shown size (md:h-28), so a small logo is downloaded.
+            width={202}
+            height={112}
             className="h-24 w-auto md:h-28"
           />
         </Link>
@@ -36,9 +37,11 @@ export function SiteFooter() {
           <p className="mt-4 text-sm">{site.description}</p>
         </div>
       </div>
-      <p className="pb-6 text-center text-sm">
-        © {new Date().getFullYear()} {site.name}. All rights reserved.
-      </p>
+      <div className="page-width">
+        <p className="border-t border-white/15 py-6 text-sm text-gray-300">
+          © {new Date().getFullYear()} {site.name}. All rights reserved.
+        </p>
+      </div>
     </footer>
   );
 }

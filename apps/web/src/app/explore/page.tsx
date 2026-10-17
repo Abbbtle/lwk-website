@@ -87,7 +87,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
   return (
     <>
       <section className="bg-black text-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div className="page-width py-14 lg:py-20">
           <p className="font-semibold text-brand uppercase">Explore</p>
           <h1 className="mt-2 max-w-3xl text-4xl font-extrabold md:text-5xl">
             Free courses and teachings, open to everyone
@@ -126,7 +126,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl space-y-14 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="page-width space-y-14 py-12">
         <div className="space-y-4">
           <nav aria-label="Filter by type" className={pillRowClass}>
             {filters.map((f) => (
