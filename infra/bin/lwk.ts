@@ -5,6 +5,7 @@ import { AuthStack } from '../lib/auth-stack';
 import { config, stages } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
+import { DomainStack } from '../lib/domain-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { StorageStack } from '../lib/storage-stack';
@@ -15,6 +16,15 @@ const app = new cdk.App();
 cdk.Tags.of(app).add('project', config.project);
 
 const env: cdk.Environment = { account: config.account, region: config.region };
+
+// Public DNS for the domain, shared by all stages (see "Domain and DNS" in docs/PLAN.md).
+// Keep the stack id and region: GoDaddy points at this zone's name servers.
+new DomainStack(app, 'lwk-domain', {
+  env,
+  terminationProtection: true,
+  description: `LWK - public DNS for ${config.apexDomainName} (Route 53)`,
+  apexDomainName: config.apexDomainName,
+});
 
 // See docs/PLAN.md. The account budget lives in cfn/budget.yaml (stack lwk-guardrails, us-east-1).
 for (const stageConfig of Object.values(stages)) {
