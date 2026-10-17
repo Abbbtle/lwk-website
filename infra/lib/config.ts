@@ -7,6 +7,8 @@ export const config = {
   // The registered domain (zone apex), at GoDaddy; its DNS is the Route 53 zone in the shared
   // lwk-domain stack. Stage sites use subdomains of it; production keeps the apex.
   apexDomainName: 'livingwithkrishna.com',
+  // CloudFront only uses certificates (and web ACLs) from this region.
+  edgeRegion: 'us-east-1',
   // GitHub repository allowed to deploy (OIDC), see DeployAccessStack.
   githubRepository: 'Abbbtle/lwk-website',
   // AWS-managed prefix list of CloudFront origin-facing IPs in af-south-1
@@ -28,8 +30,18 @@ export type StageConfig = {
   /** Prefix for the Cognito hosted sign-in domain (<prefix>.auth.<region>.amazoncognito.com). */
   authDomainPrefix: string;
   /**
-   * Origins allowed to receive sign-in redirects and upload to the media bucket. The CloudFront
-   * URL is added after the first deploy of the app stack (it is only known then).
+   * Public host name of the stage's site, a subdomain of `config.apexDomainName` (production
+   * will use the apex itself). Other host names that reach the distribution redirect here.
+   */
+  siteHostName: string;
+  /**
+   * Whether search engines may index the site. Only production should; other stages send
+   * `X-Robots-Tag: noindex, nofollow` with every response.
+   */
+  searchIndexing: boolean;
+  /**
+   * Origins allowed to receive sign-in redirects and upload to the media bucket: the site, local
+   * development, and earlier addresses that now redirect (so sign-ins started there can finish).
    */
   appOrigins: string[];
   /** Git branch that deploys to this stage. */
@@ -38,12 +50,21 @@ export type StageConfig = {
   ai: { assistantModel: string; writerModel: string; monthlyBudgetUsd: number };
 };
 
+const devSiteHostName = `dev.${config.apexDomainName}`;
+
 // One AWS environment while on the Free plan (see docs/PLAN.md, "Branches and environments").
 export const stages: Record<string, StageConfig> = {
   dev: {
     stage: 'dev',
     authDomainPrefix: 'livingwithkrishna-dev',
-    appOrigins: ['http://localhost:3000', 'https://d1uih31m6ki5c2.cloudfront.net'],
+    siteHostName: devSiteHostName,
+    searchIndexing: false,
+    appOrigins: [
+      `https://${devSiteHostName}`,
+      'http://localhost:3000',
+      // The distribution's own address, used before the domain; it now redirects to the site.
+      'https://d1uih31m6ki5c2.cloudfront.net',
+    ],
     deployBranch: 'dev',
     ai: {
       assistantModel: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',

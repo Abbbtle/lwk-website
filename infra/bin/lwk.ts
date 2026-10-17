@@ -6,6 +6,7 @@ import { config, stages } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
 import { DomainStack } from '../lib/domain-stack';
+import { EdgeStack } from '../lib/edge-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { StorageStack } from '../lib/storage-stack';
@@ -16,10 +17,13 @@ const app = new cdk.App();
 cdk.Tags.of(app).add('project', config.project);
 
 const env: cdk.Environment = { account: config.account, region: config.region };
+// Where CloudFront reads certificates from; stacks here reference the zone and are referenced
+// by the app stacks through weak cross-region references.
+const edgeEnv: cdk.Environment = { account: config.account, region: config.edgeRegion };
 
 // Public DNS for the domain, shared by all stages (see "Domain and DNS" in docs/PLAN.md).
 // Keep the stack id and region: GoDaddy points at this zone's name servers.
-new DomainStack(app, 'lwk-domain', {
+const domain = new DomainStack(app, 'lwk-domain', {
   env,
   terminationProtection: true,
   description: `LWK - public DNS for ${config.apexDomainName} (Route 53)`,
@@ -48,6 +52,12 @@ for (const stageConfig of Object.values(stages)) {
     description: `LWK ${stage} - PostgreSQL (RDS)`,
     vpc: network.vpc,
     securityGroup: network.databaseSecurityGroup,
+  });
+  const edge = new EdgeStack(app, `lwk-${stage}-edge`, {
+    ...common,
+    env: edgeEnv,
+    description: `LWK ${stage} - CloudFront certificate for ${stageConfig.siteHostName} (us-east-1)`,
+    hostedZone: domain.hostedZone,
   });
   const web = new AppStack(app, `lwk-${stage}-app`, {
     ...common,
@@ -80,7 +90,7 @@ for (const stageConfig of Object.values(stages)) {
     alertEmail: process.env.ALERT_EMAIL,
   });
 
-  for (const stack of [auth, storage, network, data, web, deployAccess, monitoring]) {
+  for (const stack of [auth, storage, network, data, edge, web, deployAccess, monitoring]) {
     cdk.Tags.of(stack).add('stage', stage);
   }
 }
