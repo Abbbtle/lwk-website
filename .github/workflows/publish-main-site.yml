@@ -1,0 +1,61 @@
+name: Publish main site
+
+# What livingwithkrishna.com shows comes from main. Until production launches that is the
+# coming-soon page (infra/coming-soon), uploaded to the lwk-coming-soon bucket in us-east-1.
+# AWS access uses GitHub OIDC and the lwk-main-github-publish role: no AWS keys are stored here.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/coming-soon/**'
+      - '.github/workflows/publish-main-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-main-site
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  PUBLISH_ROLE_ARN: arn:aws:iam::455280338092:role/lwk-main-github-publish
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ env.PUBLISH_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Find the bucket and distribution
+        run: |
+          outputs=$(aws cloudformation describe-stacks --stack-name lwk-coming-soon \
+            --query 'Stacks[0].Outputs' --output json)
+          echo "BUCKET=$(jq -r '.[] | select(.OutputKey=="BucketName") | .OutputValue' <<<"$outputs")" >>"$GITHUB_ENV"
+          echo "DISTRIBUTION_ID=$(jq -r '.[] | select(.OutputKey=="DistributionId") | .OutputValue' <<<"$outputs")" >>"$GITHUB_ENV"
+          echo "SITE_URL=$(jq -r '.[] | select(.OutputKey=="SiteUrl") | .OutputValue' <<<"$outputs")" >>"$GITHUB_ENV"
+
+      - name: Upload the page
+        run: aws s3 sync infra/coming-soon "s3://$BUCKET" --delete --only-show-errors
+
+      - name: Refresh CloudFront
+        run: |
+          id=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
+            --paths '/*' --query 'Invalidation.Id' --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION_ID" --id "$id"
+
+      - name: Check the live site
+        run: |
+          for _ in $(seq 1 10); do
+            if curl -fsS -o /dev/null "$SITE_URL/"; then exit 0; fi
+            sleep 6
+          done
+          echo "The main site did not answer at $SITE_URL" && exit 1

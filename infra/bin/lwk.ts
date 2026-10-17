@@ -48,6 +48,7 @@ new ComingSoonStack(app, 'lwk-coming-soon', {
   terminationProtection: true,
   description: `LWK - coming-soon page on ${config.apexDomainName} and www until launch`,
   hostedZone: domain.hostedZone,
+  publishBranch: config.productionBranch,
 });
 
 // See docs/PLAN.md. The account budget lives in cfn/budget.yaml (stack lwk-guardrails, us-east-1).

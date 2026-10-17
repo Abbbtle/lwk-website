@@ -61,6 +61,10 @@ main address until launch. That region needs a one-time `cdk bootstrap`, and the
 global STS endpoint should issue session tokens valid in all Regions (IAM > Account settings),
 which AWS recommends for references between `us-east-1` and opt-in Regions such as `af-south-1`.
 
+The main address shows what is on `main`: until production launches that is the coming-soon page
+in `infra/coming-soon`, which `.github/workflows/publish-main-site.yml` uploads to the
+`lwk-coming-soon` bucket whenever it changes on `main` (it can also be run by hand).
+
 Open a shell on the web server (no SSH): `aws ssm start-session --target <instance-id>
 --profile lwk` (requires the Session Manager plugin). App logs: CloudWatch Logs group
 `/lwk/dev/web`.
