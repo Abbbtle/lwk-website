@@ -1,4 +1,11 @@
-import { FileText, Headphones, type LucideIcon, Newspaper, PlayCircle } from 'lucide-react';
+import {
+  FileText,
+  GraduationCap,
+  Headphones,
+  type LucideIcon,
+  Newspaper,
+  PlayCircle,
+} from 'lucide-react';
 
 const badge = 'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold uppercase';
 
@@ -41,6 +48,16 @@ export function TypeBadge({
     <span className={`${badge} bg-black text-white ${className}`}>
       <Icon className="size-3.5" aria-hidden />
       {label}
+    </span>
+  );
+}
+
+/** Marks a course in a list of mixed free content, as TypeBadge marks each kind of resource. */
+export function CourseTypeBadge({ className = '' }: { className?: string }) {
+  return (
+    <span className={`${badge} bg-black text-white ${className}`}>
+      <GraduationCap className="size-3.5" aria-hidden />
+      Course
     </span>
   );
 }

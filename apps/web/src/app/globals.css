@@ -10,6 +10,27 @@
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --animate-strand-count: strand-count 600ms linear both;
   --animate-tassel-drop: tassel-drop 480ms ease-out both;
+  /* How long a hero slide shows before the next one (the active tab's bar fills meanwhile). */
+  --animate-slide-timer: grow-x 8s linear both;
+  --animate-grow-x: grow-x 1.2s ease-out both;
+  --animate-rise-in: rise-in 500ms ease-out both;
+
+  /* Grows from the left edge. */
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
 
   /* Beads darken from the top, like a round of japa being counted. */
   @keyframes strand-count {
