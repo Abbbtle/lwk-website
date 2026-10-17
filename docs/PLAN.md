@@ -342,7 +342,10 @@ Status: infrastructure DEPLOYED; first release goes out when this phase is merge
   verifies the RDS TLS certificate.
 - `lwk-dev-deploy-access`: GitHub OIDC provider and role `lwk-dev-github-deploy`, trusted
   only for `refs/heads/dev` of this repository; it can upload bundles, run commands on
-  the web server and read the app stack's outputs.
+  the web server and read the app stack's outputs. The GitHub OIDC provider is account-wide (IAM allows
+  one per issuer): the coming-soon publish role trusts it too, so do not destroy this stack while
+  `lwk-coming-soon` exists. A second stage in this account needs an account-level owner for the
+  provider first (`bin/lwk.ts` refuses to synthesize one).
 - Deploy: `.github/workflows/deploy.yml` on push to `dev` - build on `ubuntu-24.04-arm`,
   `deploy/build-bundle.sh`, upload, `deploy/instance/activate.sh` via SSM (config,
   migrations, switch release, health check, automatic rollback), then a health check
@@ -643,11 +646,14 @@ features fall back to non-AI help until access works.
   coming-soon page (`infra/coming-soon`, stack `lwk-coming-soon` in us-east-1: private S3
   bucket, its own CloudFront distribution, `www` redirects to the main address). The page is
   published from `main`: `.github/workflows/publish-main-site.yml` uploads it whenever it changes
-  there (role `lwk-main-github-publish`, usable only by workflows on `main`), so the main address
-  always shows the production branch.
+  there (role `lwk-coming-soon-github-publish`, usable only by workflows on `main`), so the main
+  address shows the page as last published from the production branch. The page has to keep to
+  the stack's content security policy (checked by `infra/test`); deploy the stack first if it ever
+  needs more.
 - Production taking over the main address: destroy `lwk-coming-soon` first (turn off its
   termination protection), which removes the apex and `www` records and frees the CloudFront
-  aliases, then deploy the production stage. The main address is offline in between, and
+  aliases, and delete `.github/workflows/publish-main-site.yml` and `infra/coming-soon` in the same
+  change; then deploy the production stage. The main address is offline in between, and
   `bin/lwk.ts` refuses to synthesize a stage on the main address while the coming-soon stack is
   wired.
 - CloudFront certificates must be in `us-east-1`; stacks there validate them against the zone

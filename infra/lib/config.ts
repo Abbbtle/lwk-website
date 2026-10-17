@@ -80,7 +80,28 @@ export function siteUrl(stageConfig: StageConfig): string {
   return `https://${stageConfig.siteHostName}`;
 }
 
-/** Origins allowed to receive sign-in redirects and upload to the media bucket, the site first. */
+/**
+ * Origins allowed to receive sign-in redirects and upload to the media bucket, the site first.
+ * Throws if an extra origin is not a bare origin: Cognito appends paths to these and S3 compares
+ * them exactly with the browser's Origin header.
+ */
 export function appOrigins(stageConfig: StageConfig): string[] {
+  for (const origin of stageConfig.extraAppOrigins) {
+    if (!isBareOrigin(origin)) {
+      throw new Error(
+        `extraAppOrigins of stage ${stageConfig.stage} must be bare origins such as ` +
+          `"http://localhost:3000" (scheme, host and optional port; no path or trailing slash), ` +
+          `got "${origin}"`,
+      );
+    }
+  }
   return [siteUrl(stageConfig), ...stageConfig.extraAppOrigins];
+}
+
+function isBareOrigin(value: string): boolean {
+  try {
+    return new URL(value).origin === value;
+  } catch {
+    return false;
+  }
 }

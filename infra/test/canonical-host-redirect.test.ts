@@ -105,7 +105,10 @@ describe('canonical host redirect', () => {
     '${Token[TOKEN.123]}',
   ]) {
     it(`rejects ${JSON.stringify(invalid)} as a canonical host name`, () => {
-      assert.throws(() => canonicalHostRedirectSource(invalid), /bare lowercase host name/);
+      assert.throws(
+        () => canonicalHostRedirectSource(invalid),
+        /fully qualified lowercase host name/,
+      );
     });
   }
 });
