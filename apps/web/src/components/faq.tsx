@@ -1,10 +1,18 @@
 import { ChevronDown } from 'lucide-react';
 
-/** POC FAQ accordion. */
-export function Faq({ items }: { items: { question: string; answer: string }[] }) {
+/** POC FAQ accordion (native details elements, so it works without scripts). */
+export function Faq({
+  items,
+  heading = 'Frequently Asked Questions',
+}: {
+  items: { question: string; answer: string }[];
+  heading?: string;
+}) {
   return (
     <section className="px-6 py-16">
-      <h2 className="text-center text-3xl font-semibold md:text-4xl">Frequently Asked Questions</h2>
+      <h2 className="text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+        {heading}
+      </h2>
       <div className="mx-auto mt-10 max-w-3xl divide-y divide-gray-300 border-b border-gray-300">
         {items.map(({ question, answer }) => (
           <details key={question} className="group py-4">

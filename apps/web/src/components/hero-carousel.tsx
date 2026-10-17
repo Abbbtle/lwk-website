@@ -89,15 +89,15 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
                   )}
                 </div>
                 <div
-                  className={`bg-white px-4 py-6 sm:px-6 md:absolute md:top-1/2 md:w-104 md:-translate-y-1/2 md:p-8 md:shadow-xl ${
+                  className={`bg-white px-4 py-6 sm:px-6 md:absolute md:top-1/2 md:w-120 md:-translate-y-1/2 md:p-9 md:shadow-xl ${
                     slide.cardSide === 'right' ? 'md:right-20' : 'md:left-20'
                   }`}
                 >
-                  <Heading className="text-3xl leading-tight font-bold tracking-tight text-black lg:text-4xl">
+                  <Heading className="text-3xl leading-[1.15] font-semibold tracking-tight text-balance text-gray-900 lg:text-4xl">
                     {slide.heading}
                   </Heading>
-                  <p className="mt-3 text-lg leading-relaxed text-gray-700">{slide.text}</p>
-                  <Link href={slide.action.href} className="btn-solid mt-6">
+                  <p className="mt-4 text-lg leading-relaxed text-gray-700">{slide.text}</p>
+                  <Link href={slide.action.href} className="btn-brand mt-7">
                     {slide.action.label}
                   </Link>
                 </div>

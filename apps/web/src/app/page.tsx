@@ -1,16 +1,22 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { CourseRow } from '@/components/course-card';
+import { Faq } from '@/components/faq';
 import { type HeroBannerSlide, HeroCarousel } from '@/components/hero-carousel';
+import { CategoryShowcase } from '@/components/home/category-showcase';
+import { EarlyAccess } from '@/components/home/early-access';
+import { FeatureTiles } from '@/components/home/feature-tiles';
+import { InstructorPromo } from '@/components/home/instructor-promo';
+import { MissionTile } from '@/components/home/mission-tile';
+import { sectionHeading, textLink } from '@/components/home/styles';
+import { ResourceGrid } from '@/components/resource-card';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
-import { plural } from '@/lib/format';
+import { getSession } from '@/server/auth/session';
 import { getCategories, searchCourses } from '@/server/catalog';
 import { listPublishedResources } from '@/server/resources';
 
 /** Two rows of the course grid. */
 const BEGINNER_LIMIT = 6;
-
-const sectionHeading = 'text-3xl font-bold tracking-tight text-black md:text-4xl';
 
 /**
  * The hero banner's slides. To advertise something new, add a slide here. Slides about beginner
@@ -28,7 +34,7 @@ function heroSlides({
     {
       id: 'learn',
       heading: 'Grow in devotion, one lesson at a time',
-      text: 'Learn devotional skills in the comfort of your home, from experienced devotees and at your own pace.',
+      text: 'Learn devotional skills at home from experienced devotees. Every course is free to join during early access.',
       action: { href: '/courses', label: 'Start learning' },
       cardSide: 'right',
       image: {
@@ -55,7 +61,7 @@ function heroSlides({
       action: { href: '/explore', label: 'Explore free content' },
       image: {
         src: '/images/mission-hero.jpg',
-        alt: 'A temple with blue domes at sunset',
+        alt: 'The Temple of the Vedic Planetarium at sunset',
         position: '50% 40%',
       },
     },
@@ -74,18 +80,59 @@ function heroSlides({
   return slides.filter((slide) => slide !== false);
 }
 
+const faqs = [
+  {
+    question: 'How much does it cost?',
+    answer:
+      'During early access every course is free to join. Courses marked Free stay free for everyone, also once subscription plans open.',
+  },
+  {
+    question: 'Do I need any experience?',
+    answer:
+      'No. Beginner courses start from the very first lesson, and you can learn at your own pace.',
+  },
+  {
+    question: 'Who teaches the courses?',
+    answer:
+      'Experienced devotees. Every instructor applies and is approved, and every course is reviewed before it is published.',
+  },
+  {
+    question: 'Can I learn on my phone?',
+    answer:
+      'Yes. The site works on phones, tablets and computers, and videos pick up where you stopped.',
+  },
+  {
+    question: 'How do I become an instructor?',
+    answer:
+      'Apply with your experience. Once your application is approved, you can build a course and submit it for review.',
+  },
+  {
+    question: 'Where can I get help?',
+    answer:
+      'Search the help centre, or send a support request and follow our reply in your account.',
+  },
+];
+
 export default async function HomePage() {
   await connection();
-  const [categories, courses, resources] = await Promise.all([
+  const [categories, courses, resources, session] = await Promise.all([
     getCategories(),
     searchCourses(),
-    listPublishedResources({ take: 1 }),
+    listPublishedResources({ take: 3 }),
+    getSession(),
   ]);
   const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
   const hasFreeContent = resources.length > 0 || courses.some((course) => course.isFree);
 
   return (
-    <>
+    <div className="bg-white">
+      <p className="bg-brand px-4 py-3 text-center text-sm font-semibold text-black sm:text-base">
+        Early access: every course is free to join.{' '}
+        <Link href="/courses" className="underline underline-offset-4 hover:no-underline">
+          Browse courses
+        </Link>
+      </p>
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:pt-8 lg:px-8">
         <HeroCarousel
           label="Featured"
@@ -93,14 +140,16 @@ export default async function HomePage() {
         />
       </div>
 
+      {categories.length > 0 && <CategoryShowcase categories={categories} />}
+
       {beginners.length > 0 && (
-        <section aria-labelledby="beginner-courses">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <section aria-labelledby="beginner-courses" className="bg-gray-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <h2 id="beginner-courses" className={sectionHeading}>
                 Start with a beginner course
               </h2>
-              <Link href="/courses" className="font-semibold underline-offset-4 hover:underline">
+              <Link href="/courses" className={textLink}>
                 View all courses
               </Link>
             </div>
@@ -109,60 +158,32 @@ export default async function HomePage() {
         </section>
       )}
 
-      {categories.length > 0 && (
-        <section aria-labelledby="categories" className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-            <h2 id="categories" className={`${sectionHeading} mb-8`}>
-              Browse by category
-            </h2>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {categories.map((category) => (
-                <li key={category.slug}>
-                  <Link
-                    href={`/courses?category=${category.slug}`}
-                    className="flex h-full flex-col border border-gray-300 bg-white p-6 transition-colors hover:border-black"
-                  >
-                    <span className="text-lg font-semibold text-black">{category.name}</span>
-                    <span className="mt-2 text-sm leading-relaxed text-gray-700">
-                      {category.description}
-                    </span>
-                    <span className="mt-auto pt-4 text-sm font-semibold text-gray-700">
-                      {category.courseCount > 0
-                        ? plural(category.courseCount, 'course')
-                        : 'Courses on their way'}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
+      <FeatureTiles course={beginners[0]} />
 
-      <section>
-        <div className="mx-auto grid max-w-7xl gap-x-12 gap-y-14 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-20">
-          <div>
-            <h2 className={sectionHeading}>Free for everyone</h2>
-            <p className="mt-3 max-w-[34em] text-lg leading-relaxed text-gray-700">
-              Explore has free courses, talks, recordings, articles and recipes. No subscription
-              needed.
-            </p>
-            <Link href="/explore" className="btn-outline mt-6">
+      <EarlyAccess signedIn={Boolean(session)} />
+
+      {resources.length > 0 && (
+        <section
+          aria-labelledby="free-content"
+          className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8 lg:pt-24"
+        >
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <h2 id="free-content" className={sectionHeading}>
+              Free to watch, listen and read
+            </h2>
+            <Link href="/explore" className={textLink}>
               Explore free content
             </Link>
           </div>
-          <div className="md:border-l md:border-gray-300 md:pl-12">
-            <h2 className={sectionHeading}>Teach what you know</h2>
-            <p className="mt-3 max-w-[34em] text-lg leading-relaxed text-gray-700">
-              Experienced in a devotional skill? Apply to teach. Once you are approved, you build
-              your course with video, PDF and text lessons, and we review it before it is published.
-            </p>
-            <Link href="/become-an-instructor" className="btn-outline mt-6">
-              Apply to teach
-            </Link>
-          </div>
-        </div>
-      </section>
-    </>
+          <ResourceGrid resources={resources} />
+        </section>
+      )}
+
+      <InstructorPromo />
+
+      <MissionTile />
+
+      <Faq heading="Questions people ask" items={faqs} />
+    </div>
   );
 }
