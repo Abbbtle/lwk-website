@@ -62,6 +62,8 @@ for (const stageConfig of Object.values(stages)) {
   const web = new AppStack(app, `lwk-${stage}-app`, {
     ...common,
     description: `LWK ${stage} - web server (EC2) and CloudFront`,
+    hostedZone: domain.hostedZone,
+    certificate: edge.certificate,
     vpc: network.vpc,
     securityGroup: network.webSecurityGroup,
     database: data.database,

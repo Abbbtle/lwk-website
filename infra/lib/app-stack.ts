@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib/core';
+import type * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import type * as cognito from 'aws-cdk-lib/aws-cognito';
@@ -6,14 +7,21 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import type * as rds from 'aws-cdk-lib/aws-rds';
+import type * as route53 from 'aws-cdk-lib/aws-route53';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
+import { CanonicalHostRedirect } from './canonical-host-redirect';
 import { config, type StageConfig } from './config';
+import { DistributionAliasRecords } from './distribution-alias-records';
 
 export type AppStackProps = cdk.StackProps & {
   stageConfig: StageConfig;
+  /** The shared zone (lwk-domain), where the site's address records go. */
+  hostedZone: route53.IHostedZone;
+  /** Certificate for the site host name, from the stage's edge stack in us-east-1. */
+  certificate: acm.ICertificate;
   vpc: ec2.IVpc;
   securityGroup: ec2.ISecurityGroup;
   database: rds.DatabaseInstance;
@@ -26,8 +34,9 @@ export type AppStackProps = cdk.StackProps & {
 };
 
 /**
- * The Next.js server on one EC2 instance behind CloudFront. Releases are built in CI, uploaded
- * to the artifacts bucket and activated with SSM Run Command (deploy/instance/activate.sh).
+ * The Next.js server on one EC2 instance behind CloudFront, served at the stage's site host name.
+ * Releases are built in CI, uploaded to the artifacts bucket and activated with SSM Run Command
+ * (deploy/instance/activate.sh).
  */
 export class AppStack extends cdk.Stack {
   readonly instance: ec2.Instance;
@@ -197,8 +206,9 @@ export class AppStack extends cdk.Stack {
     ]);
 
     // ---- CloudFront ----
-    // HTTP to the origin: without a domain name the instance cannot hold a public TLS
-    // certificate. Only CloudFront IPs may connect (security group). See docs/PLAN.md.
+    const { siteHostName, searchIndexing } = props.stageConfig;
+    // HTTP to the origin: the instance holds no public TLS certificate of its own. Only
+    // CloudFront IPs may connect (security group). See docs/PLAN.md.
     const origin = new origins.HttpOrigin(originDomain, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
       httpPort: 3000,
@@ -206,8 +216,30 @@ export class AppStack extends cdk.Stack {
       // Resolved by CloudFormation at deploy time (a dynamic reference, not the value).
       customHeaders: { 'X-Origin-Verify': originSecret.secretValue.unsafeUnwrap() },
     });
+    // Requests for any other host name (such as the distribution's own address, used before the
+    // domain) move to the site's address with their path and query string.
+    const redirect = new CanonicalHostRedirect(this, 'CanonicalHost', {
+      canonicalHostName: siteHostName,
+      comment: `LWK ${stage} - redirects other host names to ${siteHostName}`,
+    });
+    // Keeps every stage except production out of search results. A response header rather than
+    // robots.txt: crawlers have to fetch a page to learn that it must not be indexed.
+    const responseHeadersPolicy = searchIndexing
+      ? undefined
+      : new cloudfront.ResponseHeadersPolicy(this, 'NoIndex', {
+          comment: `LWK ${stage} - asks search engines not to index this stage`,
+          customHeadersBehavior: {
+            customHeaders: [{ header: 'X-Robots-Tag', value: 'noindex, nofollow', override: true }],
+          },
+        });
+    const siteHandling = {
+      functionAssociations: [redirect.functionAssociation],
+      responseHeadersPolicy,
+    };
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: `LWK ${stage}`,
+      domainNames: [siteHostName],
+      certificate: props.certificate,
       priceClass: cloudfront.PriceClass.PRICE_CLASS_200, // includes South Africa
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       defaultBehavior: {
@@ -220,6 +252,7 @@ export class AppStack extends cdk.Stack {
         // CloudFront's own headers (the viewer's IP address, used for rate limiting).
         originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_AND_CLOUDFRONT_2022,
         compress: true,
+        ...siteHandling,
       },
       additionalBehaviors: {
         // Hashed build assets are safe to cache for a long time.
@@ -228,10 +261,16 @@ export class AppStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
+          ...siteHandling,
         },
       },
     });
-    const appUrl = (this.appUrl = `https://${this.distribution.distributionDomainName}`);
+    new DistributionAliasRecords(this, 'SiteAddress', {
+      zone: props.hostedZone,
+      hostName: siteHostName,
+      distribution: this.distribution,
+    });
+    const appUrl = (this.appUrl = `https://${siteHostName}`);
 
     // ---- Runtime configuration read by activate.sh (names are env var names; no secrets) ----
     const params: Record<string, string> = {
