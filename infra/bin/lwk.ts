@@ -2,6 +2,7 @@
 import * as cdk from 'aws-cdk-lib/core';
 import { AppStack } from '../lib/app-stack';
 import { AuthStack } from '../lib/auth-stack';
+import { ComingSoonStack } from '../lib/coming-soon-stack';
 import { config, stages } from '../lib/config';
 import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
@@ -28,6 +29,14 @@ const domain = new DomainStack(app, 'lwk-domain', {
   terminationProtection: true,
   description: `LWK - public DNS for ${config.apexDomainName} (Route 53)`,
   apexDomainName: config.apexDomainName,
+});
+
+// The main address (and www) shows a coming-soon page until production launches.
+new ComingSoonStack(app, 'lwk-coming-soon', {
+  env: edgeEnv,
+  terminationProtection: true,
+  description: `LWK - coming-soon page on ${config.apexDomainName} and www until launch`,
+  hostedZone: domain.hostedZone,
 });
 
 // See docs/PLAN.md. The account budget lives in cfn/budget.yaml (stack lwk-guardrails, us-east-1).
