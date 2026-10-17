@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BeadStrand, type BeadStrandItem } from '@/components/bead-strand';
 import { inquiryTypes } from '@/lib/forms/contact';
-import { site, socialLinks } from '@/lib/site';
+import { site } from '@/lib/site';
 import { getSession } from '@/server/auth/session';
 import { ContactForm } from './contact-form';
 
@@ -10,76 +11,63 @@ export const metadata: Metadata = {
   description: 'Questions, feedback or partnership ideas? Get in touch with Living With Krishna.',
 };
 
+const itemHeading = 'text-lg font-semibold text-black';
+const itemLink =
+  'mt-1 inline-block font-semibold underline underline-offset-4 hover:text-brand-ink';
+
+const otherWays: BeadStrandItem[] = [
+  {
+    id: 'email',
+    content: (
+      <>
+        <h2 className={itemHeading}>Email</h2>
+        <a href={`mailto:${site.supportEmail}`} className={`${itemLink} break-all`}>
+          {site.supportEmail}
+        </a>
+      </>
+    ),
+  },
+  {
+    id: 'office-hours',
+    content: (
+      <>
+        <h2 className={itemHeading}>Office hours</h2>
+        {/* Lines break between the parts, never inside one ("(UTC + 2)" stays together). */}
+        <p className="mt-1 text-gray-700">
+          {site.officeHours.map((part) => part.replaceAll(' ', ' ')).join(' ')}
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'help',
+    content: (
+      <>
+        <h2 className={itemHeading}>Help centre</h2>
+        <p className="mt-1 text-gray-700">
+          Answers to common questions about courses and accounts.
+        </p>
+        <Link href="/help" className={itemLink}>
+          Visit the help centre
+        </Link>
+      </>
+    ),
+  },
+];
+
 export default async function ContactPage({ searchParams }: PageProps<'/contact'>) {
   const type = (await searchParams).type;
   const inquiryType = inquiryTypes.find((t) => t.value === type)?.value;
   const session = await getSession();
   return (
-    <>
-      <div className="overflow-hidden py-10" aria-hidden>
-        <p className="animate-marquee text-7xl font-extrabold whitespace-nowrap text-brand-ink uppercase md:text-9xl">
-          {Array.from({ length: 8 }, () => 'Contact us ').join('')}
-        </p>
-      </div>
-      <h1 className="sr-only">Contact us</h1>
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">Contact us</h1>
+      <p className="mt-3 max-w-2xl text-lg text-gray-700">
+        Questions, feedback or partnership ideas? Send us a message, or reach us another way.
+      </p>
 
-      <div className="grid gap-12 px-6 pb-20 md:px-8 lg:grid-cols-2">
-        <div className="space-y-12">
-          <p className="text-xl md:text-2xl">
-            We&apos;re excited to connect with you! Whether you have a question, need expert
-            guidance, or want to share feedback, we&apos;re here to assist you every step of the
-            way.
-          </p>
-
-          <section>
-            <h2 className="text-xl font-bold uppercase">Social media</h2>
-            <p className="mt-2 font-medium uppercase">
-              {socialLinks
-                .filter((s) => s.id !== 'facebook')
-                .map((s, i) => (
-                  <span key={s.id}>
-                    {i > 0 && ' — '}
-                    {s.href ? (
-                      <a
-                        href={s.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-brand-ink"
-                      >
-                        {s.id === 'x' ? 'Twitter' : s.label}
-                      </a>
-                    ) : (
-                      <span title="Coming soon">{s.id === 'x' ? 'Twitter' : s.label}</span>
-                    )}
-                  </span>
-                ))}
-            </p>
-          </section>
-
-          <div className="grid gap-8 sm:grid-cols-2">
-            <section>
-              <h2 className="text-xl font-bold uppercase">Get in touch</h2>
-              <a
-                href={`mailto:${site.supportEmail}`}
-                className="mt-2 block uppercase hover:text-brand-ink"
-              >
-                {site.supportEmail}
-              </a>
-            </section>
-            <section>
-              <h2 className="text-xl font-bold uppercase">Office hours</h2>
-              <p className="mt-2 uppercase">
-                {site.officeHours.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </p>
-            </section>
-          </div>
-        </div>
-
-        <div className="space-y-6">
+      <div className="mt-12 grid gap-x-16 gap-y-14 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
           {session && (
             <p className="border-l-4 border-brand bg-orange-50 p-4 text-sm">
               You are logged in: for questions about your account or courses,{' '}
@@ -91,7 +79,10 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
           )}
           <ContactForm inquiryType={inquiryType} />
         </div>
+        <div className="lg:col-span-5">
+          <BeadStrand items={otherWays} label="Other ways to reach us" />
+        </div>
       </div>
-    </>
+    </div>
   );
 }

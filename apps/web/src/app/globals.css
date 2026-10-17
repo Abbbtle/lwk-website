@@ -8,14 +8,25 @@
   --color-brand-ink: var(--color-orange-700);
   --color-surface: #f9f9f9;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --animate-marquee: marquee 40s linear infinite;
+  --animate-strand-count: strand-count 600ms linear both;
+  --animate-tassel-drop: tassel-drop 480ms ease-out both;
 
-  @keyframes marquee {
+  /* Beads darken from the top, like a round of japa being counted. */
+  @keyframes strand-count {
     from {
-      transform: translateX(0);
+      clip-path: inset(0 0 100% 0);
     }
     to {
-      transform: translateX(-50%);
+      clip-path: inset(0);
+    }
+  }
+
+  @keyframes tassel-drop {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
     }
   }
 }
@@ -54,11 +65,18 @@ body {
   @apply btn border-brand bg-brand text-black hover:border-brand-dark hover:bg-brand-dark;
 }
 
+/*
+ * A strand of japa beads, as on the coming-soon page, in the current text colour. `space`
+ * keeps a whole number of beads in each strand, so strands stacked end to end stay evenly spaced.
+ */
+@utility bead-strand {
+  background-image: radial-gradient(circle, currentColor 4.25px, transparent 4.75px);
+  background-size: 100% 12px;
+  background-repeat: no-repeat space;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn-outline {
     transition: none;
-  }
-  .animate-marquee {
-    animation: none;
   }
 }
