@@ -592,8 +592,10 @@ excludes AWS Marketplace offers that incur charges (Anthropic models are sold th
 Marketplace): calls fail with "not available for this account", and the on-demand quotas in
 most regions are 0. Upgrading the account to the Paid plan (Billing console, "Upgrade plan";
 remaining credits carry over) unlocks them. The Free plan ends after six months or when the
-credits run out and then closes the account, so the upgrade is needed before about December
-2026 in any case. AI features fall back to non-AI help until access works.
+credits run out and then closes the account (AWS keeps the data for 90 days). For this account
+it ends on 24 March 2027, and at the current spend (about USD 1 a day, checked 2026-10-17) the
+credits last until about then, so the upgrade is needed before that date in any case. AI
+features fall back to non-AI help until access works.
 
 **Later phases (from the proposal)**
 
@@ -621,6 +623,24 @@ credits run out and then closes the account, so the upgrade is needed before abo
   from `dev` or `uat`); each additional environment costs roughly another USD 30/month.
   Separate `uat` and `prod` stacks (ideally separate AWS accounts under AWS
   Organizations) are added before public launch.
+
+**Domain and DNS**
+
+- `livingwithkrishna.com` was registered at GoDaddy on 2026-10-17 (expires 2027-10-17; keep
+  auto-renew and the domain lock on). GoDaddy only holds the registration: its nameservers
+  point to the Route 53 hosted zone in the shared `lwk-domain` stack, where all records live
+  as code.
+- The dev stage moves to `dev.livingwithkrishna.com`. The main address (and `www`) is kept for
+  production and shows a coming-soon page until launch.
+- CloudFront certificates must be in `us-east-1`; stacks there validate them against the zone
+  through weak cross-stack references (`Fn::GetStackOutput`), which work across regions.
+- The zone's identity is fixed once GoDaddy points at it: the stack id `lwk-domain`, its region
+  and the zone's logical ID (pinned as `HostedZone`) must not change, or a second zone with new
+  name servers is created. Records live in the stacks that use them, not in `lwk-domain`.
+- When production moves to its own AWS account, the zone moves there (GoDaddy's nameservers
+  change once) and the other stages get delegated subzones such as `dev.livingwithkrishna.com`.
+- Email from the domain (Amazon SES with DKIM, SPF and DMARC records in the zone) follows once
+  SES production access is granted; until then Cognito sends its own emails (50 a day).
 
 ## Verification
 

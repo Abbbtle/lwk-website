@@ -4,6 +4,9 @@ export const config = {
   account: '455280338092',
   // Cape Town, closest region to our first users. CloudFront serves everyone else.
   region: 'af-south-1',
+  // The registered domain (zone apex), at GoDaddy; its DNS is the Route 53 zone in the shared
+  // lwk-domain stack. Stage sites use subdomains of it; production keeps the apex.
+  apexDomainName: 'livingwithkrishna.com',
   // GitHub repository allowed to deploy (OIDC), see DeployAccessStack.
   githubRepository: 'Abbbtle/lwk-website',
   // AWS-managed prefix list of CloudFront origin-facing IPs in af-south-1

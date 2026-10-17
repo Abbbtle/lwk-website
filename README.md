@@ -52,6 +52,10 @@ with CDK from `infra/` (`npm run diff` first, then `npm run deploy -- <stack>`).
 Always deploy the monitoring stack with the alert address set, otherwise the email
 subscription is removed: `ALERT_EMAIL=<address> npm run deploy -- lwk-dev-monitoring`.
 
+The domain `livingwithkrishna.com` is registered at GoDaddy. Its DNS is the Route 53 zone in
+the shared `lwk-domain` stack (`npm run deploy -- lwk-domain`), so the domain's nameservers at
+GoDaddy must be the four values in that stack's `NameServers` output.
+
 Open a shell on the web server (no SSH): `aws ssm start-session --target <instance-id>
 --profile lwk` (requires the Session Manager plugin). App logs: CloudWatch Logs group
 `/lwk/dev/web`.
