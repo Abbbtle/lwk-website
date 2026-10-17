@@ -26,7 +26,8 @@ export function SearchBar({
       <button
         type="submit"
         aria-label="Search"
-        className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-black"
+        // A 36 px target (WCAG 2.2 asks for at least 24 px); the icon stays where it was.
+        className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:text-black"
       >
         <Search className="size-5" aria-hidden />
       </button>
