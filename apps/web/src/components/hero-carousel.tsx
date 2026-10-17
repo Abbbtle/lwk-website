@@ -1,135 +1,131 @@
 'use client';
 
-import { Pause, Play } from 'lucide-react';
-import { type KeyboardEvent, type ReactNode, useId, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
-export type HeroCarouselSlide = {
+export type HeroBannerSlide = {
   id: string;
-  /** Short name on the slide's tab, e.g. "Free content". */
-  label: string;
-  content: ReactNode;
+  heading: string;
+  text: string;
+  action: { href: string; label: string };
+  /** Which side of the photo the card covers on wider screens: the side without the subject. */
+  cardSide?: 'left' | 'right';
+  image: {
+    src: string;
+    alt: string;
+    /** CSS object-position, to keep the subject in view beside the card, e.g. "70% 30%". */
+    position?: string;
+  };
 };
 
+const arrow =
+  'absolute top-[28.125vw] z-10 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black text-white shadow-lg hover:bg-gray-800 md:top-[170px] md:size-12 lg:top-[200px]';
+
 /**
- * Hero slides that rotate on their own, as a tabbed carousel. The active tab's bar fills while its
- * slide shows and moves on to the next slide when full. Rotation pauses while the pointer or
- * keyboard focus is in the carousel and stops with the pause button; with reduced motion slides
- * only change when a tab is chosen. Each slide wrapper carries `data-active`, so a slide's
- * contents can animate when it comes into view (`group-data-[active=true]/slide:`).
+ * A photo banner in the manner of Udemy's: a white card with the message over the photo (under it
+ * on phones) and arrows to move between slides. It never moves by itself. Only the first photo
+ * loads with the page; the others load once the visitor reaches for the arrows, so slow
+ * connections are not kept busy with photos nobody asked for.
  */
-export function HeroCarousel({ label, slides }: { label: string; slides: HeroCarouselSlide[] }) {
+export function HeroCarousel({ label, slides }: { label: string; slides: HeroBannerSlide[] }) {
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [held, setHeld] = useState(false);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const baseId = useId();
+  const [ready, setReady] = useState<ReadonlySet<number>>(() => new Set([0]));
   const count = slides.length;
 
-  function select(next: number, focus = false) {
-    const target = (next + count) % count;
-    setIndex(target);
-    if (focus) tabs.current[target]?.focus();
+  /** Lets a slide's photo and its neighbours' photos load. */
+  function warm(around: number) {
+    setReady((previous) => {
+      const next = new Set(previous);
+      for (const i of [around - 1, around, around + 1]) next.add((i + count) % count);
+      return next.size === previous.size ? previous : next;
+    });
   }
 
-  function onTabKeyDown(event: KeyboardEvent) {
-    const moves: Record<string, number> = {
-      ArrowRight: index + 1,
-      ArrowLeft: index - 1,
-      Home: 0,
-      End: count - 1,
-    };
-    if (event.key in moves) {
-      event.preventDefault();
-      select(moves[event.key], true);
-    }
+  function go(next: number) {
+    const target = (next + count) % count;
+    warm(target);
+    setIndex(target);
   }
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label={label}
-      onPointerEnter={() => setHeld(true)}
-      onPointerLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false);
-      }}
+      className="relative -mx-4 sm:-mx-6 md:mx-0"
+      onPointerEnter={() => warm(index)}
+      onFocus={() => warm(index)}
     >
-      {/* Slides share one grid cell, so the hero is as tall as the tallest slide and never jumps. */}
-      <div className="grid grid-cols-1">
-        {slides.map((slide, i) => (
-          <div
-            key={slide.id}
-            id={`${baseId}-${slide.id}`}
-            role="tabpanel"
-            aria-roledescription="slide"
-            aria-label={`${i + 1} of ${count}: ${slide.label}`}
-            data-active={i === index}
-            inert={i !== index}
-            className={`group/slide col-start-1 row-start-1 flex min-w-0 items-center transition-[opacity,visibility] duration-500 motion-reduce:transition-none ${
-              i === index ? 'visible opacity-100' : 'invisible opacity-0'
-            }`}
-          >
-            {slide.content}
-          </div>
-        ))}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {slides.map((slide, i) => {
+            const Heading = i === 0 ? 'h1' : 'h2';
+            return (
+              <div
+                key={slide.id}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${count}`}
+                inert={i !== index}
+                className="relative w-full shrink-0"
+              >
+                <div className="relative aspect-video bg-gray-200 md:aspect-auto md:h-[340px] lg:h-[400px]">
+                  {ready.has(i) && (
+                    <Image
+                      src={slide.image.src}
+                      alt={slide.image.alt}
+                      fill
+                      sizes="(min-width: 1280px) 1248px, 100vw"
+                      // The first photo is usually the largest thing on screen: fetch it first.
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={i === 0 ? 'high' : 'auto'}
+                      className="object-cover"
+                      style={{ objectPosition: slide.image.position }}
+                    />
+                  )}
+                </div>
+                <div
+                  className={`bg-white px-4 py-6 sm:px-6 md:absolute md:top-1/2 md:w-104 md:-translate-y-1/2 md:p-8 md:shadow-xl ${
+                    slide.cardSide === 'right' ? 'md:right-20' : 'md:left-20'
+                  }`}
+                >
+                  <Heading className="text-3xl leading-tight font-bold tracking-tight text-black lg:text-4xl">
+                    {slide.heading}
+                  </Heading>
+                  <p className="mt-3 text-lg leading-relaxed text-gray-700">{slide.text}</p>
+                  <Link href={slide.action.href} className="btn-solid mt-6">
+                    {slide.action.label}
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {count > 1 && (
-        <div className="mt-10 flex items-end gap-4 sm:gap-6">
-          <div
-            role="tablist"
-            aria-label="Slides"
-            className="flex min-w-0 flex-1 gap-4 sm:flex-none sm:gap-6"
-          >
-            {slides.map((slide, i) => {
-              const selected = i === index;
-              return (
-                <button
-                  key={slide.id}
-                  ref={(element) => {
-                    tabs.current[i] = element;
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  aria-controls={`${baseId}-${slide.id}`}
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => select(i)}
-                  onKeyDown={onTabKeyDown}
-                  className={`min-w-0 flex-1 cursor-pointer pb-1 text-left text-sm font-semibold sm:w-40 sm:flex-none ${
-                    selected ? 'text-black' : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  <span className="relative mb-3 block h-0.5 overflow-hidden bg-gray-300">
-                    {selected && (
-                      <span
-                        // A new bar for each showing, so the timer starts from empty.
-                        key={index}
-                        className="absolute inset-0 origin-left bg-brand motion-safe:animate-slide-timer"
-                        style={{ animationPlayState: playing && !held ? 'running' : 'paused' }}
-                        onAnimationEnd={() => select(index + 1)}
-                      />
-                    )}
-                  </span>
-                  <span className="block truncate">{slide.label}</span>
-                </button>
-              );
-            })}
-          </div>
+        <>
           <button
             type="button"
-            onClick={() => setPlaying(!playing)}
-            aria-label={playing ? 'Pause slides' : 'Play slides'}
-            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-gray-400 text-black hover:border-black motion-reduce:hidden"
+            aria-label="Previous slide"
+            onClick={() => go(index - 1)}
+            className={`${arrow} left-3 md:left-4`}
           >
-            {playing ? (
-              <Pause className="size-4" aria-hidden />
-            ) : (
-              <Play className="size-4" aria-hidden />
-            )}
+            <ChevronLeft className="size-6" aria-hidden />
           </button>
-        </div>
+          <button
+            type="button"
+            aria-label="Next slide"
+            onClick={() => go(index + 1)}
+            className={`${arrow} right-3 md:right-4`}
+          >
+            <ChevronRight className="size-6" aria-hidden />
+          </button>
+        </>
       )}
     </section>
   );

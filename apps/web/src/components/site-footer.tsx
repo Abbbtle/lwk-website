@@ -11,8 +11,9 @@ export function SiteFooter() {
           <Image
             src="/logo-white.png"
             alt={site.name}
-            width={1428}
-            height={793}
+            // Its largest shown size (md:h-28), so a small logo is downloaded.
+            width={202}
+            height={112}
             className="h-24 w-auto md:h-28"
           />
         </Link>

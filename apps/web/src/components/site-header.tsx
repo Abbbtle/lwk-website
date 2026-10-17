@@ -42,8 +42,9 @@ export async function SiteHeader() {
           <Image
             src="/logo-black.png"
             alt={site.name}
-            width={1417}
-            height={790}
+            // Its shown size (h-12), so phones download a small logo rather than the full image.
+            width={86}
+            height={48}
             preload
             className="h-12 w-auto"
           />

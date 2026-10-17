@@ -1,19 +1,11 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { CourseRow } from '@/components/course-card';
-import { HeroCarousel, type HeroCarouselSlide } from '@/components/hero-carousel';
-import { HeroSlide } from '@/components/hero-slide';
-import {
-  CourseBuilderPreview,
-  FreeContentPreview,
-  LessonPreview,
-} from '@/components/product-previews';
+import { type HeroBannerSlide, HeroCarousel } from '@/components/hero-carousel';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
-import type { CourseSummary } from '@/lib/catalog/types';
 import { plural } from '@/lib/format';
-import { site } from '@/lib/site';
 import { getCategories, searchCourses } from '@/server/catalog';
-import { listPublishedResources, type ResourceSummary } from '@/server/resources';
+import { listPublishedResources } from '@/server/resources';
 
 /** Two rows of the course grid. */
 const BEGINNER_LIMIT = 6;
@@ -21,69 +13,62 @@ const BEGINNER_LIMIT = 6;
 const sectionHeading = 'text-3xl font-bold tracking-tight text-black md:text-4xl';
 
 /**
- * The hero's slides, each pictured with the part of the site it is about. To advertise something
- * new, add a slide here. The free content slide shows only once there is free content.
+ * The hero banner's slides. To advertise something new, add a slide here. Slides about beginner
+ * courses and free content show only when there are some.
+ * TODO: the POC photos need usage permission (or replacing) before the public launch.
  */
 function heroSlides({
-  featured,
-  building,
-  freeCourses,
-  resources,
+  hasBeginnerCourses,
+  hasFreeContent,
 }: {
-  featured?: CourseSummary;
-  building?: CourseSummary;
-  freeCourses: CourseSummary[];
-  resources: ResourceSummary[];
-}): HeroCarouselSlide[] {
-  const slides: (HeroCarouselSlide | false)[] = [
+  hasBeginnerCourses: boolean;
+  hasFreeContent: boolean;
+}): HeroBannerSlide[] {
+  const slides: (HeroBannerSlide | false)[] = [
     {
       id: 'learn',
-      label: 'Courses',
-      content: (
-        <HeroSlide
-          headingLevel="h1"
-          heading={site.tagline}
-          text="Video lessons, reading and progress tracking, taught by experienced devotees. Learn at your own pace, from your first steps to deeper study."
-          action={
-            <Link href="/courses" className="btn-solid">
-              Browse courses
-            </Link>
-          }
-          visual={featured && <LessonPreview course={featured} />}
-        />
-      ),
+      heading: 'Grow in devotion, one lesson at a time',
+      text: 'Learn devotional skills in the comfort of your home, from experienced devotees and at your own pace.',
+      action: { href: '/courses', label: 'Start learning' },
+      cardSide: 'right',
+      image: {
+        src: '/images/hero-devotion.jpg',
+        alt: 'Devotees gathered in kirtan around a garlanded seat',
+        position: '50% 35%',
+      },
     },
-    (freeCourses.length > 0 || resources.length > 0) && {
+    hasBeginnerCourses && {
+      id: 'beginners',
+      heading: 'New here? Start with the basics',
+      text: 'Beginner courses take you step by step, from your very first lesson.',
+      action: { href: '#beginner-courses', label: 'See beginner courses' },
+      image: {
+        src: '/images/hero-sastra.jpg',
+        alt: 'Volumes of Vedic literature',
+        position: '50% 40%',
+      },
+    },
+    hasFreeContent && {
       id: 'free',
-      label: 'Free content',
-      content: (
-        <HeroSlide
-          heading="Free teachings, open to everyone."
-          text="Talks, recordings, articles and free courses you can start right away. No subscription needed."
-          action={
-            <Link href="/explore" className="btn-solid">
-              Explore free content
-            </Link>
-          }
-          visual={<FreeContentPreview courses={freeCourses} resources={resources} />}
-        />
-      ),
+      heading: 'Begin today, for free',
+      text: 'Watch talks, listen to kirtan and take free courses, open to everyone. No subscription needed.',
+      action: { href: '/explore', label: 'Explore free content' },
+      image: {
+        src: '/images/mission-hero.jpg',
+        alt: 'A temple with blue domes at sunset',
+        position: '50% 40%',
+      },
     },
     {
       id: 'teach',
-      label: 'Teach',
-      content: (
-        <HeroSlide
-          heading="Share what you know."
-          text="Apply to teach. Once you are approved, build your course with video, PDF and text lessons, and we review it before it is published."
-          action={
-            <Link href="/become-an-instructor" className="btn-solid">
-              Apply to teach
-            </Link>
-          }
-          visual={building && <CourseBuilderPreview course={building} />}
-        />
-      ),
+      heading: 'Share what you know',
+      text: 'Teach the devotional skills you love and help others grow. We review every course before it goes live.',
+      action: { href: '/become-an-instructor', label: 'Apply to teach' },
+      image: {
+        src: '/images/hero-kirtan.jpg',
+        alt: 'A kirtan leader singing with devotees',
+        position: '50% 30%',
+      },
     },
   ];
   return slides.filter((slide) => slide !== false);
@@ -94,33 +79,22 @@ export default async function HomePage() {
   const [categories, courses, resources] = await Promise.all([
     getCategories(),
     searchCourses(),
-    listPublishedResources({ take: 4 }),
+    listPublishedResources({ take: 1 }),
   ]);
   const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
-  // Courses with the fullest curriculum make the clearest pictures in the hero.
-  const bySections = (list: CourseSummary[]) =>
-    list.toSorted((a, b) => b.sections.length - a.sections.length);
-  const featured = bySections(beginners)[0] ?? bySections(courses)[0];
-  const building = bySections(courses).find((course) => course !== featured) ?? featured;
+  const hasFreeContent = resources.length > 0 || courses.some((course) => course.isFree);
 
   return (
     <>
-      <div className="bg-gray-100">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-          <HeroCarousel
-            label="Featured"
-            slides={heroSlides({
-              featured,
-              building,
-              freeCourses: courses.filter((course) => course.isFree),
-              resources,
-            })}
-          />
-        </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:pt-8 lg:px-8">
+        <HeroCarousel
+          label="Featured"
+          slides={heroSlides({ hasBeginnerCourses: beginners.length > 0, hasFreeContent })}
+        />
       </div>
 
       {beginners.length > 0 && (
-        <section aria-labelledby="beginner-courses" className="bg-white">
+        <section aria-labelledby="beginner-courses">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <h2 id="beginner-courses" className={sectionHeading}>
@@ -136,7 +110,7 @@ export default async function HomePage() {
       )}
 
       {categories.length > 0 && (
-        <section aria-labelledby="categories">
+        <section aria-labelledby="categories" className="bg-white">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
             <h2 id="categories" className={`${sectionHeading} mb-8`}>
               Browse by category
@@ -165,7 +139,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="bg-white">
+      <section>
         <div className="mx-auto grid max-w-7xl gap-x-12 gap-y-14 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8 lg:py-20">
           <div>
             <h2 className={sectionHeading}>Free for everyone</h2>
