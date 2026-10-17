@@ -661,13 +661,14 @@ features fall back to non-AI help until access works.
   recommends that the global STS endpoint issue session tokens valid in all Regions for
   references between `us-east-1` and opt-in Regions such as `af-south-1` (IAM > Account
   settings), and `us-east-1` needs a one-time `cdk bootstrap`.
-- First rollout, once GoDaddy points at the zone: bootstrap `us-east-1`; deploy `lwk-domain`
-  (adds the outputs the other stacks read), `lwk-dev-edge`, then `lwk-dev-auth` and
-  `lwk-dev-storage` (new sign-in callback and upload origin), then `lwk-dev-app`; run the Deploy
-  workflow so the server picks up the new `APP_URL`; deploy `lwk-dev-monitoring` with
-  `ALERT_EMAIL` set; deploy `lwk-coming-soon`, whose page appears once `main` publishes it (after
-  the promotion from `dev` through `uat`). Then remove the CloudFront address from the dev
-  stage's `extraAppOrigins`.
+- First rollout (done 2026-10-17, after GoDaddy pointed at the zone): the account's global STS
+  endpoint was set to issue session tokens valid in all Regions and `us-east-1` was bootstrapped;
+  then `lwk-domain` (adds the outputs the other stacks read), `lwk-dev-edge`, `lwk-dev-auth` and
+  `lwk-dev-storage` (new sign-in callback and upload origin), `lwk-dev-app`, a Deploy workflow
+  run so the server picks up the new `APP_URL`, `lwk-dev-monitoring` with `ALERT_EMAIL` set, and
+  `lwk-coming-soon`, whose page appears once `main` publishes it (after the promotion from `dev`
+  through `uat`). After that Deploy run the CloudFront address left the dev stage's sign-in and
+  upload origins (`lwk-dev-auth` and `lwk-dev-storage` deployed again); it only redirects now.
 - The zone's identity is fixed once GoDaddy points at it: the stack id `lwk-domain`, its region
   and the zone's logical ID (pinned as `HostedZone`) must not change, or a second zone with new
   name servers is created. Records live in the stacks that use them, not in `lwk-domain`.

@@ -60,12 +60,7 @@ export const stages: Record<string, StageConfig> = {
     authDomainPrefix: 'livingwithkrishna-dev',
     siteHostName: `dev.${config.apexDomainName}`,
     searchIndexing: false,
-    extraAppOrigins: [
-      'http://localhost:3000',
-      // Rollout only: until the Deploy workflow has run after lwk-dev-app moved to the new host
-      // name, the server still sends sign-ins back to its old address. Remove after that run.
-      'https://d1uih31m6ki5c2.cloudfront.net',
-    ],
+    extraAppOrigins: ['http://localhost:3000'],
     deployBranch: 'dev',
     ai: {
       assistantModel: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',

@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  // The categories page was removed; the courses page filters by category.
+  async redirects() {
+    return [{ source: '/categories', destination: '/courses', permanent: true }];
+  },
 };
 
 export default nextConfig;
