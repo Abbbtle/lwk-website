@@ -39,7 +39,7 @@ export default async function AdminAiPage() {
   const outcomes = report.byOutcome as Record<string, number | undefined>;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="AI" greeting={session.name} />
       <AdminNav current="/admin/ai" />
 

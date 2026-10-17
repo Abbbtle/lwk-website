@@ -52,7 +52,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
     TICKET_CATEGORIES.find((c) => c.value === value)?.label ?? value;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="Support" greeting={session.name} />
       <AdminNav current="/admin/support" />
 

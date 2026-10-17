@@ -36,7 +36,7 @@ export default async function ActivityPage({ searchParams }: PageProps<'/admin/a
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="Activity log" greeting={session.name} />
       <AdminNav current="/admin/activity" />
       <p className="mb-6 max-w-2xl text-gray-700">

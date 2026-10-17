@@ -34,68 +34,70 @@ export default async function RequestPage({
   const resolved = ticket.status === 'RESOLVED';
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link href="/support" className="text-sm hover:text-brand-ink">
-        ← Help and support
-      </Link>
+    <div className="page-width py-12">
+      <div className="max-w-3xl">
+        <Link href="/support" className="text-sm hover:text-brand-ink">
+          ← Help and support
+        </Link>
 
-      {isNew && (
-        <p
-          role="status"
-          className="mt-6 border-l-4 border-green-700 bg-green-50 p-4 text-green-900"
-        >
-          <strong>We have your request {ticketRef(ticket.number)}.</strong> We usually reply within
-          one working day, and you will get a notification when we do.
-        </p>
-      )}
-
-      <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-gray-600">
-            {ticketRef(ticket.number)} · {category}
+        {isNew && (
+          <p
+            role="status"
+            className="mt-6 border-l-4 border-green-700 bg-green-50 p-4 text-green-900"
+          >
+            <strong>We have your request {ticketRef(ticket.number)}.</strong> We usually reply
+            within one working day, and you will get a notification when we do.
           </p>
-          <h1 className="mt-1 text-2xl font-extrabold md:text-3xl">{ticket.subject}</h1>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm text-gray-600">
+              {ticketRef(ticket.number)} · {category}
+            </p>
+            <h1 className="mt-1 text-2xl font-extrabold md:text-3xl">{ticket.subject}</h1>
+          </div>
+          <TicketBadge value={ticket.status} label={STATUS_LABELS[ticket.status]} />
         </div>
-        <TicketBadge value={ticket.status} label={STATUS_LABELS[ticket.status]} />
-      </div>
 
-      <div className="mt-8">
-        <TicketThread messages={ticket.messages} viewer="requester" />
-      </div>
+        <div className="mt-8">
+          <TicketThread messages={ticket.messages} viewer="requester" />
+        </div>
 
-      <div className="mt-8 space-y-4">
-        {closed ? (
-          <p className="bg-white p-6 text-gray-700 shadow-md">
-            This request is closed.{' '}
-            <Link href="/support/new" className="font-semibold underline">
-              Start a new request
-            </Link>{' '}
-            if you need more help.
-          </p>
-        ) : (
-          <section className="bg-white p-6 shadow-md">
-            <ReplyForm ticketNumber={ticket.number} />
-          </section>
-        )}
-        {!closed && (
-          <form action={markResolved.bind(null, ticket.number, !resolved)} className="text-sm">
-            {resolved ? (
-              <p>
-                Marked as resolved.{' '}
-                <button type="submit" className="cursor-pointer font-semibold underline">
-                  Reopen
-                </button>
-              </p>
-            ) : (
-              <p>
-                Sorted?{' '}
-                <button type="submit" className="cursor-pointer font-semibold underline">
-                  Mark as resolved
-                </button>
-              </p>
-            )}
-          </form>
-        )}
+        <div className="mt-8 space-y-4">
+          {closed ? (
+            <p className="bg-white p-6 text-gray-700 shadow-md">
+              This request is closed.{' '}
+              <Link href="/support/new" className="font-semibold underline">
+                Start a new request
+              </Link>{' '}
+              if you need more help.
+            </p>
+          ) : (
+            <section className="bg-white p-6 shadow-md">
+              <ReplyForm ticketNumber={ticket.number} />
+            </section>
+          )}
+          {!closed && (
+            <form action={markResolved.bind(null, ticket.number, !resolved)} className="text-sm">
+              {resolved ? (
+                <p>
+                  Marked as resolved.{' '}
+                  <button type="submit" className="cursor-pointer font-semibold underline">
+                    Reopen
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  Sorted?{' '}
+                  <button type="submit" className="cursor-pointer font-semibold underline">
+                    Mark as resolved
+                  </button>
+                </p>
+              )}
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

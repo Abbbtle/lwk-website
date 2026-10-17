@@ -20,7 +20,7 @@ export default async function AdminCoursesPage({ searchParams }: PageProps<'/adm
   const courses = await listCoursesByStatus(status);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="page-width py-12">
       <AdminHeading title="Courses" greeting={session.name} />
       <AdminNav current="/admin/courses" />
 

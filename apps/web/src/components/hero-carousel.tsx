@@ -164,7 +164,7 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
                   onPhoto ? 'bg-black' : 'bg-brand'
                 }`}
               >
-                <div className="mx-auto flex h-full max-w-7xl px-4 pt-6 pb-20 sm:px-6 md:items-center md:pt-0 md:pb-8 lg:px-8">
+                <div className="page-width flex h-full pt-6 pb-20 md:items-center md:pt-0 md:pb-8">
                   <div
                     className={`max-w-xl lg:max-w-2xl ${slide.align === 'right' ? 'md:ml-auto' : ''}`}
                   >

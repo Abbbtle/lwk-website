@@ -15,10 +15,7 @@ export function CategoryShowcase({
   categories: (Category & { courseCount: number })[];
 }) {
   return (
-    <section
-      aria-labelledby="category-showcase"
-      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
-    >
+    <section aria-labelledby="category-showcase" className="page-width py-16 lg:py-24">
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="max-w-2xl">
           <h2 id="category-showcase" className={sectionHeading}>

@@ -150,7 +150,7 @@ export default async function HomePage() {
 
       {beginners.length > 0 && (
         <section aria-labelledby="beginner-courses" className="bg-gray-50">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="page-width py-16 lg:py-24">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <h2 id="beginner-courses" className={sectionHeading}>
                 Start with a beginner course
@@ -169,10 +169,7 @@ export default async function HomePage() {
       <EarlyAccess signedIn={Boolean(session)} />
 
       {resources.length > 0 && (
-        <section
-          aria-labelledby="free-content"
-          className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8 lg:pt-24"
-        >
+        <section aria-labelledby="free-content" className="page-width pt-16 lg:pt-24">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <h2 id="free-content" className={sectionHeading}>
               Free to watch, listen and read

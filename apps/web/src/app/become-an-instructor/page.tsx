@@ -11,12 +11,9 @@ export const metadata: Metadata = {
   description: 'Share your knowledge of devotional life with learners around the world.',
 };
 
+/** A status message, starting at the page's left edge like the heading above it. */
 function Notice({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-2xl space-y-4 bg-white p-8 text-center shadow-md [&>div]:justify-center">
-      {children}
-    </div>
-  );
+  return <div className="max-w-2xl space-y-4 bg-white p-8 shadow-md">{children}</div>;
 }
 
 export default async function BecomeAnInstructorPage() {
@@ -76,16 +73,18 @@ export default async function BecomeAnInstructorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
-      <h1 className="text-center text-3xl font-semibold md:text-4xl">Become An Instructor</h1>
-      <p className="mx-auto mt-8 max-w-2xl text-center text-lg">
-        We are looking for passionate and knowledgeable instructors from around the world. Fill out
-        the form below to get started.
-      </p>
-      <p className="mt-4 text-center">
-        <HelpLink slug="becoming-an-instructor">How applying works</HelpLink>
-      </p>
-      <div className="mt-10">{content}</div>
+    <div className="page-width py-12">
+      <div className="max-w-5xl">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Become An Instructor</h1>
+        <p className="mt-4 max-w-2xl text-lg">
+          We are looking for passionate and knowledgeable instructors from around the world. Fill
+          out the form below to get started.
+        </p>
+        <p className="mt-4">
+          <HelpLink slug="becoming-an-instructor">How applying works</HelpLink>
+        </p>
+        <div className="mt-10">{content}</div>
+      </div>
     </div>
   );
 }

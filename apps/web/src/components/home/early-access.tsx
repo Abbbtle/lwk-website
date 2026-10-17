@@ -3,7 +3,7 @@ import Link from 'next/link';
 /** The early access offer, as a large saffron panel. Signed-in people are sent to the courses. */
 export function EarlyAccess({ signedIn }: { signedIn: boolean }) {
   return (
-    <section aria-labelledby="early-access" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section aria-labelledby="early-access" className="page-width">
       <div className="rounded-3xl bg-brand px-6 py-14 text-center sm:px-12 lg:py-20">
         <h2
           id="early-access"

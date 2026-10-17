@@ -4,7 +4,7 @@ import Link from 'next/link';
 /** The mission, as a large black panel with the brand's Krishna drawing (as on Apple). */
 export function MissionTile() {
   return (
-    <section aria-labelledby="mission" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section aria-labelledby="mission" className="page-width">
       <div className="rounded-3xl bg-black px-6 py-16 text-center text-white sm:px-12 lg:py-24">
         <Image
           src="/images/krishna-flute.svg"

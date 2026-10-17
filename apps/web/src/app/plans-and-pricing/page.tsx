@@ -108,7 +108,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
 
 function PlanGroup({ title, billing }: { title: string; billing: string }) {
   return (
-    <section className="mx-auto max-w-6xl px-6 pt-12">
+    <section className="page-width pt-12">
       <h2 className="text-center text-3xl font-semibold">{title}</h2>
       <p className="mt-2 mb-8 text-center">
         Access any of our courses with our {billing.toLowerCase().replace(' billing', '')}{' '}
@@ -126,7 +126,7 @@ function PlanGroup({ title, billing }: { title: string; billing: string }) {
 export default function PlansAndPricingPage() {
   return (
     <>
-      <section className="px-6 pt-12 text-center">
+      <section className="page-width pt-12 text-center">
         <h1 className="text-3xl font-bold md:text-5xl">
           Elevate Your Spiritual Practice with Tailored Plans
         </h1>

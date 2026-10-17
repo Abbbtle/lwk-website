@@ -35,6 +35,16 @@ body {
   @apply bg-surface text-gray-900 antialiased;
 }
 
+/*
+ * The site's one content width and side margins. The header, the footer and every page section
+ * use it, so their left and right edges line up everywhere. Narrower reading columns sit inside
+ * it, starting at its left edge.
+ */
+@utility page-width {
+  /* max-w-360 is 1440px, about Udemy's content width; wide enough for the header's search. */
+  @apply mx-auto w-full max-w-360 px-4 sm:px-6 lg:px-8;
+}
+
 /* Square, bold buttons as in the POC. */
 @utility btn {
   @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-black px-5 py-2.5 font-bold transition-colors;

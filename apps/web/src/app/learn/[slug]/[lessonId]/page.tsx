@@ -60,7 +60,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
   const lessonHref = (l: { id: string }) => `/learn/${course.slug}/${l.id}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className="page-width py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/courses/${course.slug}`}

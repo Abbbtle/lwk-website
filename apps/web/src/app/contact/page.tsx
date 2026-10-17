@@ -60,7 +60,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
   const inquiryType = inquiryTypes.find((t) => t.value === type)?.value;
   const session = await getSession();
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <div className="page-width py-12 lg:py-16">
       <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">Contact us</h1>
       <p className="mt-3 max-w-2xl text-lg text-gray-700">
         Questions, feedback or partnership ideas? Send us a message, or reach us another way.

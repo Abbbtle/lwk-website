@@ -53,15 +53,18 @@ export default function OurMissionPage() {
           sizes="100vw"
           className="object-cover"
         />
-        <h1 className="relative mt-10 max-w-5xl px-6 text-center text-4xl font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] md:mt-16 md:text-6xl">
-          Embracing Krishna&apos;s Teachings in Modern Life
-        </h1>
+        {/* On the page's board, like the home page banner's text. */}
+        <div className="page-width relative pt-10 md:pt-16">
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] md:text-6xl">
+            Embracing Krishna&apos;s Teachings in Modern Life
+          </h1>
+        </div>
       </section>
       <p className="bg-black py-4 text-center text-sm font-semibold tracking-wide text-white uppercase md:text-base">
         Providing quality Vaisnava education since 2024
       </p>
 
-      <section className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 py-20 md:flex-row">
+      <section className="page-width flex flex-col items-center gap-12 py-20 md:flex-row">
         <div className="md:w-1/2">
           <h2 className="text-3xl font-bold md:text-4xl">About Living With Krishna</h2>
           <p className="mt-4 text-lg text-gray-700">
@@ -78,14 +81,14 @@ export default function OurMissionPage() {
             width={1080}
             height={1586}
             sizes="(min-width: 768px) 30vw, 80vw"
-            className="mx-auto h-auto w-2/3 rounded-md shadow-lg md:w-3/5"
+            className="mx-auto h-auto w-2/3 rounded-md shadow-lg md:mr-0 md:w-3/5"
           />
         </div>
       </section>
 
-      <section className="px-6 pb-8">
+      <section className="page-width pb-8">
         <h2 className="text-center text-3xl font-semibold">What We Offer</h2>
-        <ul className="mx-auto mt-10 grid max-w-6xl gap-8 md:grid-cols-3">
+        <ul className="mt-10 grid gap-8 md:grid-cols-3">
           {offerings.map(({ title, text }) => (
             <li key={title} className="rounded-md bg-gray-100 p-6 shadow-md">
               <h3 className="text-xl font-semibold">{title}</h3>

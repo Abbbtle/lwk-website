@@ -17,20 +17,22 @@ export default async function NewRequestPage({ searchParams }: PageProps<'/suppo
   const pageUrl = from ? safeReturnTo(from, '') || undefined : undefined;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link href="/support" className="text-sm hover:text-brand-ink">
-        ← Help and support
-      </Link>
-      <h1 className="mt-3 text-3xl font-extrabold md:text-4xl">New support request</h1>
-      <p className="mt-2 text-gray-700">
-        Tell us what you need and we will reply here. You get a notification when we do.
-      </p>
-      <div className="mt-8 bg-white p-6 shadow-md sm:p-8">
-        <NewRequestForm
-          categories={TICKET_CATEGORIES}
-          initialCategory={category}
-          pageUrl={pageUrl}
-        />
+    <div className="page-width py-12">
+      <div className="max-w-3xl">
+        <Link href="/support" className="text-sm hover:text-brand-ink">
+          ← Help and support
+        </Link>
+        <h1 className="mt-3 text-3xl font-extrabold md:text-4xl">New support request</h1>
+        <p className="mt-2 text-gray-700">
+          Tell us what you need and we will reply here. You get a notification when we do.
+        </p>
+        <div className="mt-8 bg-white p-6 shadow-md sm:p-8">
+          <NewRequestForm
+            categories={TICKET_CATEGORIES}
+            initialCategory={category}
+            pageUrl={pageUrl}
+          />
+        </div>
       </div>
     </div>
   );
