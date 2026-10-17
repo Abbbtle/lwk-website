@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+/* Palette from the reference POC: saffron orange accent, black, grays, white. */
+@theme {
+  --color-brand: var(--color-orange-500);
+  --color-brand-dark: var(--color-orange-600);
+  /* Orange for text on light backgrounds: orange-500 is too light to read there (WCAG AA). */
+  --color-brand-ink: var(--color-orange-700);
+  --color-surface: #f9f9f9;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+body {
+  @apply bg-surface text-gray-900 antialiased;
+}
+
+/* Square, bold buttons as in the POC. */
+@utility btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-black px-5 py-2.5 font-bold transition-colors;
+}
+
+/* Black outline that fills black from left to right on hover. */
+@utility btn-outline {
+  @apply btn text-black;
+  background-image: linear-gradient(to right, black 50%, transparent 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition:
+    background-position 0.5s,
+    color 0.5s;
+
+  &:hover {
+    background-position: left bottom;
+    color: white;
+  }
+}
+
+@utility btn-solid {
+  @apply btn bg-black text-surface hover:bg-[#282828];
+}
+
+/* Black text on saffron: white text on orange is too faint to read (WCAG AA). */
+@utility btn-brand {
+  @apply btn border-brand bg-brand text-black hover:border-brand-dark hover:bg-brand-dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-outline {
+    transition: none;
+  }
+  .animate-marquee {
+    animation: none;
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+.DS_Store
+*.log
+
+# local secrets - never commit
+.env
+.env.*
+!.env.example
+
+# build output
+.next/
+out/
+cdk.out/
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+**/src/generated/
+
+# notes that design-review agents keep between sessions (local to each machine)
+**/.claude/agent-memory-local/
