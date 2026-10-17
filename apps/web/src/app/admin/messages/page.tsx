@@ -39,11 +39,11 @@ export default async function MessagesPage({ searchParams }: PageProps<'/admin/m
       </nav>
 
       {messages.length === 0 ? (
-        <p className="bg-surface p-8 text-center text-gray-700">No messages here.</p>
+        <p className="rounded-card bg-surface p-8 text-center text-gray-700">No messages here.</p>
       ) : (
         <ul className="space-y-4">
           {messages.map((m) => (
-            <li key={m.id} className="border border-gray-300 p-5">
+            <li key={m.id} className="rounded-card border border-gray-300 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold">

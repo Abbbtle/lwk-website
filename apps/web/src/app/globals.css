@@ -8,6 +8,16 @@
   --color-brand-ink: var(--color-orange-700);
   --color-surface: #f9f9f9;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * Corner radii, from small to large, so the site's roundness is set in one place: badges
+   * (rounded-badge), buttons, inputs and pills (rounded-control), and cards, panels, menus and
+   * dialogs (rounded-card). The home page's large feature tiles use the bigger rounded-3xl.
+   */
+  --radius-badge: 0.375rem;
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+
   --animate-strand-count: strand-count 600ms linear both;
   --animate-tassel-drop: tassel-drop 480ms ease-out both;
 
@@ -45,9 +55,22 @@ body {
   @apply mx-auto w-full max-w-360 px-4 sm:px-6 lg:px-8;
 }
 
-/* Square, bold buttons as in the POC. */
+/* Bold buttons as in the POC, with softly rounded corners. */
 @utility btn {
-  @apply inline-flex cursor-pointer items-center justify-center gap-2 border border-black px-5 py-2.5 font-bold transition-colors;
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-control border border-black px-5 py-2.5 font-bold transition-colors;
+}
+
+/*
+ * For a rounded card whose rows or pictures run to its edges: clips them to the corners, and
+ * draws keyboard focus inside each row so the clipping cannot hide it.
+ */
+@utility card-clip {
+  overflow: hidden;
+
+  & :focus-visible {
+    outline: 2px solid black;
+    outline-offset: -2px;
+  }
 }
 
 /* Black outline that fills black from left to right on hover. */

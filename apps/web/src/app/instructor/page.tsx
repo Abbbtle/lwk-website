@@ -34,11 +34,11 @@ export default async function InstructorPage() {
         <section className="lg:col-span-2">
           <h2 className="mb-4 text-xl font-bold">Your courses</h2>
           {courses.length === 0 ? (
-            <p className="bg-surface p-8 text-center text-gray-700">
+            <p className="rounded-card bg-surface p-8 text-center text-gray-700">
               You have not created a course yet. Start with a title and a category.
             </p>
           ) : (
-            <ul className="divide-y divide-gray-300 border border-gray-300">
+            <ul className="card-clip divide-y divide-gray-300 rounded-card border border-gray-300">
               {courses.map((course) => (
                 <li key={course.id}>
                   <Link
@@ -61,7 +61,7 @@ export default async function InstructorPage() {
         </section>
         <aside className="space-y-6">
           <NewCourseForm categories={categories.map((c) => ({ value: c.slug, label: c.name }))} />
-          <div className="space-y-2 bg-white p-6 shadow-md">
+          <div className="space-y-2 rounded-card bg-white p-6 shadow-md">
             <h2 className="font-bold">Guides for instructors</h2>
             <ul className="space-y-2">
               <li>

@@ -81,7 +81,7 @@ export default function OurMissionPage() {
             width={1080}
             height={1586}
             sizes="(min-width: 768px) 30vw, 80vw"
-            className="mx-auto h-auto w-2/3 rounded-md shadow-lg md:mr-0 md:w-3/5"
+            className="mx-auto h-auto w-2/3 rounded-card shadow-lg md:mr-0 md:w-3/5"
           />
         </div>
       </section>
@@ -90,7 +90,7 @@ export default function OurMissionPage() {
         <h2 className="text-center text-3xl font-semibold">What We Offer</h2>
         <ul className="mt-10 grid gap-8 md:grid-cols-3">
           {offerings.map(({ title, text }) => (
-            <li key={title} className="rounded-md bg-gray-100 p-6 shadow-md">
+            <li key={title} className="rounded-card bg-gray-100 p-6 shadow-md">
               <h3 className="text-xl font-semibold">{title}</h3>
               <p className="mt-2 text-gray-600">{text}</p>
             </li>

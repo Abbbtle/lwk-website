@@ -56,7 +56,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <TypeBadge type={resource.type} />
               <StatusBadge status={resource.status} />
@@ -78,7 +78,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
           </section>
 
           {kind && (
-            <section className="space-y-4 bg-white p-6 shadow-md">
+            <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
               <h2 className="text-xl font-bold">The {fileLabel[kind]}</h2>
               {resource.mediaUrl ? (
                 kind === 'video' ? (
@@ -86,7 +86,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
                     controls
                     preload="metadata"
                     src={resource.mediaUrl}
-                    className="aspect-video w-full bg-black"
+                    className="aspect-video w-full rounded-card bg-black"
                   />
                 ) : kind === 'audio' ? (
                   <audio controls preload="metadata" src={resource.mediaUrl} className="w-full" />
@@ -116,7 +116,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
             </section>
           )}
 
-          <section className="space-y-4 bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Cover image</h2>
             <p className="text-sm text-gray-600">
               Optional. Without one, the category photo is used.
@@ -139,7 +139,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
         </div>
 
         <aside className="space-y-8">
-          <section className="space-y-4 bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Publishing</h2>
             {published ? (
               <>
@@ -176,7 +176,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
             )}
           </section>
 
-          <section className="space-y-4 bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Delete</h2>
             <ConfirmAction
               label="Delete this resource"

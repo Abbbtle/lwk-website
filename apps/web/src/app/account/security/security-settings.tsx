@@ -38,7 +38,7 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="bg-white p-6 shadow-md sm:p-8">
+    <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="flex items-center gap-3 text-xl font-bold">
           <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-brand-ink">
@@ -259,7 +259,7 @@ export function SecuritySettings({
           <form
             onSubmit={turnOn}
             noValidate
-            className="space-y-5 border border-gray-300 bg-surface p-5"
+            className="space-y-5 rounded-card border border-gray-300 bg-surface p-5"
           >
             <h3 className="font-bold">Set up your authenticator app</h3>
             <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-700">
@@ -300,7 +300,7 @@ export function SecuritySettings({
         )}
 
         {flow.name === 'totp-off' && (
-          <div className="space-y-4 border border-gray-300 bg-surface p-5">
+          <div className="space-y-4 rounded-card border border-gray-300 bg-surface p-5">
             <h3 className="font-bold">Turn off two-step verification?</h3>
             <p className="text-sm text-gray-700">
               Anyone who learns your password will be able to log in as you.
@@ -338,7 +338,7 @@ export function SecuritySettings({
           <form
             onSubmit={savePassword}
             noValidate
-            className="space-y-5 border border-gray-300 bg-surface p-5"
+            className="space-y-5 rounded-card border border-gray-300 bg-surface p-5"
           >
             <h3 className="font-bold">Choose a new password</h3>
             <AuthError message={error} />
@@ -392,7 +392,7 @@ export function SecuritySettings({
         <form ref={logoutForm} action="/auth/logout" method="post" className="space-y-4">
           <input type="hidden" name="everywhere" value="1" />
           {confirmSignOut ? (
-            <div className="space-y-4 border border-gray-300 bg-surface p-5">
+            <div className="space-y-4 rounded-card border border-gray-300 bg-surface p-5">
               <p className="font-semibold">Log out on all devices now?</p>
               <div className="flex flex-wrap gap-3">
                 <button

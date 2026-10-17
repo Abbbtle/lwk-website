@@ -16,9 +16,9 @@ import {
 } from '../../actions';
 
 const input =
-  'w-full border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none';
+  'w-full rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none';
 const iconButton =
-  'cursor-pointer border border-gray-300 p-1.5 hover:border-black disabled:cursor-not-allowed disabled:opacity-40';
+  'cursor-pointer rounded-control border border-gray-300 p-1.5 hover:border-black disabled:cursor-not-allowed disabled:opacity-40';
 
 function MoveButtons({
   onUp,
@@ -73,14 +73,14 @@ function LessonMedia({
   if (lesson.type === 'TEXT') return null;
   const isVideo = lesson.type === 'VIDEO';
   return (
-    <div className="space-y-3 bg-surface p-3">
+    <div className="space-y-3 rounded-card bg-surface p-3">
       {url ? (
         isVideo ? (
           <video
             controls
             preload="metadata"
             src={url}
-            className="aspect-video w-full max-w-xl bg-black"
+            className="aspect-video w-full max-w-xl rounded-card bg-black"
           />
         ) : (
           <a
@@ -120,7 +120,7 @@ export function Curriculum({
   return (
     <div className="space-y-6">
       {course.sections.map((section, sIndex) => (
-        <section key={section.id} className="border border-gray-300">
+        <section key={section.id} className="card-clip rounded-card border border-gray-300">
           <div className="flex flex-wrap items-center gap-2 border-b border-gray-300 bg-gray-100 p-3">
             <span className="text-sm font-bold text-gray-500">Section {sIndex + 1}</span>
             {locked ? (

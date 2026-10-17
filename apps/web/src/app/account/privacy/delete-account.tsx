@@ -37,7 +37,7 @@ export function DeleteAccount({
 
   if (step === 'typing') {
     return (
-      <div className="space-y-4 border border-red-300 bg-red-50 p-5">
+      <div className="space-y-4 rounded-card border border-red-300 bg-red-50 p-5">
         <p className="font-semibold text-red-900">This cannot be undone.</p>
         <p className="text-sm text-red-900">
           Your account, enrollments, progress and applications will be deleted for good. Type DELETE
@@ -51,7 +51,7 @@ export function DeleteAccount({
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           autoComplete="off"
-          className="w-full border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
+          className="w-full rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
         />
         <div className="flex flex-wrap gap-3">
           <button type="button" autoFocus onClick={() => setStep('idle')} className="btn-outline">

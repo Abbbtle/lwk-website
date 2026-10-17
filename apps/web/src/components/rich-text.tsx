@@ -221,7 +221,10 @@ export function RichText({
             );
           case 'code':
             return (
-              <pre key={index} className="overflow-x-auto bg-gray-100 p-3 font-mono text-sm">
+              <pre
+                key={index}
+                className="overflow-x-auto rounded-control bg-gray-100 p-3 font-mono text-sm"
+              >
                 <code>{block.text}</code>
               </pre>
             );

@@ -17,7 +17,7 @@ export function AuthCard({
 }) {
   return (
     <div className="flex justify-center px-4 py-16 md:py-24">
-      <div className="w-full max-w-md bg-white p-8 shadow-lg">
+      <div className="w-full max-w-md rounded-card bg-white p-8 shadow-lg">
         <h1 className="text-center text-3xl font-bold">{title}</h1>
         {subtitle && <p className="mt-3 text-center text-gray-600">{subtitle}</p>}
         <div className="mt-8">{children}</div>
@@ -30,7 +30,7 @@ export function AuthCard({
 }
 
 const inputClass =
-  'w-full border border-gray-300 bg-surface px-4 py-2.5 focus:border-black focus:outline-none';
+  'w-full rounded-control border border-gray-300 bg-surface px-4 py-2.5 focus:border-black focus:outline-none';
 
 export function AuthField({
   label,

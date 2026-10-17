@@ -28,7 +28,7 @@ export default async function MyLearningPage() {
       )}
 
       {courses.length === 0 ? (
-        <div className="mt-8 bg-white p-10 text-center shadow-md">
+        <div className="mt-8 rounded-card bg-white p-10 text-center shadow-md">
           <p className="text-lg text-gray-700">
             You have not enrolled in a course yet. Start with a free course, or browse the
             catalogue: every course is free during early access.
@@ -45,7 +45,10 @@ export default async function MyLearningPage() {
       ) : (
         <ul className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
-            <li key={course.slug} className="flex flex-col bg-white shadow-md">
+            <li
+              key={course.slug}
+              className="flex flex-col overflow-hidden rounded-card bg-white shadow-md"
+            >
               <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <h2 className="text-lg font-semibold">{course.title}</h2>

@@ -66,7 +66,7 @@ export default async function RequestPage({
 
         <div className="mt-8 space-y-4">
           {closed ? (
-            <p className="bg-white p-6 text-gray-700 shadow-md">
+            <p className="rounded-card bg-white p-6 text-gray-700 shadow-md">
               This request is closed.{' '}
               <Link href="/support/new" className="font-semibold underline">
                 Start a new request
@@ -74,7 +74,7 @@ export default async function RequestPage({
               if you need more help.
             </p>
           ) : (
-            <section className="bg-white p-6 shadow-md">
+            <section className="rounded-card bg-white p-6 shadow-md">
               <ReplyForm ticketNumber={ticket.number} />
             </section>
           )}

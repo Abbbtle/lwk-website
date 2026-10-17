@@ -79,7 +79,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
   const featured = plan.featured;
   return (
     <li
-      className={`flex flex-col border p-6 ${
+      className={`flex flex-col rounded-card border p-6 ${
         featured ? 'border-brand bg-brand text-black' : 'border-gray-600 bg-gray-100'
       }`}
     >

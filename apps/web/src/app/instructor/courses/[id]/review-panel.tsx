@@ -21,7 +21,7 @@ export function ReviewPanel({
   );
 
   return (
-    <div className="space-y-4 border border-gray-300 p-6">
+    <div className="space-y-4 rounded-card border border-gray-300 p-6">
       <h2 className="text-xl font-bold">Review</h2>
 
       {reviewNote && status === 'DRAFT' && (

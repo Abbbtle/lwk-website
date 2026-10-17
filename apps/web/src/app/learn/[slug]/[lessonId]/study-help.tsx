@@ -30,7 +30,7 @@ export function StudyHelp({ lessonId, lessonTitle }: { lessonId: string; lessonT
   return (
     <section
       aria-labelledby="study-help-title"
-      className="max-w-3xl space-y-4 border border-gray-300 bg-white p-5"
+      className="max-w-3xl space-y-4 rounded-card border border-gray-300 bg-white p-5"
     >
       <h2 id="study-help-title" className="flex items-center gap-2 text-lg font-bold">
         <Sparkles className="size-5 text-brand-ink" aria-hidden /> Study help
@@ -100,7 +100,7 @@ export function StudyHelp({ lessonId, lessonTitle }: { lessonId: string; lessonT
                 return (
                   <label
                     key={j}
-                    className={`flex cursor-pointer items-start gap-3 border border-gray-200 p-2.5 text-sm ${tone}`}
+                    className={`flex cursor-pointer items-start gap-3 rounded-control border border-gray-200 p-2.5 text-sm ${tone}`}
                   >
                     <input
                       type="radio"

@@ -60,7 +60,7 @@ export function HelpFeedback({ slug, signedIn }: { slug: string; signedIn: boole
             maxLength={1000}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
+            className="w-full rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
           />
           <p className="text-sm text-gray-600">
             This goes to the team that writes these articles. It is not a support request.

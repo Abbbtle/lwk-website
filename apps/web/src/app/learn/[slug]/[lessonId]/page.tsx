@@ -97,7 +97,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
           </header>
 
           {!lesson.unlocked ? (
-            <div className="space-y-4 bg-surface p-8 text-center">
+            <div className="space-y-4 rounded-card bg-surface p-8 text-center">
               <Lock className="mx-auto size-8 text-gray-500" aria-hidden />
               <p className="text-lg font-semibold">Enroll to open this lesson.</p>
               <p className="text-gray-700">Free during early access.</p>
@@ -128,7 +128,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
                 title={lesson.title}
               />
             ) : (
-              <p className="bg-surface p-8 text-center text-gray-700">
+              <p className="rounded-card bg-surface p-8 text-center text-gray-700">
                 This video is not available yet.
               </p>
             )
@@ -138,7 +138,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
                 <iframe
                   src={player.mediaUrl}
                   title={lesson.title}
-                  className="h-[75vh] w-full border border-gray-300"
+                  className="h-[75vh] w-full rounded-card border border-gray-300"
                 />
                 <a
                   href={player.mediaUrl}
@@ -150,7 +150,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
                 </a>
               </div>
             ) : (
-              <p className="bg-surface p-8 text-center text-gray-700">
+              <p className="rounded-card bg-surface p-8 text-center text-gray-700">
                 This document is not available yet.
               </p>
             )
@@ -203,7 +203,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
         </article>
 
         <aside aria-label="Course content" className="lg:sticky lg:top-6 lg:self-start">
-          <div className="border border-gray-300">
+          <div className="card-clip rounded-card border border-gray-300">
             {player.sections.map((section, index) => (
               <section key={section.id}>
                 <h2 className="border-b border-gray-300 bg-gray-100 px-4 py-3 text-sm font-bold">
