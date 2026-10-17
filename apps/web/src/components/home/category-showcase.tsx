@@ -29,8 +29,8 @@ export function CategoryShowcase({
             every day.
           </p>
         </div>
-        <Link href="/categories" className={textLink}>
-          Browse all categories
+        <Link href="/courses" className={textLink}>
+          Browse all courses
         </Link>
       </div>
       <ul className="-mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
