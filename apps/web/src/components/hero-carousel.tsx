@@ -39,6 +39,15 @@ function scrimClass(align: HeroBannerSlide['align']) {
 }
 
 /**
+ * Moves the text clear of the side arrows (48px wide, 16-24px in from the screen edge), which
+ * would otherwise cover its first or last words. From 98rem (1568px) the page's own side
+ * margin leaves room for them, so the text lines up with the rest of the page again.
+ */
+function arrowClearance(align: HeroBannerSlide['align']) {
+  return align === 'right' ? 'md:mr-14 min-[98rem]:mr-0' : 'md:ml-14 min-[98rem]:ml-0';
+}
+
+/**
  * The home page banner: full-width slides, each a photo with white text over a dark fade, or a
  * saffron brand panel, with a label, a headline and two buttons. Slides move on by themselves;
  * rotation pauses while the pointer or keyboard focus is in the banner, stops with the pause
@@ -166,7 +175,9 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
               >
                 <div className="page-width flex h-full pt-6 pb-20 md:items-center md:pt-0 md:pb-8">
                   <div
-                    className={`max-w-xl lg:max-w-2xl ${slide.align === 'right' ? 'md:ml-auto' : ''}`}
+                    className={`max-w-xl lg:max-w-2xl ${slide.align === 'right' ? 'md:ml-auto' : ''} ${
+                      count > 1 ? arrowClearance(slide.align) : ''
+                    }`}
                   >
                     {slide.tag && (
                       <p
