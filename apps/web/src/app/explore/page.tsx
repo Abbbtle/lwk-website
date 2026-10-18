@@ -7,7 +7,7 @@ import { CourseGrid } from '@/components/course-card';
 import { ResourceGrid } from '@/components/resource-card';
 import type { ResourceType } from '@/generated/prisma/client';
 import { getCategories, searchCourses } from '@/server/catalog';
-import { viewerPriceRegion } from '@/server/pricing';
+import { viewerPriceRegion } from '@/server/price-region';
 import { listPublishedResources } from '@/server/resources';
 
 export const metadata: Metadata = {

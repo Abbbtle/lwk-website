@@ -21,7 +21,7 @@ import {
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
 import { getEnrollmentBySlug } from '@/server/learning';
-import { viewerPriceRegion } from '@/server/pricing';
+import { viewerPriceRegion } from '@/server/price-region';
 import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.

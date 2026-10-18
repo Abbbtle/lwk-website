@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { CategoryPills } from '@/components/category-pills';
 import { CourseGrid } from '@/components/course-card';
 import { getCategories, searchCourses } from '@/server/catalog';
-import { viewerPriceRegion } from '@/server/pricing';
+import { viewerPriceRegion } from '@/server/price-region';
 
 export const metadata: Metadata = {
   title: 'All Courses',

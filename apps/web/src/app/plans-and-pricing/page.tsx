@@ -27,7 +27,7 @@ import {
   YEARLY_FULL_REFUND_DAYS,
   yearlySavingPercent,
 } from '@/lib/pricing';
-import { viewerPriceRegion } from '@/server/pricing';
+import { viewerPriceRegion } from '@/server/price-region';
 
 export const metadata: Metadata = {
   title: 'Plans & Pricing',

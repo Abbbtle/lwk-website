@@ -1,5 +1,5 @@
 // Prices for memberships and single courses in each price region, and how to show them. Pure
-// code, safe in client components. The visitor's region comes from src/server/pricing.ts.
+// code, safe in client components. The visitor's region comes from src/server/price-region.ts.
 
 export {
   COURSE_TIERS,
@@ -38,6 +38,7 @@ export {
   yearlySavingPercent,
 } from './recurring';
 export {
+  HOME_PRICE_REGION,
   PRICE_REGIONS,
   type PriceRegion,
   regionCurrency,

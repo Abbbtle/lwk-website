@@ -1,6 +1,6 @@
 import 'server-only';
 import { headers } from 'next/headers';
-import { toCountryCode } from '@/lib/country-code';
+import { type CountryCode, toCountryCode } from '@/lib/country-code';
 
 /**
  * The visitor's IP address. In AWS every request arrives through CloudFront, which sets
@@ -11,8 +11,8 @@ export async function clientIp(): Promise<string> {
   return ipFromHeaders(await headers());
 }
 
-export function ipFromHeaders(h: Headers): string {
-  const viewer = h.get('cloudfront-viewer-address');
+export function ipFromHeaders(requestHeaders: Headers): string {
+  const viewer = requestHeaders.get('cloudfront-viewer-address');
   if (viewer) {
     // "198.51.100.10:46532" or "2001:db8::1:46532": the port follows the last colon.
     const ip = viewer.slice(0, viewer.lastIndexOf(':'));
@@ -22,18 +22,16 @@ export function ipFromHeaders(h: Headers): string {
 }
 
 /**
- * The visitor's country as an ISO 3166-1 alpha-2 code ("ZA"), or null when unknown. CloudFront
- * sets `CloudFront-Viewer-Country` itself from the visitor's IP address (the origin request policy
- * forwards it). Outside production, `PRICE_COUNTRY` stands in for it, so other countries' prices
- * can be tried locally; production ignores it.
+ * The visitor's country. CloudFront sets `CloudFront-Viewer-Country` itself from the visitor's IP
+ * address (the origin request policy forwards it); null when it is missing or not a country code,
+ * as locally, where there is no CloudFront.
  */
-export async function viewerCountry(): Promise<string | null> {
+export async function viewerCountry(): Promise<CountryCode | null> {
   return countryFromHeaders(await headers());
 }
 
-export function countryFromHeaders(h: Headers): string | null {
-  const standIn = process.env.NODE_ENV === 'production' ? undefined : process.env.PRICE_COUNTRY;
-  return toCountryCode(standIn || h.get('cloudfront-viewer-country'));
+export function countryFromHeaders(requestHeaders: Headers): CountryCode | null {
+  return toCountryCode(requestHeaders.get('cloudfront-viewer-country'));
 }
 
 /** CloudFront's request ID, for matching log lines to a request. */

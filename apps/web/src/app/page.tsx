@@ -13,7 +13,7 @@ import { ResourceGrid } from '@/components/resource-card';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
 import { getSession } from '@/server/auth/session';
 import { getCategories, searchCourses } from '@/server/catalog';
-import { viewerPriceRegion } from '@/server/pricing';
+import { viewerPriceRegion } from '@/server/price-region';
 import { listPublishedResources } from '@/server/resources';
 
 /** Two rows of the course grid. */

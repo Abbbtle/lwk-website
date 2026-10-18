@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { COUNTRY_CODES, type CountryCode, toCountryCode } from '@/lib/country-code';
 import {
+  HOME_PRICE_REGION,
   PRICE_REGIONS,
   regionCurrency,
   regionForCountry,
@@ -8,35 +10,44 @@ import {
   visitorRegionPhrase,
 } from './regions';
 
+function country(code: string): CountryCode {
+  const checked = toCountryCode(code);
+  if (!checked) throw new Error(`${code} is not a country code`);
+  return checked;
+}
+
+const regionOf = (code: string) => regionForCountry(country(code));
+
 describe('regionForCountry', () => {
   it('gives South Africa and India their own regions', () => {
-    expect(regionForCountry('ZA')).toBe('south-africa');
-    expect(regionForCountry('IN')).toBe('india');
+    expect(regionOf('ZA')).toBe('south-africa');
+    expect(regionOf('IN')).toBe('india');
   });
 
-  it('groups high-income countries', () => {
-    for (const code of ['US', 'GB', 'DE', 'JP', 'AU', 'AE', 'SG', 'HK', 'JE', 'PR', 'RU', 'UY']) {
-      expect(regionForCountry(code), code).toBe('high-income');
+  it('groups high-income countries and territories', () => {
+    for (const code of ['US', 'GB', 'DE', 'JP', 'AU', 'AE', 'SG', 'HK', 'RU', 'UY', 'JE', 'BM']) {
+      expect(regionOf(code), code).toBe('high-income');
     }
   });
 
   it('puts every other country in the rest of the world', () => {
     for (const code of ['BR', 'NG', 'KE', 'PK', 'MX', 'CN', 'LK', 'BW']) {
-      expect(regionForCountry(code), code).toBe('rest-of-world');
+      expect(regionOf(code), code).toBe('rest-of-world');
     }
   });
 
-  it('reads codes in any case and ignores surrounding spaces', () => {
-    expect(regionForCountry('za')).toBe('south-africa');
-    expect(regionForCountry('in')).toBe('india');
-    expect(regionForCountry(' gb ')).toBe('high-income');
-    expect(regionForCountry('br')).toBe('rest-of-world');
+  it('places every country in a region and leaves no region empty', () => {
+    const reached = new Set(COUNTRY_CODES.map(regionOf));
+    expect([...reached].sort()).toEqual([...PRICE_REGIONS].sort());
   });
 
-  it('treats a missing or unrecognised country as South Africa', () => {
-    for (const code of [null, undefined, '', '  ', 'ZAF', 'Z', '1A', 'G B']) {
-      expect(regionForCountry(code), String(code)).toBe('south-africa');
-    }
+  it('knows all 88 high-income economies by real country codes', () => {
+    // A mistyped code in the World Bank list would match no country, and the count would drop.
+    expect(COUNTRY_CODES.filter((code) => regionOf(code) === 'high-income')).toHaveLength(88);
+  });
+
+  it('leaves unknown countries to the caller, who uses the home region', () => {
+    expect(HOME_PRICE_REGION).toBe('south-africa');
   });
 });
 

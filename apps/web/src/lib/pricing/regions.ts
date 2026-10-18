@@ -1,4 +1,4 @@
-import { toCountryCode } from '@/lib/country-code';
+import type { CountryCode } from '@/lib/country-code';
 import type { Currency } from './money';
 
 // Prices follow local incomes, so people everywhere can afford them: each visitor's country falls
@@ -6,6 +6,9 @@ import type { Currency } from './money';
 
 export const PRICE_REGIONS = ['south-africa', 'high-income', 'india', 'rest-of-world'] as const;
 export type PriceRegion = (typeof PRICE_REGIONS)[number];
+
+/** The home market, whose prices show when a visitor's country is unknown (and locally). */
+export const HOME_PRICE_REGION: PriceRegion = 'south-africa';
 
 const regions: Record<
   PriceRegion,
@@ -40,15 +43,11 @@ const HIGH_INCOME_COUNTRIES = new Set(
   ),
 );
 
-/**
- * The price region for a country code such as "ZA" or "gb". A missing or unrecognised country
- * counts as South Africa, the home market (local development has no country either).
- */
-export function regionForCountry(country: string | null | undefined): PriceRegion {
-  const code = toCountryCode(country);
-  if (code === null || code === 'ZA') return 'south-africa';
-  if (code === 'IN') return 'india';
-  return HIGH_INCOME_COUNTRIES.has(code) ? 'high-income' : 'rest-of-world';
+/** The price region a country belongs to. Every country belongs to one. */
+export function regionForCountry(country: CountryCode): PriceRegion {
+  if (country === 'ZA') return 'south-africa';
+  if (country === 'IN') return 'india';
+  return HIGH_INCOME_COUNTRIES.has(country) ? 'high-income' : 'rest-of-world';
 }
 
 export function regionCurrency(region: PriceRegion): Currency {
