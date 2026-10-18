@@ -36,7 +36,7 @@ async function submittedCourse(teacher: Session, title: string) {
     categorySlug: 'prasadam',
     level: 'BEGINNER',
     instructorName: 'Teacher',
-    isFree: false,
+    price: 2,
     outcomes: ['Cook'],
   });
   await authoring.addSection(teacher, course.id, 'Section');
@@ -63,7 +63,12 @@ describe('course review', () => {
 
     await publishCourse(admin, course.id);
     const live = await getCourse(course.slug);
-    expect(live).toMatchObject({ title: 'Festival Sweets', lessonCount: 1, instructor: 'Teacher' });
+    expect(live).toMatchObject({
+      title: 'Festival Sweets',
+      lessonCount: 1,
+      instructor: 'Teacher',
+      priceTier: 2,
+    });
 
     // Deciding twice fails instead of silently changing a live course.
     await expect(publishCourse(admin, course.id)).rejects.toMatchObject({ code: 'locked' });
@@ -113,7 +118,7 @@ describe('course review', () => {
       categorySlug: 'prasadam',
       level: 'BEGINNER',
       instructorName: 'Teacher',
-      isFree: false,
+      price: 2,
       outcomes: ['Cook'],
     });
     expect((await authoring.getCourseForEditing(teacher, course.id)).slug).toBe(course.slug);

@@ -176,7 +176,9 @@ export async function updateCourseDetails(
       outcomes: input.outcomes,
       level: input.level,
       instructorName: input.instructorName,
-      isFree: input.isFree,
+      // Free for everyone or a price tier, never both.
+      isFree: input.price === 'free',
+      priceTier: input.price === 'free' ? null : input.price,
       categoryId: await categoryId(input.categorySlug),
     },
   });
@@ -362,6 +364,9 @@ export function reviewChecklist(course: EditableCourse): string[] {
   if (!course.subtitle.trim()) missing.push('Add a subtitle.');
   if (!course.description.trim()) missing.push('Add a description.');
   if (course.outcomes.length === 0) missing.push('List at least one thing learners will learn.');
+  if (!course.isFree && course.priceTier === null) {
+    missing.push('Choose a price, or offer the course for free.');
+  }
   if (course.sections.length === 0) missing.push('Add at least one section.');
   for (const section of course.sections) {
     if (section.lessons.length === 0) missing.push(`Add a lesson to "${section.title}".`);

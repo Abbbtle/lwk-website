@@ -31,7 +31,7 @@ const details = {
   categorySlug: 'vaisnava-etiquette',
   level: 'BEGINNER' as const,
   instructorName: 'Japa Teacher',
-  isFree: false,
+  price: 2 as const,
   outcomes: ['Chant sixteen rounds steadily'],
 };
 
@@ -152,6 +152,31 @@ describe('course authoring', () => {
     await authoring.withdrawSubmission(teacher, course.id);
     await authoring.addSection(teacher, course.id, 'Back to editing');
     expect((await authoring.getCourseForEditing(teacher, course.id)).status).toBe('DRAFT');
+  });
+
+  it('stores free or a price tier, never both, and asks for one before review', async () => {
+    const teacher = await person(['instructor']);
+    const course = await authoring.createCourse(teacher, {
+      title: 'Pricing',
+      categorySlug: 'kirtan',
+    });
+    const reload = () => authoring.getCourseForEditing(teacher, course.id);
+    const choosePrice = 'Choose a price, or offer the course for free.';
+    expect(authoring.reviewChecklist(await reload())).toContain(choosePrice);
+
+    const withPrice = (price: 'free' | 4 | null) =>
+      authoring.updateCourseDetails(teacher, course.id, { ...details, title: 'Pricing', price });
+    await withPrice(4);
+    expect(await reload()).toMatchObject({ isFree: false, priceTier: 4 });
+    expect(authoring.reviewChecklist(await reload())).not.toContain(choosePrice);
+
+    await withPrice('free');
+    expect(await reload()).toMatchObject({ isFree: true, priceTier: null });
+    expect(authoring.reviewChecklist(await reload())).not.toContain(choosePrice);
+
+    await withPrice(null);
+    expect(await reload()).toMatchObject({ isFree: false, priceTier: null });
+    expect(authoring.reviewChecklist(await reload())).toContain(choosePrice);
   });
 
   it('flags video and PDF lessons that still need a file', async () => {

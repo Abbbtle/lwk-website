@@ -1,14 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import {
-  CheckboxField,
-  FormStatus,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from '@/components/form-fields';
-import { levelOptions } from '@/lib/forms/course';
+import { FormStatus, SelectField, TextAreaField, TextField } from '@/components/form-fields';
+import { levelOptions, priceOptions } from '@/lib/forms/course';
 import type { FormState } from '@/lib/forms/form-state';
 import { updateDetails } from '../../actions';
 
@@ -63,10 +57,12 @@ export function DetailsForm({
           rows={5}
           state={state}
         />
-        <CheckboxField
-          name="isFree"
-          label="Offer this course for free"
-          hint="Free courses are listed in Explore and stay free for everyone, also when paid plans start."
+        <SelectField
+          name="price"
+          label="Price"
+          options={priceOptions}
+          placeholder="Choose a price"
+          hint="Free courses are listed in Explore and stay free for everyone. Each tier has a local price in every country."
           state={state}
         />
         {!locked && (

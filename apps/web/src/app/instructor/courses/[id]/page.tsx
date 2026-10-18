@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { MediaUploader } from '@/components/media-uploader';
 import { StatusBadge } from '@/components/status-badge';
+import { priceFieldValue } from '@/lib/forms/course';
 import { aiConfig } from '@/server/ai/config';
 import { hasRole, requireRole } from '@/server/auth/session';
 import { AuthoringError, getCourseForEditing, reviewChecklist } from '@/server/authoring';
@@ -67,7 +68,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
                 level: course.level,
                 instructorName: course.instructorName,
                 outcomes: course.outcomes.join('\n'),
-                isFree: course.isFree ? 'on' : '',
+                price: priceFieldValue(course),
               }}
             />
           </section>
