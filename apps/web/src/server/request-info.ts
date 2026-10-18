@@ -20,6 +20,22 @@ export function ipFromHeaders(h: Headers): string {
   return 'local';
 }
 
+/**
+ * The visitor's country as an ISO 3166-1 alpha-2 code ("ZA"), or null when unknown. CloudFront
+ * sets `CloudFront-Viewer-Country` itself from the visitor's IP address (the origin request policy
+ * forwards it). Outside production, `PRICE_COUNTRY` stands in for it, so other countries' prices
+ * can be tried locally; production ignores it.
+ */
+export async function viewerCountry(): Promise<string | null> {
+  return countryFromHeaders(await headers());
+}
+
+export function countryFromHeaders(h: Headers): string | null {
+  const standIn = process.env.NODE_ENV === 'production' ? undefined : process.env.PRICE_COUNTRY;
+  const code = (standIn || h.get('cloudfront-viewer-country'))?.trim().toUpperCase();
+  return code && /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
 /** CloudFront's request ID, for matching log lines to a request. */
 export async function requestId(): Promise<string | undefined> {
   return (await headers()).get('x-amz-cf-id') ?? undefined;

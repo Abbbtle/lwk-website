@@ -1,0 +1,70 @@
+import type { Currency } from './money';
+
+// Prices follow local incomes, so people everywhere can afford them: each visitor's country falls
+// in one of four price regions, and each region has its own prices and currency.
+
+export const PRICE_REGIONS = ['south-africa', 'high-income', 'india', 'rest-of-world'] as const;
+export type PriceRegion = (typeof PRICE_REGIONS)[number];
+
+const regions: Record<
+  PriceRegion,
+  { currency: Currency; name: string; label: string; taxNote: string }
+> = {
+  'south-africa': {
+    currency: 'ZAR',
+    name: 'South Africa',
+    label: 'South Africa',
+    taxNote: 'including VAT',
+  },
+  'high-income': {
+    currency: 'USD',
+    name: 'The US, UK, Europe and similar countries',
+    label: 'the US, UK, Europe and similar countries',
+    taxNote: 'including local taxes',
+  },
+  india: { currency: 'INR', name: 'India', label: 'India', taxNote: 'including GST' },
+  'rest-of-world': {
+    currency: 'USD',
+    name: 'Rest of the world',
+    label: 'your region',
+    taxNote: 'including local taxes',
+  },
+};
+
+// World Bank high-income economies, classification of 1 July 2026 (ISO 3166-1 alpha-2 codes). The
+// World Bank reviews the classification every July; check this list against it then.
+const HIGH_INCOME_COUNTRIES = new Set(
+  'AS AD AG AW AU AT BS BH BB BE BM VG BN BG CA KY JE GG CL CR HR CW CY CZ DK EE FO FI FR PF DE GI GR GL GU GY HK HU IS IE IM IL IT JP KR KW LV LI LT LU MO MT MC NR NL NC NZ MP NO OM PW PA PL PT PR QA RO RU SM SA SC SG SX SK SI ES KN MF SE CH TW TT TC AE GB US UY VI'.split(
+    ' ',
+  ),
+);
+
+/**
+ * The price region for a country code such as "ZA" or "gb". A missing or unrecognised country
+ * counts as South Africa, the home market (local development has no country either).
+ */
+export function regionForCountry(country: string | null | undefined): PriceRegion {
+  const code = country?.trim().toUpperCase();
+  if (!code || !/^[A-Z]{2}$/.test(code) || code === 'ZA') return 'south-africa';
+  if (code === 'IN') return 'india';
+  return HIGH_INCOME_COUNTRIES.has(code) ? 'high-income' : 'rest-of-world';
+}
+
+export function regionCurrency(region: PriceRegion): Currency {
+  return regions[region].currency;
+}
+
+/** The region's name in a list of every region: "South Africa", "Rest of the world". */
+export function regionName(region: PriceRegion): string {
+  return regions[region].name;
+}
+
+/** The region as told to a visitor there, mid-sentence: "Prices for your region". */
+export function regionLabel(region: PriceRegion): string {
+  return regions[region].label;
+}
+
+/** Prices include tax; how to say so for the region: "including VAT". */
+export function taxNote(region: PriceRegion): string {
+  return regions[region].taxNote;
+}
