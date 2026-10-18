@@ -680,8 +680,13 @@ features fall back to non-AI help until access works.
   retries, and a forwarded copy that bounces, is marked as spam or is rejected, are reported by
   email to the same address. SES's emailed bounce notices are off for the domain, since they would
   go to support@ and be forwarded in a loop, so other mail sent from the domain later needs its own
-  way to track bounces (such as a configuration set). Sending Cognito's email through SES still needs
-  SES production access; until then Cognito sends its own emails (50 a day).
+  way to track bounces (such as a configuration set). Suppression is off for forwarded copies, so
+  that one bounce or complaint does not stop all later copies, and in exchange their bounces and
+  complaints count toward the account's sending reputation. Sending Cognito's email through SES
+  still needs SES production access; until then Cognito sends its own emails (50 a day). When
+  Cognito moves to SES, which shares that reputation, add alarms on the account's bounce and
+  complaint rates (`AWS/SES` `Reputation.BounceRate` and `Reputation.ComplaintRate`) or turn
+  suppression back on for forwarded copies.
 
 ## Verification
 

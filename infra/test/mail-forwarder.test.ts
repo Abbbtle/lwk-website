@@ -15,7 +15,7 @@ import {
   sendingAddress,
   type ForwardingOptions,
   type SesReceipt,
-} from '../lambda/mail-forwarder/forwarding';
+} from '../lambda/mail-forwarder/forwarding-rules';
 import {
   forwarderEnvironment,
   readForwarderSettings,
@@ -195,8 +195,8 @@ describe('deciding whether to forward', () => {
 });
 
 describe('forwarded addresses', () => {
-  it('are the local parts at the domain', () => {
-    assert.deepEqual(forwardedAddresses(['support', 'hello'], 'livingwithkrishna.com'), [
+  it('are the local parts at the domain, in lower case', () => {
+    assert.deepEqual(forwardedAddresses(['support', 'hello'], 'LivingWithKrishna.com'), [
       SUPPORT,
       HELLO,
     ]);
@@ -249,17 +249,19 @@ describe('forwarder settings', () => {
     }
   });
 
-  it('refuse a forward-to address that is itself forwarded, without naming it', () => {
-    const looping = forwarderEnvironment({
-      ...SETTINGS,
-      forwardTo: 'Support@LivingWithKrishna.com',
-    });
-    assert.throws(
-      () => readForwarderSettings(looping),
-      (error: Error) =>
-        /^FORWARD_TO must not be one of FORWARDED_ADDRESSES/.test(error.message) &&
-        !error.message.toLowerCase().includes(SUPPORT),
-    );
+  it('refuse a forward-to address that is itself forwarded, in any case, without naming it', () => {
+    for (const looping of [
+      { ...SETTINGS, forwardTo: 'Support@LivingWithKrishna.com' },
+      { ...SETTINGS, forwardTo: SUPPORT, forwardedAddresses: ['SUPPORT@livingwithkrishna.com'] },
+    ] satisfies ForwarderSettings[]) {
+      assert.throws(
+        () => readForwarderSettings(forwarderEnvironment(looping)),
+        (error: Error) =>
+          /^FORWARD_TO must not be one of FORWARDED_ADDRESSES/.test(error.message) &&
+          !error.message.toLowerCase().includes(SUPPORT),
+        looping.forwardTo,
+      );
+    }
   });
 });
 
@@ -311,14 +313,14 @@ describe('forwarding a received event', () => {
     assert.equal(request.ConfigurationSetName, SETTINGS.configurationSetName);
     const copy = Buffer.from(request.Content?.Raw?.Data ?? []).toString('latin1');
     assert.ok(copy.startsWith(`From: "jane@example.com via ${NAME}" <${HELLO}>\r\n`), copy);
-    assert.deepEqual(logged, [{ messageId: 'm-1', forwarded: true }]);
+    assert.deepEqual(logged, [{ messageId: 'm-1', status: 'forwarded' }]);
   });
 
   it('logs a skipped message and neither reads nor sends it', async () => {
     const { dependencies, read, sent, logged } = fakes();
     await forwardReceivedMail(event({ spamVerdict: { status: 'FAIL' } }), dependencies);
     assert.deepEqual([read, sent], [[], []]);
-    assert.deepEqual(logged, [{ messageId: 'm-1', forwarded: false, reason: 'spam' }]);
+    assert.deepEqual(logged, [{ messageId: 'm-1', status: 'skipped', reason: 'spam' }]);
   });
 
   it('logs a failure by error name only and rethrows it, so Lambda retries and reports it', async () => {
@@ -337,7 +339,7 @@ describe('forwarding a received event', () => {
       return true;
     });
     assert.deepEqual(logged, [
-      { messageId: 'm-1', forwarded: false, reason: 'error', errorName: 'MessageRejected' },
+      { messageId: 'm-1', status: 'failed', errorName: 'MessageRejected' },
     ]);
   });
 });

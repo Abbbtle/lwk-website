@@ -14,7 +14,10 @@ import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import type { Construct } from 'constructs';
-import { checkedForwarderName, forwardedAddresses } from '../lambda/mail-forwarder/forwarding';
+import {
+  checkedForwarderName,
+  forwardedAddresses,
+} from '../lambda/mail-forwarder/forwarding-rules';
 import { forwarderEnvironment } from '../lambda/mail-forwarder/settings';
 
 export type MailStackProps = cdk.StackProps & {
@@ -56,7 +59,10 @@ const MESSAGE_RETENTION = cdk.Duration.days(30);
 export class MailStack extends cdk.Stack {
   /**
    * The domain as an SES sender (DKIM and MAIL FROM). Forwarded copies are sent from it now; other
-   * mail from the domain (sign-in emails, notifications) can use it later.
+   * mail from the domain (sign-in emails, notifications) can use it later. Emailed bounce and
+   * complaint notices are off for the domain (they would loop through the forwarder), so anything
+   * else that sends through this identity must name its own configuration set with bounce and
+   * complaint event destinations (see "Mail" in docs/PLAN.md).
    */
   readonly sendingIdentity: ses.IEmailIdentity;
 
@@ -110,9 +116,10 @@ export class MailStack extends cdk.Stack {
       enforceSSL: true,
     });
     failures.addSubscription(new subscriptions.EmailSubscription(forwardTo));
-    // What happens to a copy after SES accepts it. Suppression is off for these copies: they only
-    // go to the forward-to address, and a bounce should be reported each time rather than have SES
-    // quietly drop every later copy.
+    // What happens to a copy after SES accepts it. Suppression is off for these copies, so that one
+    // bounce or complaint does not stop every later copy until someone removes the forward-to
+    // address from the account's suppression list by hand. In exchange, each bounce and complaint
+    // counts toward the account's sending reputation (see "Mail" in docs/PLAN.md).
     const forwardedMail = new ses.ConfigurationSet(this, 'ForwardedMail', {
       disableSuppressionList: true,
     });

@@ -4,7 +4,7 @@ import { extname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import * as cdk from 'aws-cdk-lib/core';
 import { Match, Template } from 'aws-cdk-lib/assertions';
-import { forwardedAddresses } from '../lambda/mail-forwarder/forwarding';
+import { forwardedAddresses } from '../lambda/mail-forwarder/forwarding-rules';
 import { readForwarderSettings } from '../lambda/mail-forwarder/settings';
 import { config } from '../lib/config';
 import { DomainStack } from '../lib/domain-stack';
@@ -117,7 +117,7 @@ describe('lwk-mail', () => {
       'AWS::SES::ConfigurationSet',
     );
     assert.equal(settings.configurationSetName, JSON.stringify({ Ref: configurationSetId }));
-    // Every bounce is reported, instead of SES dropping later copies without a word.
+    // Suppression off: one bounce or complaint must not stop every later copy.
     assert.deepEqual(configurationSet.SuppressionOptions, { SuppressedReasons: [] });
 
     const [, { Properties: destination }] = only('AWS::SES::ConfigurationSetEventDestination');

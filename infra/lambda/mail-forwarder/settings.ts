@@ -64,7 +64,8 @@ export function readForwarderSettings(
     forwardedAddresses: [firstAddress, ...otherAddresses],
     configurationSetName: read('configurationSetName'),
   };
-  if (settings.forwardedAddresses.includes(settings.forwardTo.toLowerCase())) {
+  const forwardTo = settings.forwardTo.toLowerCase();
+  if (settings.forwardedAddresses.some((address) => address.toLowerCase() === forwardTo)) {
     throw new Error(
       `${VARIABLES.forwardTo} must not be one of ${VARIABLES.forwardedAddresses}: ` +
         'mail would be forwarded in a loop',

@@ -38,11 +38,11 @@ export function reasonNotToForward(receipt: SesReceipt): SkipReason | null {
 const LOCAL_PART = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 
 /**
- * Full addresses of the forwarded mailboxes, from local parts such as "support". Throws unless
- * there is at least one and all are distinct lowercase local parts: the addresses feed the receipt
- * rule (an empty list would match every recipient), the IAM condition on sending and the
- * forwarder, and lowercase gives every one of them, and the site's published addresses, the same
- * spelling.
+ * Full, lower-case addresses of the forwarded mailboxes, from local parts such as "support".
+ * Throws unless there is at least one and all are distinct lowercase local parts: the addresses
+ * feed the receipt rule (an empty list would match every recipient), the IAM condition on sending
+ * and the forwarder, and lowercase gives every one of them, and the site's published addresses,
+ * the same spelling.
  */
 export function forwardedAddresses(
   localParts: readonly string[],
@@ -62,7 +62,7 @@ export function forwardedAddresses(
   if (new Set(localParts).size !== localParts.length) {
     throw new Error(`forwardedLocalParts must be distinct, got ${localParts.join(', ')}`);
   }
-  const [first, ...rest] = localParts.map((localPart) => `${localPart}@${domain}`);
+  const [first, ...rest] = localParts.map((localPart) => `${localPart}@${domain.toLowerCase()}`);
   return [first, ...rest];
 }
 
