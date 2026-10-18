@@ -674,8 +674,10 @@ features fall back to non-AI help until access works.
   name servers is created. Records live in the stacks that use them, not in `lwk-domain`.
 - When production moves to its own AWS account, the zone moves there (GoDaddy's nameservers
   change once) and the other stages get delegated subzones such as `dev.livingwithkrishna.com`.
-- Email from the domain (Amazon SES with DKIM, SPF and DMARC records in the zone) follows once
-  SES production access is granted; until then Cognito sends its own emails (50 a day).
+- Mail: `lwk-mail` makes the domain an SES identity (DKIM, MAIL FROM `mail.livingwithkrishna.com`,
+  DMARC `p=none`) and forwards support@ to the address in Parameter Store (one-time steps in the
+  README); messages are kept in S3 for 30 days. Sending Cognito's email through SES still needs
+  SES production access; until then Cognito sends its own emails (50 a day).
 
 ## Verification
 

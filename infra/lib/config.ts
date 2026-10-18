@@ -11,6 +11,13 @@ export const config = {
   edgeRegion: 'us-east-1',
   // Git branch that publishes the main address (the coming-soon page until production launches).
   productionBranch: 'main',
+  // Mail for the domain (MailStack, lwk-mail): SES receives these mailboxes and forwards their mail
+  // to the address in this Parameter Store parameter, which is kept out of the repository.
+  mail: {
+    forwardedMailboxes: ['support'],
+    forwardToParameterName: '/lwk/mail/forward-to',
+    senderName: 'Living With Krishna',
+  },
   // GitHub repository allowed to deploy (OIDC), see DeployAccessStack.
   githubRepository: 'Abbbtle/lwk-website',
   // AWS-managed prefix list of CloudFront origin-facing IPs in af-south-1

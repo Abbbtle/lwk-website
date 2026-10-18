@@ -65,6 +65,16 @@ The main address shows what is on `main`: until production launches that is the 
 in `infra/coming-soon`, which `.github/workflows/publish-main-site.yml` uploads to the
 `lwk-coming-soon` bucket whenever it changes on `main` (it can also be run by hand).
 
+Mail for the domain: the `lwk-mail` stack (SES in `af-south-1`) receives mail for
+support@livingwithkrishna.com, keeps each message in S3 for 30 days and forwards it to the address
+in the Parameter Store parameter `/lwk/mail/forward-to`, which is kept out of the repository.
+Before the first deploy, create that parameter
+(`aws ssm put-parameter --name /lwk/mail/forward-to --type String --value <address>`) and, while
+SES is in its sandbox, verify the address in SES
+(`aws sesv2 create-email-identity --email-identity <address>`, then open the link AWS emails).
+Messages SES flags as a virus or spam, or that fail a sending domain's reject DMARC policy, are
+not forwarded but stay in S3.
+
 Open a shell on the web server (no SSH): `aws ssm start-session --target <instance-id>
 --profile lwk` (requires the Session Manager plugin). App logs: CloudWatch Logs group
 `/lwk/dev/web`.
