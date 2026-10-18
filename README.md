@@ -27,6 +27,9 @@ Useful endpoints: `/api/v1/health`, `/api/v1/categories`, `/api/v1/courses?q=&ca
 ## Where things live
 
 - Help centre articles: `apps/web/src/content/help.ts` (the assistant answers from these too).
+- Prices: `apps/web/src/lib/pricing` (one price list for every region). Locally South African
+  prices show; set `PRICE_COUNTRY=IN` (or another country code) in `apps/web/.env.local` to see
+  another region's.
 - Sample content for testing: Admin > Explore > Load sample content (`SAMPLE_CONTENT=off`
   disables it).
 - AI: `apps/web/src/server/ai/` (assistant, tools, metering). Admin > AI shows spend against the
