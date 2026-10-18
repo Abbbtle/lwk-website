@@ -242,7 +242,7 @@ export function AssistantChat({
             entry.role === 'user' ? (
               <li
                 key={entry.id}
-                className="ml-8 bg-black px-4 py-3 text-sm whitespace-pre-line text-white"
+                className="ml-8 rounded-card bg-black px-4 py-3 text-sm whitespace-pre-line text-white"
               >
                 <span className="sr-only">You: </span>
                 {entry.content}
@@ -250,7 +250,7 @@ export function AssistantChat({
             ) : (
               <li
                 key={entry.id}
-                className="mr-4 space-y-3 border border-gray-200 bg-white px-4 py-3"
+                className="mr-4 space-y-3 rounded-card border border-gray-200 bg-white px-4 py-3"
               >
                 <span className="sr-only">Assistant: </span>
                 {entry.content && <RichText text={entry.content} size="sm" />}
@@ -367,13 +367,13 @@ export function AssistantChat({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Ask a question..."
-            className="max-h-32 min-h-11 flex-1 resize-none border border-gray-300 bg-surface px-3 py-2 text-sm focus:border-black focus:outline-none"
+            className="max-h-32 min-h-11 flex-1 resize-none rounded-control border border-gray-300 bg-surface px-3 py-2 text-sm focus:border-black focus:outline-none"
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
             aria-label="Send"
-            className="flex size-11 shrink-0 cursor-pointer items-center justify-center bg-black text-white disabled:opacity-40"
+            className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control bg-black text-white disabled:opacity-40"
           >
             <ArrowUp className="size-5" aria-hidden />
           </button>
@@ -481,7 +481,7 @@ function Handoff({
             value={subject}
             maxLength={150}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full border border-gray-300 bg-white px-2 py-1.5"
+            className="w-full rounded-control border border-gray-300 bg-white px-2 py-1.5"
           />
           <label htmlFor="handoff-note" className="block font-semibold">
             Anything to add? (optional)
@@ -492,7 +492,7 @@ function Handoff({
             value={note}
             maxLength={2000}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full border border-gray-300 bg-white px-2 py-1.5"
+            className="w-full rounded-control border border-gray-300 bg-white px-2 py-1.5"
           />
           <p className="text-xs text-gray-600">
             This conversation is included, so you do not need to repeat it.

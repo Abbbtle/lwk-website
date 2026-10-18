@@ -38,9 +38,9 @@ export default async function AdminCoursesPage({ searchParams }: PageProps<'/adm
       </nav>
 
       {courses.length === 0 ? (
-        <p className="bg-surface p-8 text-center text-gray-700">No courses here.</p>
+        <p className="rounded-card bg-surface p-8 text-center text-gray-700">No courses here.</p>
       ) : (
-        <ul className="divide-y divide-gray-300 border border-gray-300">
+        <ul className="card-clip divide-y divide-gray-300 rounded-card border border-gray-300">
           {courses.map((course) => (
             <li key={course.id}>
               <Link

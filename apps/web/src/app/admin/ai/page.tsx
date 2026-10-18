@@ -45,7 +45,7 @@ export default async function AdminAiPage() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Spending this month</h2>
             <p className="mt-2 text-3xl font-extrabold">
               {usd(report.spendUsd)}{' '}
@@ -86,7 +86,7 @@ export default async function AdminAiPage() {
             )}
           </section>
 
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">By feature</h2>
             {report.byFeature.length === 0 ? (
               <p className="mt-3 text-gray-600">No AI use yet this month.</p>
@@ -121,7 +121,7 @@ export default async function AdminAiPage() {
             </p>
           </section>
 
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">How people rated answers</h2>
             <p className="mt-1 text-sm text-gray-600">
               Only answers someone chose to rate are kept. Use &ldquo;not helpful&rdquo; ones to
@@ -158,7 +158,7 @@ export default async function AdminAiPage() {
         </div>
 
         <aside className="space-y-6">
-          <section className="space-y-3 bg-white p-6 shadow-md text-sm">
+          <section className="space-y-3 rounded-card bg-white p-6 shadow-md text-sm">
             <h2 className="text-xl font-bold">Status</h2>
             <p>
               <span className="font-semibold">AI features:</span>{' '}
@@ -186,7 +186,7 @@ export default async function AdminAiPage() {
               under /lwk/&lt;stage&gt;/web); they apply after the next release.
             </p>
           </section>
-          <section className="space-y-2 bg-white p-6 shadow-md text-sm">
+          <section className="space-y-2 rounded-card bg-white p-6 shadow-md text-sm">
             <h2 className="text-xl font-bold">Privacy</h2>
             <p className="text-gray-700">
               Questions go to Claude on Amazon Bedrock, which may process them in any AWS region

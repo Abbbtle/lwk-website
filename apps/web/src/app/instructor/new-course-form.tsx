@@ -8,7 +8,11 @@ import { createCourse } from './actions';
 export function NewCourseForm({ categories }: { categories: { value: string; label: string }[] }) {
   const [state, formAction, pending] = useActionState(createCourse, initialFormState);
   return (
-    <form action={formAction} noValidate className="space-y-4 border border-gray-300 p-6">
+    <form
+      action={formAction}
+      noValidate
+      className="space-y-4 rounded-card border border-gray-300 p-6"
+    >
       <h2 className="text-xl font-bold">Create a course</h2>
       <FormStatus state={state} />
       <TextField name="title" label="Course title" required state={state} />

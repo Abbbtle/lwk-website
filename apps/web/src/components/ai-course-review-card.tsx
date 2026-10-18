@@ -12,7 +12,7 @@ export function AiCourseReviewCard({ courseId }: { courseId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   return (
-    <section className="space-y-3 border border-gray-300 bg-white p-5">
+    <section className="space-y-3 rounded-card border border-gray-300 bg-white p-5">
       <h2 className="flex items-center gap-2 font-bold">
         <Sparkles className="size-4 text-brand-ink" aria-hidden /> AI review
       </h2>

@@ -62,7 +62,7 @@ export function VideoPlayer({
       playsInline
       src={src}
       aria-label={title}
-      className="aspect-video w-full bg-black"
+      className="aspect-video w-full rounded-card bg-black"
       // Resume, unless the learner was within the last few seconds.
       onLoadedMetadata={(event) => {
         const el = event.currentTarget;

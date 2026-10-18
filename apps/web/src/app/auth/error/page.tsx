@@ -15,7 +15,7 @@ export default async function AuthErrorPage({ searchParams }: PageProps<'/auth/e
 
   return (
     <div className="flex items-center justify-center bg-gray-100 px-4 py-24">
-      <div className="w-full max-w-md bg-white p-8 text-center shadow-lg">
+      <div className="w-full max-w-md rounded-card bg-white p-8 text-center shadow-lg">
         <h1 className="text-3xl font-bold">Sign-in problem</h1>
         <p className="mt-4 text-gray-700">{message} Please try again.</p>
         <div className="mt-8 flex flex-col gap-3">

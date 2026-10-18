@@ -9,7 +9,10 @@ export function GettingStarted({ checklist }: { checklist: Checklist }) {
   const done = checklist.items.filter((item) => item.done).length;
   const percent = Math.round((done / checklist.items.length) * 100);
   return (
-    <section aria-labelledby={`${checklist.key}-title`} className="bg-white p-6 shadow-md">
+    <section
+      aria-labelledby={`${checklist.key}-title`}
+      className="rounded-card bg-white p-6 shadow-md"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id={`${checklist.key}-title`} className="text-xl font-bold">

@@ -73,7 +73,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
               name="q"
               defaultValue={query}
               placeholder="Search by #number, subject, name or email"
-              className="min-w-0 flex-1 border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
+              className="min-w-0 flex-1 rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
             />
             <button type="submit" className="btn-solid px-4" aria-label="Search">
               <Search className="size-4" aria-hidden />
@@ -98,11 +98,11 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
           </p>
 
           {tickets.length === 0 ? (
-            <p className="bg-white p-8 text-center text-gray-700 shadow-md">
+            <p className="rounded-card bg-white p-8 text-center text-gray-700 shadow-md">
               {view === 'open' ? 'No open requests. Well done.' : 'Nothing here.'}
             </p>
           ) : (
-            <ul className="divide-y divide-gray-200 bg-white shadow-md">
+            <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
               {tickets.map((ticket) => (
                 <li key={ticket.id}>
                   <Link
@@ -161,7 +161,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
 
         <aside className="space-y-6">
           {hasRole(session, 'admin') && (
-            <section className="space-y-2 bg-white p-5 shadow-md">
+            <section className="space-y-2 rounded-card bg-white p-5 shadow-md">
               <h2 className="font-bold">Contact form</h2>
               <p className="text-sm text-gray-600">Messages from people without an account.</p>
               <Link href="/admin/messages" className="text-sm font-semibold underline">
@@ -169,7 +169,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
               </Link>
             </section>
           )}
-          <section className="space-y-3 bg-white p-5 shadow-md">
+          <section className="space-y-3 rounded-card bg-white p-5 shadow-md">
             <h2 className="font-bold">Help article feedback</h2>
             <p className="text-sm text-gray-600">Last 30 days.</p>
             {feedback.articles.length === 0 ? (

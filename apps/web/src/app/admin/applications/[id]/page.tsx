@@ -85,7 +85,7 @@ export default async function ApplicationPage({ params }: PageProps<'/admin/appl
           {a.status === 'PENDING' ? (
             <DecisionForm id={a.id} />
           ) : (
-            <div className="bg-surface p-4 text-sm">
+            <div className="rounded-card bg-surface p-4 text-sm">
               <p>
                 Decided by {a.reviewedBy?.name ?? 'an admin'} on{' '}
                 {a.reviewedAt?.toLocaleDateString('en-GB', { dateStyle: 'long' })}

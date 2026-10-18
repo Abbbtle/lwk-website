@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 /** A status message, starting at the page's left edge like the heading above it. */
 function Notice({ children }: { children: React.ReactNode }) {
-  return <div className="max-w-2xl space-y-4 bg-white p-8 shadow-md">{children}</div>;
+  return <div className="max-w-2xl space-y-4 rounded-card bg-white p-8 shadow-md">{children}</div>;
 }
 
 export default async function BecomeAnInstructorPage() {

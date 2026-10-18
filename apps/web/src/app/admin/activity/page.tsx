@@ -58,9 +58,11 @@ export default async function ActivityPage({ searchParams }: PageProps<'/admin/a
       </nav>
 
       {events.length === 0 ? (
-        <p className="bg-white p-8 text-center text-gray-700 shadow-md">Nothing recorded yet.</p>
+        <p className="rounded-card bg-white p-8 text-center text-gray-700 shadow-md">
+          Nothing recorded yet.
+        </p>
       ) : (
-        <ol className="divide-y divide-gray-200 bg-white shadow-md">
+        <ol className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
           {events.map((event) => {
             const href = targetLink(event.targetType, event.targetId);
             return (

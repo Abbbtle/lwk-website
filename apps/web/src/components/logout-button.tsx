@@ -41,7 +41,7 @@ export function LogoutButton({ className, name }: { className: string; name: str
           action="/auth/logout"
           method="post"
           onSubmit={() => setPending(true)}
-          className="bg-white p-6 text-left shadow-xl sm:p-8"
+          className="rounded-card bg-white p-6 text-left shadow-xl sm:p-8"
         >
           <div className="flex items-start gap-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-brand-ink">

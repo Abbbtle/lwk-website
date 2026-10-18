@@ -7,7 +7,8 @@ import {
   PlayCircle,
 } from 'lucide-react';
 
-const badge = 'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold uppercase';
+const badge =
+  'inline-flex items-center gap-1 rounded-badge px-2 py-0.5 text-xs font-bold uppercase';
 
 /** Free for everyone. */
 export function FreeBadge({ className = '' }: { className?: string }) {

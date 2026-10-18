@@ -78,7 +78,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
           {!locked && aiConfig().enabled && <AiCourseHelp courseId={course.id} />}
         </div>
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <div className="space-y-3 border border-gray-300 p-6">
+          <div className="space-y-3 rounded-card border border-gray-300 p-6">
             <h2 className="text-xl font-bold">Cover image</h2>
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- short-lived signed S3 URL

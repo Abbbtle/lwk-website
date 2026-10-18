@@ -13,7 +13,7 @@ export default async function PrivacyPage() {
 
   return (
     <div className="space-y-8">
-      <section className="bg-white p-6 shadow-md sm:p-8">
+      <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
         <h2 className="flex items-center gap-3 text-xl font-bold">
           <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-brand-ink">
             <Download className="size-5" aria-hidden />
@@ -29,7 +29,7 @@ export default async function PrivacyPage() {
         </a>
       </section>
 
-      <section className="bg-white p-6 shadow-md sm:p-8">
+      <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
         <h2 className="flex items-center gap-3 text-xl font-bold">
           <span className="flex size-10 items-center justify-center rounded-full bg-red-50 text-red-700">
             <Trash2 className="size-5" aria-hidden />

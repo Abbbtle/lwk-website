@@ -45,7 +45,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Roles</h2>
             <p className="mt-2 text-sm text-gray-600">
               Every account can learn. Changes apply to their current session straight away.
@@ -92,7 +92,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
             </ul>
           </section>
 
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Learning</h2>
             <p className="mt-2 text-sm text-gray-600">
               {user._count.enrollments} {user._count.enrollments === 1 ? 'course' : 'courses'}{' '}
@@ -134,7 +134,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
             )}
           </section>
 
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Activity</h2>
             {events.length === 0 ? (
               <p className="mt-3 text-sm text-gray-600">No recorded changes yet.</p>
@@ -154,7 +154,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
         </div>
 
         <aside className="space-y-8">
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Account</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <div>
@@ -187,7 +187,7 @@ export default async function UserPage({ params }: PageProps<'/admin/users/[id]'
           </section>
 
           {!isSelf && (
-            <section className="space-y-5 bg-white p-6 shadow-md">
+            <section className="space-y-5 rounded-card bg-white p-6 shadow-md">
               <h2 className="text-xl font-bold">Actions</h2>
               <ConfirmAction
                 label="Sign out everywhere"
