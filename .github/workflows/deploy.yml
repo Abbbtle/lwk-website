@@ -81,10 +81,15 @@ jobs:
             --query '[StandardOutputContent, StandardErrorContent]' --output text
           test "$status" = Success
 
+      # Needs a 200 with the database up: a redirect (for example from a wrong host name) or an
+      # error page is a failure, the same rule as the uptime check.
       - name: Check the live site
         run: |
           for _ in $(seq 1 10); do
-            if curl -fsS "$APP_URL/api/v1/health"; then exit 0; fi
+            http_code=$(curl -sS -o health.json -w '%{http_code}' "$APP_URL/api/v1/health" || true)
+            if [ "$http_code" = 200 ] && grep -q '"database":"ok"' health.json; then exit 0; fi
             sleep 6
           done
-          echo "Health check through CloudFront failed" && exit 1
+          echo "Health check through CloudFront failed: $APP_URL/api/v1/health answered $http_code"
+          cat health.json 2>/dev/null || true
+          exit 1
