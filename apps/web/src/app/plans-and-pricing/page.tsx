@@ -3,20 +3,28 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Faq } from '@/components/faq';
 import {
+  billingPeriodPhrase,
   COMMUNITY_MIN_SEATS,
   communitySeatPrice,
   courseStartingPrice,
   FAMILY_MAX_PEOPLE,
   familyPrice,
   formatMoney,
+  formatRecurring,
   FOUNDING_MEMBER_PLACES,
   foundingMemberPrice,
   freePrice,
+  MEMBERSHIP_TRIAL_DAYS,
+  membershipLeadPrice,
   membershipPrices,
   monthlyEquivalent,
+  PAID_PLANS_NOTICE_DAYS,
+  perSeatPhrase,
   type PriceRegion,
-  regionLabel,
-  taxNote,
+  type RecurringPrice,
+  regionTaxNote,
+  visitorRegionPhrase,
+  YEARLY_FULL_REFUND_DAYS,
   yearlySavingPercent,
 } from '@/lib/pricing';
 import { viewerPriceRegion } from '@/server/pricing';
@@ -46,24 +54,26 @@ type Plan = {
 
 const joinFree = { href: '/sign-up?returnTo=%2Fcourses', label: 'Join free during early access' };
 
-/** Monthly, with the yearly saving, where there is monthly billing; otherwise yearly. */
+/** A recurring price as a card shows it: the amount, then what it is for. */
+function shownPrice(price: RecurringPrice, per = billingPeriodPhrase(price.period)) {
+  return { price: formatMoney(price.amount), per };
+}
+
+/** The lead price, then the yearly option and its saving, or what yearly billing is a month. */
 function membershipPricing(region: PriceRegion): Pick<Plan, 'price' | 'per' | 'billing'> {
-  const { monthly, yearly } = membershipPrices(region);
-  if (monthly) {
-    return {
-      price: formatMoney(monthly),
-      per: 'a month',
-      billing: `or ${formatMoney(yearly)} a year (save ${yearlySavingPercent(monthly, yearly)}%)`,
-    };
-  }
+  const lead = membershipLeadPrice(region);
+  const { yearly } = membershipPrices(region);
   return {
-    price: formatMoney(yearly),
-    per: 'a year',
-    billing: `${formatMoney(monthlyEquivalent(yearly))} a month, billed yearly`,
+    ...shownPrice(lead),
+    billing:
+      lead.period === 'month'
+        ? `or ${formatRecurring(yearly)} (save ${yearlySavingPercent({ monthly: lead, yearly })}%)`
+        : `${formatRecurring(monthlyEquivalent(yearly))}, billed yearly`,
   };
 }
 
 function plansFor(region: PriceRegion): Plan[] {
+  const seat = communitySeatPrice(region);
   return [
     {
       name: 'Free',
@@ -82,7 +92,7 @@ function plansFor(region: PriceRegion): Plan[] {
       ...membershipPricing(region),
       features: [
         'Every paid course',
-        'Try it free for 7 days',
+        `Try it free for ${MEMBERSHIP_TRIAL_DAYS} days`,
         'Cancel any time',
         'More study help each day',
       ],
@@ -92,16 +102,14 @@ function plansFor(region: PriceRegion): Plan[] {
     {
       name: 'Family',
       audience: 'For a household',
-      price: formatMoney(familyPrice(region)),
-      per: 'a year',
+      ...shownPrice(familyPrice(region)),
       features: ['Everything in Membership', `Up to ${FAMILY_MAX_PEOPLE} people in one household`],
       action: joinFree,
     },
     {
       name: 'Community',
       audience: 'For temples, schools and study groups',
-      price: formatMoney(communitySeatPrice(region)),
-      per: 'a seat a year',
+      ...shownPrice(seat, perSeatPhrase(seat.period)),
       features: [
         'Everything in Membership for each seat',
         `From ${COMMUNITY_MIN_SEATS} seats`,
@@ -113,11 +121,11 @@ function plansFor(region: PriceRegion): Plan[] {
 }
 
 function faqsFor(region: PriceRegion) {
+  const seat = communitySeatPrice(region);
   return [
     {
       question: 'When can I subscribe?',
-      answer:
-        'Paid plans open soon, and we will announce the start date 30 days ahead. Until then every course is free during early access.',
+      answer: `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead. Until then every course is free during early access.`,
     },
     {
       question: 'Do I keep the courses I join during early access?',
@@ -126,16 +134,15 @@ function faqsFor(region: PriceRegion) {
     },
     {
       question: 'Why are prices different in my country?',
-      answer: `Prices follow local incomes, as on Udemy, so people everywhere can afford them. The prices on this page are for ${regionLabel(region)}.`,
+      answer: `Prices follow local incomes, as on Udemy, so people everywhere can afford them. The prices on this page are for ${visitorRegionPhrase(region)}.`,
     },
     {
       question: 'Can I cancel?',
-      answer:
-        'Yes, at any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within 14 days, and in part after that.',
+      answer: `Yes, at any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within ${YEARLY_FULL_REFUND_DAYS} days, and in part after that.`,
     },
     {
       question: 'Is there a plan for a temple or group?',
-      answer: `Yes. Community plans are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, at ${formatMoney(communitySeatPrice(region))} a seat a year.`,
+      answer: `Yes. Community plans are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, at ${formatMoney(seat.amount)} ${perSeatPhrase(seat.period)}.`,
     },
     {
       question: 'Can I give a membership or sponsor someone?',
@@ -199,7 +206,7 @@ export default async function PlansAndPricingPage() {
           together, and single courses are yours to keep.
         </p>
         <p className="mt-4 text-sm text-gray-600">
-          Prices for {regionLabel(region)}, {taxNote(region)}.
+          Prices for {visitorRegionPhrase(region)}, {regionTaxNote(region)}.
         </p>
         <p className="mx-auto mt-6 max-w-3xl bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
           Paid plans open soon. Until then every course is free during early access, and the courses
@@ -219,9 +226,9 @@ export default async function PlansAndPricingPage() {
         <div className="mt-10 space-y-3 text-center text-gray-700">
           <p>
             <strong className="text-gray-900">Founding members:</strong> join during early access,
-            or be one of the first {FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members, and a
-            year of Membership is {formatMoney(foundingMemberPrice(region))} instead of{' '}
-            {formatMoney(yearly)}.
+            or be one of the first {FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members, and
+            Membership is {formatRecurring(foundingMemberPrice(region))} instead of{' '}
+            {formatRecurring(yearly)}.
           </p>
           <p>
             Prefer to buy{' '}

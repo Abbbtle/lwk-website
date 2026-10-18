@@ -3,9 +3,9 @@ import {
   PRICE_REGIONS,
   regionCurrency,
   regionForCountry,
-  regionLabel,
   regionName,
-  taxNote,
+  regionTaxNote,
+  visitorRegionPhrase,
 } from './regions';
 
 describe('regionForCountry', () => {
@@ -41,9 +41,13 @@ describe('regionForCountry', () => {
 });
 
 describe('region wording', () => {
-  it('gives each region a currency, a label for its visitors and a tax note', () => {
+  it('gives each region a currency, a phrase for its visitors and a tax note', () => {
     expect(
-      PRICE_REGIONS.map((region) => [regionCurrency(region), regionLabel(region), taxNote(region)]),
+      PRICE_REGIONS.map((region) => [
+        regionCurrency(region),
+        visitorRegionPhrase(region),
+        regionTaxNote(region),
+      ]),
     ).toEqual([
       ['ZAR', 'South Africa', 'including VAT'],
       ['USD', 'the US, UK, Europe and similar countries', 'including local taxes'],

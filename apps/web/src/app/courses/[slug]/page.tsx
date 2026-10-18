@@ -11,11 +11,11 @@ import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, joinParts, plural } from '@/lib/format';
 import {
   coursePrice,
-  decimalAmount,
+  toDecimalString,
   formatMoney,
   formatRecurring,
   freePrice,
-  membershipHeadline,
+  membershipLeadPrice,
   type PriceRegion,
 } from '@/lib/pricing';
 import { getSession } from '@/server/auth/session';
@@ -49,7 +49,7 @@ function courseOffer(course: CourseSummary, region: PriceRegion) {
   return {
     '@type': 'Offer',
     category: course.isFree ? 'Free' : 'Paid',
-    price: decimalAmount(price),
+    price: toDecimalString(price),
     priceCurrency: price.currency,
   };
 }
@@ -243,7 +243,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 <Link href="/plans-and-pricing" className="font-semibold underline">
                   Membership
                 </Link>
-                , {formatRecurring(membershipHeadline(region))}, when paid plans open.
+                , {formatRecurring(membershipLeadPrice(region))}, when paid plans open.
               </p>
             </div>
           </div>

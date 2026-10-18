@@ -4,35 +4,45 @@
 export {
   COURSE_TIERS,
   type CourseTier,
-  courseTierLabel,
+  courseTierName,
   courseTierTitle,
   isCourseTier,
 } from './course-tiers';
-export { type Currency, decimalAmount, formatMoney, type Money } from './money';
+export { type Currency, formatMoney, type Money, money, toDecimalString } from './money';
 export {
-  type BillingPeriod,
   COMMUNITY_MIN_SEATS,
+  FAMILY_MAX_PEOPLE,
+  FOUNDING_MEMBER_PLACES,
+  MEMBERSHIP_TRIAL_DAYS,
+  PAID_PLANS_NOTICE_DAYS,
+  YEARLY_FULL_REFUND_DAYS,
+} from './plan-terms';
+export {
   communitySeatPrice,
   coursePrice,
   courseStartingPrice,
-  FAMILY_MAX_PEOPLE,
   familyPrice,
-  formatRecurring,
-  FOUNDING_MEMBER_PLACES,
   foundingMemberPrice,
   freePrice,
-  membershipHeadline,
+  membershipLeadPrice,
+  type MembershipPrices,
   membershipPrices,
+} from './prices';
+export {
+  type BillingPeriod,
+  billingPeriodPhrase,
+  formatRecurring,
   monthlyEquivalent,
+  perSeatPhrase,
   type RecurringPrice,
   yearlySavingPercent,
-} from './prices';
+} from './recurring';
 export {
   PRICE_REGIONS,
   type PriceRegion,
   regionCurrency,
   regionForCountry,
-  regionLabel,
   regionName,
-  taxNote,
+  regionTaxNote,
+  visitorRegionPhrase,
 } from './regions';

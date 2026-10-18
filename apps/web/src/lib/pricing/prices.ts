@@ -1,5 +1,6 @@
 import type { CourseTier } from './course-tiers';
-import { formatMoney, type Money } from './money';
+import { type Money, money } from './money';
+import type { RecurringPrice } from './recurring';
 import { type PriceRegion, regionCurrency } from './regions';
 
 // The price list: every price on the site comes from here. Amounts are minor units (cents, paise)
@@ -53,22 +54,18 @@ const PRICES: Record<PriceRegion, RegionPrices> = {
   },
 };
 
-// The rules that go with the prices.
-/** Family covers up to this many people in one household. */
-export const FAMILY_MAX_PEOPLE = 5;
-/** Community plans, for temples, schools and study groups, start at this many seats. */
-export const COMMUNITY_MIN_SEATS = 5;
-/** How many first members get the founding price, besides everyone joining in early access. */
-export const FOUNDING_MEMBER_PLACES = 1000;
-
-const MONTHS_IN_A_YEAR = 12;
-
-export type BillingPeriod = 'month' | 'year';
-/** A price paid every month or every year. */
-export type RecurringPrice = { amount: Money; period: BillingPeriod };
+/** Membership by the month (null where it is sold yearly only) and by the year. */
+export type MembershipPrices = {
+  readonly monthly: RecurringPrice | null;
+  readonly yearly: RecurringPrice;
+};
 
 function inRegion(region: PriceRegion, minorUnits: number): Money {
-  return { currency: regionCurrency(region), minorUnits };
+  return money(regionCurrency(region), minorUnits);
+}
+
+function yearlyInRegion(region: PriceRegion, minorUnits: number): RecurringPrice {
+  return { amount: inRegion(region, minorUnits), period: 'year' };
 }
 
 /** What a single course in the tier costs in the region. */
@@ -86,48 +83,34 @@ export function freePrice(region: PriceRegion): Money {
   return inRegion(region, 0);
 }
 
-/** Membership by the month (null where it is sold yearly only) and by the year. */
-export function membershipPrices(region: PriceRegion): { monthly: Money | null; yearly: Money } {
+export function membershipPrices(region: PriceRegion): MembershipPrices {
   const { membershipMonthly, membershipYearly } = PRICES[region];
   return {
-    monthly: membershipMonthly === null ? null : inRegion(region, membershipMonthly),
-    yearly: inRegion(region, membershipYearly),
+    monthly:
+      membershipMonthly === null
+        ? null
+        : { amount: inRegion(region, membershipMonthly), period: 'month' },
+    yearly: yearlyInRegion(region, membershipYearly),
   };
 }
 
 /** The Membership price to lead with: monthly where it is offered, otherwise yearly. */
-export function membershipHeadline(region: PriceRegion): RecurringPrice {
+export function membershipLeadPrice(region: PriceRegion): RecurringPrice {
   const { monthly, yearly } = membershipPrices(region);
-  return monthly ? { amount: monthly, period: 'month' } : { amount: yearly, period: 'year' };
+  return monthly ?? yearly;
 }
 
 /** A year of Membership at the founding-member price. */
-export function foundingMemberPrice(region: PriceRegion): Money {
-  return inRegion(region, PRICES[region].foundingMemberYearly);
+export function foundingMemberPrice(region: PriceRegion): RecurringPrice {
+  return yearlyInRegion(region, PRICES[region].foundingMemberYearly);
 }
 
 /** A year of Family membership. */
-export function familyPrice(region: PriceRegion): Money {
-  return inRegion(region, PRICES[region].familyYearly);
+export function familyPrice(region: PriceRegion): RecurringPrice {
+  return yearlyInRegion(region, PRICES[region].familyYearly);
 }
 
 /** One Community seat for a year. */
-export function communitySeatPrice(region: PriceRegion): Money {
-  return inRegion(region, PRICES[region].communitySeatYearly);
-}
-
-/** What paying yearly saves over 12 monthly payments, in whole percent: 33. */
-export function yearlySavingPercent(monthly: Money, yearly: Money): number {
-  if (monthly.currency !== yearly.currency) throw new Error('Prices are in different currencies.');
-  return Math.round((1 - yearly.minorUnits / (monthly.minorUnits * MONTHS_IN_A_YEAR)) * 100);
-}
-
-/** A yearly price spread over 12 months, rounded up so it never understates the yearly price. */
-export function monthlyEquivalent(yearly: Money): Money {
-  return { currency: yearly.currency, minorUnits: Math.ceil(yearly.minorUnits / MONTHS_IN_A_YEAR) };
-}
-
-/** "R99 a month", "₹2,499 a year". */
-export function formatRecurring({ amount, period }: RecurringPrice): string {
-  return `${formatMoney(amount)} a ${period}`;
+export function communitySeatPrice(region: PriceRegion): RecurringPrice {
+  return yearlyInRegion(region, PRICES[region].communitySeatYearly);
 }

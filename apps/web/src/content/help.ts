@@ -12,11 +12,16 @@ import {
   FAMILY_MAX_PEOPLE,
   familyPrice,
   formatMoney,
+  formatRecurring,
   FOUNDING_MEMBER_PLACES,
   foundingMemberPrice,
+  MEMBERSHIP_TRIAL_DAYS,
   membershipPrices,
+  PAID_PLANS_NOTICE_DAYS,
+  perSeatPhrase,
   PRICE_REGIONS,
   regionName,
+  YEARLY_FULL_REFUND_DAYS,
 } from '@/lib/pricing';
 
 export type HelpAudience = 'everyone' | 'instructor' | 'staff';
@@ -75,9 +80,10 @@ export const helpTopics: HelpTopic[] = [
 const pricesInEachRegion = PRICE_REGIONS.map((region) => {
   const { monthly, yearly } = membershipPrices(region);
   const membership = monthly
-    ? `${formatMoney(monthly)} a month or ${formatMoney(yearly)} a year`
-    : `${formatMoney(yearly)} a year`;
-  return `- **${regionName(region)}**: Membership ${membership} (founding members ${formatMoney(foundingMemberPrice(region))} a year), Family ${formatMoney(familyPrice(region))} a year, Community ${formatMoney(communitySeatPrice(region))} a seat a year, single courses from ${formatMoney(courseStartingPrice(region))}.`;
+    ? `${formatRecurring(monthly)} or ${formatRecurring(yearly)}`
+    : formatRecurring(yearly);
+  const seat = communitySeatPrice(region);
+  return `- **${regionName(region)}**: Membership ${membership} (founding members ${formatRecurring(foundingMemberPrice(region))}), Family ${formatRecurring(familyPrice(region))}, Community ${formatMoney(seat.amount)} ${perSeatPhrase(seat.period)}, single courses from ${formatMoney(courseStartingPrice(region))}.`;
 }).join('\n');
 
 const courseTiers = COURSE_TIERS.map((tier) => `- ${courseTierTitle(tier)}`).join('\n');
@@ -257,11 +263,11 @@ Not sure yet? Choose **Watch a free preview** when a course offers one.`,
       'region',
       'currency',
     ],
-    body: `Paid plans open soon, and we will announce the start date 30 days ahead. Until then every course is free during early access, and the courses you join now stay yours, also when paid plans open. Courses marked **Free** stay free for everyone.
+    body: `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead. Until then every course is free during early access, and the courses you join now stay yours, also when paid plans open. Courses marked **Free** stay free for everyone.
 
 When paid plans open:
 
-- **Membership** opens every paid course, with more study help each day. Try it free for 7 days and cancel any time.
+- **Membership** opens every paid course, with more study help each day. Try it free for ${MEMBERSHIP_TRIAL_DAYS} days and cancel any time.
 - **Single courses** are yours to keep, if you would rather buy only the courses you want.
 - **Family** gives everything in Membership to up to ${FAMILY_MAX_PEOPLE} people in one household, paid yearly.
 - **Community** seats are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, paid yearly for each seat.
@@ -277,7 +283,7 @@ ${pricesInEachRegion}
 
 ## Cancelling and refunds
 
-Cancel any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within 14 days, and in part after that.`,
+Cancel any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within ${YEARLY_FULL_REFUND_DAYS} days, and in part after that.`,
   },
   {
     slug: 'using-the-lesson-player',

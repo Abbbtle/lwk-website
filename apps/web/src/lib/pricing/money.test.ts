@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { type Currency, decimalAmount, formatMoney } from './money';
+import { formatMoney, type Money, money, toDecimalString } from './money';
 
-const money = (currency: Currency, minorUnits: number) => ({ currency, minorUnits });
+describe('money', () => {
+  it('holds a whole, non-negative number of minor units', () => {
+    expect(money('ZAR', 19900)).toEqual({ currency: 'ZAR', minorUnits: 19900 });
+    expect(money('USD', 0).minorUnits).toBe(0);
+  });
+
+  it('refuses anything else', () => {
+    expect(() => money('ZAR', 999.5)).toThrow(
+      new RangeError('Expected a whole, non-negative number of ZAR minor units but got 999.5.'),
+    );
+    for (const minorUnits of [-5, Number.NaN, Number.POSITIVE_INFINITY, 2 ** 53]) {
+      expect(() => money('USD', minorUnits), String(minorUnits)).toThrow(RangeError);
+    }
+  });
+});
 
 describe('formatMoney', () => {
   it('shows whole amounts without cents', () => {
@@ -25,12 +39,18 @@ describe('formatMoney', () => {
   });
 });
 
-describe('decimalAmount', () => {
-  it('writes the amount with two decimals', () => {
-    expect(decimalAmount(money('ZAR', 19900))).toBe('199.00');
-    expect(decimalAmount(money('USD', 1999))).toBe('19.99');
-    expect(decimalAmount(money('INR', 249900))).toBe('2499.00');
-    expect(decimalAmount(money('USD', 5))).toBe('0.05');
-    expect(decimalAmount(money('USD', 0))).toBe('0.00');
+describe('toDecimalString', () => {
+  it('writes the amount with two decimals, as schema.org prices are written', () => {
+    expect(toDecimalString(money('ZAR', 19900))).toBe('199.00');
+    expect(toDecimalString(money('USD', 1999))).toBe('19.99');
+    expect(toDecimalString(money('INR', 249900))).toBe('2499.00');
+    expect(toDecimalString(money('USD', 5))).toBe('0.05');
+    expect(toDecimalString(money('USD', 0))).toBe('0.00');
+  });
+
+  it('refuses amounts that were not made by money()', () => {
+    const forged = { currency: 'USD', minorUnits: 999.5 } as Money;
+    expect(() => toDecimalString(forged)).toThrow(RangeError);
+    expect(() => formatMoney({ currency: 'USD', minorUnits: -5 } as Money)).toThrow(RangeError);
   });
 });

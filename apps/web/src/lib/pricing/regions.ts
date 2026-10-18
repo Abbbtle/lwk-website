@@ -9,25 +9,25 @@ export type PriceRegion = (typeof PRICE_REGIONS)[number];
 
 const regions: Record<
   PriceRegion,
-  { currency: Currency; name: string; label: string; taxNote: string }
+  { currency: Currency; name: string; visitorPhrase: string; taxNote: string }
 > = {
   'south-africa': {
     currency: 'ZAR',
     name: 'South Africa',
-    label: 'South Africa',
+    visitorPhrase: 'South Africa',
     taxNote: 'including VAT',
   },
   'high-income': {
     currency: 'USD',
     name: 'The US, UK, Europe and similar countries',
-    label: 'the US, UK, Europe and similar countries',
+    visitorPhrase: 'the US, UK, Europe and similar countries',
     taxNote: 'including local taxes',
   },
-  india: { currency: 'INR', name: 'India', label: 'India', taxNote: 'including GST' },
+  india: { currency: 'INR', name: 'India', visitorPhrase: 'India', taxNote: 'including GST' },
   'rest-of-world': {
     currency: 'USD',
     name: 'Rest of the world',
-    label: 'your region',
+    visitorPhrase: 'your region',
     taxNote: 'including local taxes',
   },
 };
@@ -61,11 +61,11 @@ export function regionName(region: PriceRegion): string {
 }
 
 /** The region as told to a visitor there, mid-sentence: "Prices for your region". */
-export function regionLabel(region: PriceRegion): string {
-  return regions[region].label;
+export function visitorRegionPhrase(region: PriceRegion): string {
+  return regions[region].visitorPhrase;
 }
 
 /** Prices include tax; how to say so for the region: "including VAT". */
-export function taxNote(region: PriceRegion): string {
+export function regionTaxNote(region: PriceRegion): string {
   return regions[region].taxNote;
 }

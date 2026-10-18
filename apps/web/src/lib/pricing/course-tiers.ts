@@ -4,7 +4,7 @@
 export const COURSE_TIERS = [1, 2, 3, 4, 5] as const;
 export type CourseTier = (typeof COURSE_TIERS)[number];
 
-const tierLabels: Record<CourseTier, string> = {
+const tierNames: Record<CourseTier, string> = {
   1: 'Short (under 2 hours)',
   2: 'Standard',
   3: 'Full course',
@@ -13,13 +13,13 @@ const tierLabels: Record<CourseTier, string> = {
 };
 
 /** "Standard", "Major programme". */
-export function courseTierLabel(tier: CourseTier): string {
-  return tierLabels[tier];
+export function courseTierName(tier: CourseTier): string {
+  return tierNames[tier];
 }
 
 /** "Tier 2 · Standard". */
 export function courseTierTitle(tier: CourseTier): string {
-  return `Tier ${tier} · ${courseTierLabel(tier)}`;
+  return `Tier ${tier} · ${courseTierName(tier)}`;
 }
 
 export function isCourseTier(value: unknown): value is CourseTier {
