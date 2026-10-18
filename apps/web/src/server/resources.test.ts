@@ -140,7 +140,10 @@ describe('sample content', () => {
       'Kirtan Basics',
       'Temple Etiquette for Newcomers',
     ]);
-    expect(samples.every((c) => c.instructor === 'LWK Team')).toBe(true);
+    expect(samples.every((c) => c.instructor === 'LWK Team' && c.priceTier === null)).toBe(true);
+    // Paid samples show a price, so testers see one.
+    const paidSamples = (await searchCourses()).filter((c) => c.isSample && !c.isFree);
+    expect(paidSamples.map((c) => c.priceTier)).toEqual([2, 2]);
     const articles = await listPublishedResources({ types: ['ARTICLE'] });
     expect(articles.filter((r) => r.isSample)).toHaveLength(4);
 

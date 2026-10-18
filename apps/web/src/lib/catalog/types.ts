@@ -1,3 +1,5 @@
+import type { CourseTier } from '@/lib/pricing';
+
 export type Level = 'Beginner' | 'Intermediate' | 'Advanced';
 
 export type Category = {
@@ -22,8 +24,8 @@ export type Course = {
   categorySlug: string;
   instructor: string;
   level: Level;
-  /** Null until a price is set. */
-  priceUsd: number | null;
+  /** Price tier for buying the course on its own; null for free courses and until one is chosen. */
+  priceTier: CourseTier | null;
   outcomes: string[];
   sections: Section[];
 };

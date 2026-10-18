@@ -5,14 +5,6 @@ export function formatDuration(totalMinutes: number): string {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 }
 
-export function formatPrice(usd: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(usd);
-}
-
 /** "1 lesson", "3 lessons". */
 export function plural(count: number, noun: string): string {
   return `${count} ${count === 1 ? noun : `${noun}s`}`;

@@ -1,6 +1,7 @@
 import 'server-only';
 import type { CourseLevel, Prisma } from '@/generated/prisma/client';
 import type { Category, CourseSummary, Level } from '@/lib/catalog/types';
+import { isCourseTier } from '@/lib/pricing';
 import { getDb } from './db';
 import { signedMediaUrl } from './media';
 
@@ -53,8 +54,9 @@ async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
     category: toCategory(row.category),
     instructor: row.instructorName,
     level: levelLabels[row.level],
-    // Prices are optional until pricing is decided; the UI hides a missing price.
-    priceUsd: row.priceCents === null ? null : row.priceCents / 100,
+    // A free course has no price, even if a tier was left behind (an older release can make a
+    // course free without clearing it).
+    priceTier: !row.isFree && isCourseTier(row.priceTier) ? row.priceTier : null,
     outcomes: row.outcomes,
     sections,
     coverUrl: row.coverKey ? await signedMediaUrl(row.coverKey) : null,

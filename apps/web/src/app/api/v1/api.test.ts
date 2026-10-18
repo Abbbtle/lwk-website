@@ -58,14 +58,16 @@ describe('GET /api/v1/courses', () => {
 });
 
 describe('GET /api/v1/courses/:slug', () => {
-  it('returns a published course', async () => {
+  it('returns a published course with its price tier, the same for every region', async () => {
     const response = await getCourse(
       new Request(url('/courses/kirtan-basics')),
       courseContext('kirtan-basics'),
     );
     expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toContain('public');
     const { data } = await response.json();
-    expect(data).toMatchObject({ slug: 'kirtan-basics', lessonCount: 15, priceUsd: 30 });
+    expect(data).toMatchObject({ slug: 'kirtan-basics', lessonCount: 15, priceTier: 3 });
+    expect(data).not.toHaveProperty('priceUsd');
   });
 
   it('returns 404 in the error envelope for an unknown course', async () => {

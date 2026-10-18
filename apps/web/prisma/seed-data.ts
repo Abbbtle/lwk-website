@@ -56,7 +56,7 @@ function course(
     categorySlug,
     instructor: faculty[categorySlug],
     level,
-    priceUsd: 30,
+    priceTier: 3,
     outcomes,
     sections: sections.map(([sectionTitle, lessonCount, durationMinutes]): Section => ({
       title: sectionTitle,

@@ -55,7 +55,7 @@ describe('getCourse', () => {
     expect(course).toMatchObject({
       title: 'Mastering Harmonium',
       level: 'Intermediate',
-      priceUsd: 30,
+      priceTier: 3,
       lessonCount: 20,
       durationMinutes: 210,
       category: { slug: 'kirtan' },
@@ -70,6 +70,33 @@ describe('getCourse', () => {
 
   it('returns undefined for an unknown slug', async () => {
     expect(await getCourse('no-such-course')).toBeUndefined();
+  });
+});
+
+describe('course prices', () => {
+  it('never give a free course a price tier', async () => {
+    const db = getDb();
+    const category = await db.category.findUniqueOrThrow({ where: { slug: 'kirtan' } });
+    // As an older release can leave it: made free without clearing the tier.
+    const course = await db.course.create({
+      data: {
+        slug: 'free-with-old-tier',
+        title: 'Free With Old Tier',
+        subtitle: 'Free',
+        description: 'Free',
+        level: 'BEGINNER',
+        status: 'PUBLISHED',
+        instructorName: 'Test',
+        categoryId: category.id,
+        isFree: true,
+        priceTier: 4,
+      },
+    });
+    try {
+      expect(await getCourse(course.slug)).toMatchObject({ isFree: true, priceTier: null });
+    } finally {
+      await db.course.delete({ where: { id: course.id } });
+    }
   });
 });
 

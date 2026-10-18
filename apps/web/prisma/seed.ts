@@ -48,7 +48,7 @@ async function main() {
         level: levels[c.level],
         status: 'PUBLISHED' as const,
         instructorName: c.instructor,
-        priceCents: c.priceUsd === null ? null : c.priceUsd * 100,
+        priceTier: c.priceTier,
         categoryId: categoryIds.get(c.categorySlug)!,
         publishedAt: new Date('2024-01-01T00:00:00Z'),
       };

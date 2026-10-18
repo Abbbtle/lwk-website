@@ -7,10 +7,21 @@ import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
 import { JsonLd } from '@/components/json-ld';
 import { RichText } from '@/components/rich-text';
-import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
+import type { CourseSummary } from '@/lib/catalog/types';
+import { formatDuration, joinParts, plural } from '@/lib/format';
+import {
+  coursePrice,
+  decimalAmount,
+  formatMoney,
+  formatRecurring,
+  freePrice,
+  membershipHeadline,
+  type PriceRegion,
+} from '@/lib/pricing';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
 import { getEnrollmentBySlug } from '@/server/learning';
+import { viewerPriceRegion } from '@/server/pricing';
 import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.
@@ -29,11 +40,31 @@ export async function generateMetadata({
   };
 }
 
+/** For search engines: free, or what the course costs the visitor once paid plans open. */
+function courseOffer(course: CourseSummary, region: PriceRegion) {
+  const price = course.isFree
+    ? freePrice(region)
+    : course.priceTier !== null && coursePrice(course.priceTier, region);
+  if (!price) return undefined;
+  return {
+    '@type': 'Offer',
+    category: course.isFree ? 'Free' : 'Paid',
+    price: decimalAmount(price),
+    priceCurrency: price.currency,
+  };
+}
+
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
   const { slug } = await params;
-  const [course, session] = await Promise.all([loadCourse(slug), getSession()]);
+  const [course, session, region] = await Promise.all([
+    loadCourse(slug),
+    getSession(),
+    viewerPriceRegion(),
+  ]);
   if (!course) notFound();
   const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
+  // Null for free courses and courses without a price yet.
+  const price = course.priceTier === null ? null : coursePrice(course.priceTier, region);
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -52,7 +83,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           description: course.subtitle || course.description,
           provider: { '@type': 'Organization', name: 'Living With Krishna' },
           educationalLevel: course.level,
-          isAccessibleForFree: course.isFree || course.priceUsd === null,
+          isAccessibleForFree: course.priceTier === null,
+          offers: courseOffer(course, region),
           hasCourseInstance: {
             '@type': 'CourseInstance',
             courseMode: 'online',
@@ -173,11 +205,9 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                     </>
                   ) : (
                     <>
-                      {course.priceUsd !== null && (
+                      {price && (
                         <p className="text-3xl font-extrabold">
-                          <span className="text-gray-500 line-through">
-                            {formatPrice(course.priceUsd)}
-                          </span>{' '}
+                          <span className="text-gray-500 line-through">{formatMoney(price)}</span>{' '}
                           Free
                         </p>
                       )}
@@ -209,10 +239,11 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               )}
               <p className="text-center text-sm text-gray-600">
-                Or access every course with a{' '}
+                Or get every course with a{' '}
                 <Link href="/plans-and-pricing" className="font-semibold underline">
-                  subscription plan
+                  Membership
                 </Link>
+                , {formatRecurring(membershipHeadline(region))}, when paid plans open.
               </p>
             </div>
           </div>

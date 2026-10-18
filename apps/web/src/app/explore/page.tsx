@@ -7,6 +7,7 @@ import { CourseGrid } from '@/components/course-card';
 import { ResourceGrid } from '@/components/resource-card';
 import type { ResourceType } from '@/generated/prisma/client';
 import { getCategories, searchCourses } from '@/server/catalog';
+import { viewerPriceRegion } from '@/server/pricing';
 import { listPublishedResources } from '@/server/resources';
 
 export const metadata: Metadata = {
@@ -58,7 +59,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
   const params = await searchParams;
   const query = single(params.q)?.trim() || undefined;
   const filter = filters.find((f) => f.value === single(params.type))?.value as Filter;
-  const categories = await getCategories();
+  const [categories, region] = await Promise.all([getCategories(), viewerPriceRegion()]);
   const category = categories.find((c) => c.slug === single(params.category))?.slug;
   const filtered = Boolean(query || filter || category);
 
@@ -180,7 +181,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
             {courses.length > 0 && (
               <div className="space-y-4">
                 {resources.length > 0 && <h3 className="text-xl font-bold">Free courses</h3>}
-                <CourseGrid courses={courses} />
+                <CourseGrid courses={courses} region={region} />
               </div>
             )}
             {resources.length > 0 && (
@@ -200,7 +201,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
                 subtitle="Complete courses you can take today, free for everyone."
                 href={href({ type: 'courses' })}
               >
-                <CourseGrid courses={courses.slice(0, 6)} />
+                <CourseGrid courses={courses.slice(0, 6)} region={region} />
               </Row>
             )}
             {videos.length > 0 && (

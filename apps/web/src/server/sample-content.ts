@@ -1,5 +1,6 @@
 import 'server-only';
 import type { CourseLevel, ResourceType } from '@/generated/prisma/client';
+import type { CourseTier } from '@/lib/pricing';
 import { recordAudit } from './audit';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
@@ -9,6 +10,8 @@ import { getDb } from './db';
 // by "LWK Team", and admins remove it all in one step before launch.
 
 const AUTHOR = 'LWK Team';
+// Paid samples carry a price, so testers see prices before real courses have them.
+const PAID_SAMPLE_TIER: CourseTier = 2;
 const NOTE =
   'This is a sample course used to test the platform. It will be replaced by courses from our instructors.';
 
@@ -403,6 +406,7 @@ export async function loadSampleContent(session: Session) {
           status: 'PUBLISHED',
           instructorName: AUTHOR,
           isFree: course.isFree,
+          priceTier: course.isFree ? null : PAID_SAMPLE_TIER,
           isSample: true,
           publishedAt: now,
           categoryId: categoryId(course.category),
