@@ -74,13 +74,15 @@ Open a shell on the web server (no SSH): `aws ssm start-session --target <instan
 The `lwk-mail` stack (SES in `af-south-1`) receives mail for support@livingwithkrishna.com, keeps
 each message in S3 for 30 days and forwards it to the address in the Parameter Store parameter
 `/lwk/mail/forward-to`. Messages SES flags as a virus or spam, or that fail a sending domain's
-reject DMARC policy, are not forwarded but stay in S3. A message that still cannot be forwarded
-after Lambda's retries also stays in S3, and AWS emails a failure report to the same address.
+reject DMARC policy, are not forwarded but stay in S3. When a message still cannot be forwarded
+after Lambda's retries, or its forwarded copy bounces, is reported as spam or is rejected, AWS
+emails a report to the same address; the message stays in S3.
 
 Like `ALERT_EMAIL`, the address is personal and stays out of the repository. Parameters holding
 such values are named `/lwk/<area>/<name>` and created by hand. Before the first deploy:
 
-1. Create the parameter:
+1. Create the parameter, with an address outside livingwithkrishna.com (the forwarder refuses to
+   start if mail sent to that address would itself be forwarded, round in a loop):
 
    ```bash
    aws ssm put-parameter --name /lwk/mail/forward-to --type String --value <address> \
@@ -96,9 +98,22 @@ such values are named `/lwk/<area>/<name>` and created by hand. Before the first
 3. Deploy from `infra/` (`npm run deploy -- lwk-mail`) and confirm the subscription in the
    "AWS Notification - Subscription Confirmation" email, so failure reports arrive.
 
+4. Before sending a test message, wait until SES has found the domain's DKIM records (usually a
+   few minutes): until then forwarding fails and only failure reports arrive.
+
+   ```bash
+   aws sesv2 get-email-identity --email-identity livingwithkrishna.com \
+     --query VerificationStatus --region af-south-1 --profile lwk   # SUCCESS when ready
+   ```
+
 To change the address, verify the new one (step 2), update the parameter (step 1 with
 `--overwrite`), deploy `lwk-mail` again (CloudFormation reads the parameter only when deploying)
 and confirm the new subscription email.
+
+To delete `lwk-mail`, turn off its termination protection and switch receiving off first, since
+SES cannot delete the active rule set and the stack never switches it off by itself (so that
+replacing its parts cannot stop mail silently):
+`aws ses set-active-receipt-rule-set --region af-south-1 --profile lwk` (no rule set name).
 
 ## Checks (same as CI)
 

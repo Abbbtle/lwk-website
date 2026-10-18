@@ -10,8 +10,8 @@ import { config } from '../lib/config';
 import { DomainStack } from '../lib/domain-stack';
 import { MailStack } from '../lib/mail-stack';
 
-// The receipt rule, the forwarder's settings and the site's contact addresses are configured in
-// different places, so these checks keep them in step.
+// The receipt rule, the forwarder's settings, the failure reports and the site's contact addresses
+// are configured in different places, so these checks keep them in step.
 const repoRoot = join(__dirname, '..', '..');
 const received = forwardedAddresses(config.mail.forwardedLocalParts, config.apexDomainName);
 
@@ -36,23 +36,29 @@ function synthesize(): Template {
 }
 
 const template = synthesize();
-const resources = template.toJSON().Resources;
+const resources: Record<string, Record<string, any>> = template.toJSON().Resources;
 
-/** The logical ID and properties of the only resource of a type. */
+/** The logical ID and the resource of the only resource of a type. */
 function only(type: string): [string, Record<string, any>] {
   const found = Object.entries(template.findResources(type));
   assert.equal(found.length, 1, `expected one ${type}`);
-  const [id, resource] = found[0];
-  return [id, resource.Properties];
+  return found[0];
 }
 
-const [, { Rule: rule }] = only('AWS::SES::ReceiptRule');
+const [
+  ,
+  {
+    Properties: { Rule: rule },
+  },
+] = only('AWS::SES::ReceiptRule');
 const [storeAction, forwardAction] = rule.Actions;
 const forwarderId: string = forwardAction.LambdaAction.FunctionArn['Fn::GetAtt'][0];
+const forwarder = resources[forwarderId].Properties;
+const [failureTopicId] = only('AWS::SNS::Topic');
 // Values that CloudFormation fills in when deploying are references here; read them as JSON.
 const settings = readForwarderSettings(
   Object.fromEntries(
-    Object.entries(resources[forwarderId].Properties.Environment.Variables).map(([name, value]) => [
+    Object.entries(forwarder.Environment.Variables).map(([name, value]) => [
       name,
       typeof value === 'string' ? value : JSON.stringify(value),
     ]),
@@ -80,8 +86,8 @@ describe('lwk-mail', () => {
       [['S3Action'], ['LambdaAction']],
     );
     assert.equal(forwardAction.LambdaAction.InvocationType, 'Event');
-    assert.equal(settings.messageBucket, JSON.stringify(storeAction.S3Action.BucketName));
-    assert.equal(settings.messagePrefix, storeAction.S3Action.ObjectKeyPrefix);
+    assert.equal(settings.messageBucketName, JSON.stringify(storeAction.S3Action.BucketName));
+    assert.equal(settings.messageKeyPrefix, storeAction.S3Action.ObjectKeyPrefix);
   });
 
   it('gives the forwarder the configured addresses and name', () => {
@@ -89,7 +95,7 @@ describe('lwk-mail', () => {
     assert.equal(settings.forwarderName, config.mail.forwarderName);
   });
 
-  it('forwards to the address in Parameter Store and reports failures there', () => {
+  it('forwards to the address in Parameter Store and emails failures there', () => {
     const [parameterId] =
       Object.entries(template.toJSON().Parameters).find(
         ([, parameter]: [string, any]) => parameter.Default === config.mail.forwardToParameterName,
@@ -97,26 +103,70 @@ describe('lwk-mail', () => {
     assert.ok(parameterId, `no parameter reads ${config.mail.forwardToParameterName}`);
     assert.equal(settings.forwardTo, JSON.stringify({ Ref: parameterId }));
 
-    const [, subscription] = only('AWS::SNS::Subscription');
+    const [, { Properties: subscription }] = only('AWS::SNS::Subscription');
     assert.equal(subscription.Protocol, 'email');
     assert.deepEqual(subscription.Endpoint, { Ref: parameterId });
-    const [, invokeConfig] = only('AWS::Lambda::EventInvokeConfig');
+    assert.deepEqual(subscription.TopicArn, { Ref: failureTopicId });
+    const [, { Properties: invokeConfig }] = only('AWS::Lambda::EventInvokeConfig');
     assert.deepEqual(invokeConfig.FunctionName, { Ref: forwarderId });
-    assert.deepEqual(invokeConfig.DestinationConfig.OnFailure.Destination, subscription.TopicArn);
+    assert.deepEqual(invokeConfig.DestinationConfig.OnFailure.Destination, { Ref: failureTopicId });
   });
 
-  it('lets the forwarder send only from the forwarded addresses', () => {
+  it('reports bounces, complaints and rejections of forwarded copies there too', () => {
+    const [configurationSetId, { Properties: configurationSet }] = only(
+      'AWS::SES::ConfigurationSet',
+    );
+    assert.equal(settings.configurationSetName, JSON.stringify({ Ref: configurationSetId }));
+    // Every bounce is reported, instead of SES dropping later copies without a word.
+    assert.deepEqual(configurationSet.SuppressionOptions, { SuppressedReasons: [] });
+
+    const [, { Properties: destination }] = only('AWS::SES::ConfigurationSetEventDestination');
+    assert.deepEqual(destination.ConfigurationSetName, { Ref: configurationSetId });
+    assert.deepEqual([...destination.EventDestination.MatchingEventTypes].sort(), [
+      'bounce',
+      'complaint',
+      'reject',
+    ]);
+    assert.deepEqual(destination.EventDestination.SnsDestination.TopicARN, {
+      Ref: failureTopicId,
+    });
+    // Emailed notices would go to the forwarded mailbox the copy came from, and loop.
+    const [, { Properties: identity }] = only('AWS::SES::EmailIdentity');
+    assert.equal(identity.FeedbackAttributes.EmailForwardingEnabled, false);
+  });
+
+  it('lets the forwarder send only from the forwarded addresses, through its configuration set', () => {
+    const [configurationSetId] = only('AWS::SES::ConfigurationSet');
     template.hasResourceProperties('AWS::IAM::Policy', {
-      Roles: [{ Ref: resources[forwarderId].Properties.Role['Fn::GetAtt'][0] }],
+      Roles: [{ Ref: forwarder.Role['Fn::GetAtt'][0] }],
       PolicyDocument: {
         Statement: Match.arrayWith([
           Match.objectLike({
             Action: ['ses:SendEmail', 'ses:SendRawEmail'],
             Condition: { StringEquals: { 'ses:FromAddress': received } },
+            Resource: Match.arrayWith([
+              Match.stringLikeRegexp(':identity/\\*$'),
+              {
+                'Fn::Join': [
+                  '',
+                  [Match.stringLikeRegexp(':configuration-set/$'), { Ref: configurationSetId }],
+                ],
+              },
+            ]),
           }),
         ]),
       },
     });
+  });
+
+  it('switches receiving on after everything else exists, and never switches it off', () => {
+    const [activationId, activation] = only('Custom::AWS');
+    assert.match(JSON.stringify(activation.Properties.Create), /setActiveReceiptRuleSet/);
+    assert.equal(activation.Properties.Delete, undefined);
+    const others = Object.keys(resources).filter(
+      (id) => id !== activationId && resources[id].Type !== 'AWS::CDK::Metadata',
+    );
+    assert.deepEqual([...activation.DependsOn].sort(), others.sort());
   });
 });
 

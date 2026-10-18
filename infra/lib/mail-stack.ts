@@ -39,22 +39,26 @@ export type MailStackProps = cdk.StackProps & {
   forwarderName: string;
 };
 
-const MESSAGE_PREFIX = 'inbound/';
+const MESSAGE_KEY_PREFIX = 'inbound/';
 const MESSAGE_RETENTION = cdk.Duration.days(30);
 
 /**
  * Mail for the domain. Amazon SES receives mail for the forwarded mailboxes (for example support@),
  * stores each message in a private bucket for 30 days and forwards it from the same mailbox, with
- * Reply-To set to the original sender. A message that still fails after Lambda's retries is
- * reported by email to the forward-to address and stays in the bucket. The domain is also a
- * verified SES identity (DKIM, a custom MAIL FROM domain and DMARC in monitoring mode), which
- * sending from the domain needs later. While SES is in its sandbox, the forward-to address must
- * itself be verified in SES. Shared by all stages; deployed in the workload region, where SES
+ * Reply-To set to the original sender. The forward-to address is told by email when a message
+ * cannot be forwarded (after Lambda's retries) and when a forwarded copy bounces, is reported as
+ * spam or is rejected; the message stays in the bucket. The domain is a verified SES identity
+ * (DKIM, a custom MAIL FROM domain and DMARC in monitoring mode): forwarded copies are sent from it,
+ * and other mail from the domain can be later. While SES is in its sandbox, the forward-to address
+ * must itself be verified in SES. Shared by all stages; deployed in the workload region, where SES
  * receives the mail.
  */
 export class MailStack extends cdk.Stack {
-  /** The domain as an SES sender (DKIM and MAIL FROM set up), for mail sent from it later. */
-  public readonly sendingIdentity: ses.IEmailIdentity;
+  /**
+   * The domain as an SES sender (DKIM and MAIL FROM). Forwarded copies are sent from it now; other
+   * mail from the domain (sign-in emails, notifications) can use it later.
+   */
+  readonly sendingIdentity: ses.IEmailIdentity;
 
   constructor(scope: Construct, id: string, props: MailStackProps) {
     super(scope, id, props);
@@ -71,6 +75,11 @@ export class MailStack extends cdk.Stack {
     this.sendingIdentity = new ses.EmailIdentity(this, 'DomainIdentity', {
       identity: ses.Identity.publicHostedZone(zone),
       mailFromDomain: `mail.${domain}`,
+      // By default SES emails bounce and complaint notices to the sender, which for forwarded
+      // copies is a forwarded mailbox: the notices would be forwarded round in a loop. The
+      // configuration set below reports them instead. (SES still emails notices for mail sent
+      // without such a configuration set.)
+      feedbackForwarding: false,
     });
     // Monitoring only for now: receivers check the domain's mail but are not asked to act on it.
     new route53.TxtRecord(this, 'Dmarc', {
@@ -95,13 +104,26 @@ export class MailStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // ---- Failures: SES invokes the forwarder asynchronously, so Lambda retries a failed message
-    // twice and then hands the event to this topic, which emails the forward-to address ----
+    // ---- Failures, emailed to the forward-to address ----
     const failures = new sns.Topic(this, 'ForwardingFailures', {
       displayName: 'LWK mail forwarding failures',
       enforceSSL: true,
     });
     failures.addSubscription(new subscriptions.EmailSubscription(forwardTo));
+    // What happens to a copy after SES accepts it. Suppression is off for these copies: they only
+    // go to the forward-to address, and a bounce should be reported each time rather than have SES
+    // quietly drop every later copy.
+    const forwardedMail = new ses.ConfigurationSet(this, 'ForwardedMail', {
+      disableSuppressionList: true,
+    });
+    forwardedMail.addEventDestination('Failures', {
+      destination: ses.EventDestination.snsTopic(failures),
+      events: [
+        ses.EmailSendingEvent.BOUNCE,
+        ses.EmailSendingEvent.COMPLAINT,
+        ses.EmailSendingEvent.REJECT,
+      ],
+    });
 
     // The AWS SDK comes with the Lambda runtime, so it is left out of the bundle (the default).
     const forwarder = new nodejs.NodejsFunction(this, 'Forwarder', {
@@ -110,28 +132,39 @@ export class MailStack extends cdk.Stack {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_24_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      // Room to hold a large message (SES receives up to 40 MB) while it is sent on.
+      memorySize: 512,
       timeout: cdk.Duration.seconds(30),
       logGroup: new logs.LogGroup(this, 'ForwarderLogs', {
         retention: logs.RetentionDays.ONE_MONTH,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       }),
       environment: forwarderEnvironment({
-        messageBucket: messages.bucketName,
-        messagePrefix: MESSAGE_PREFIX,
+        messageBucketName: messages.bucketName,
+        messageKeyPrefix: MESSAGE_KEY_PREFIX,
         forwardTo,
         forwarderName,
         forwardedAddresses: addresses,
+        configurationSetName: forwardedMail.configurationSetName,
       }),
+      // SES invokes the function asynchronously: Lambda retries a failed message twice, then
+      // hands the event to the failure topic.
       onFailure: new destinations.SnsDestination(failures),
     });
-    messages.grantRead(forwarder, `${MESSAGE_PREFIX}*`);
+    messages.grantRead(forwarder, `${MESSAGE_KEY_PREFIX}*`);
     forwarder.addToRolePolicy(
       new iam.PolicyStatement({
-        // Only from the forwarded mailboxes. In the sandbox SES also checks the destination's
-        // identity, hence every identity in this account and region.
+        // Only from the forwarded mailboxes, through the configuration set. In the sandbox SES
+        // also checks the destination's identity, hence every identity in this account and region.
         actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-        resources: [`arn:aws:ses:${this.region}:${this.account}:identity/*`],
+        resources: [
+          this.formatArn({ service: 'ses', resource: 'identity', resourceName: '*' }),
+          this.formatArn({
+            service: 'ses',
+            resource: 'configuration-set',
+            resourceName: forwardedMail.configurationSetName,
+          }),
+        ],
         conditions: { StringEquals: { 'ses:FromAddress': addresses } },
       }),
     );
@@ -143,24 +176,31 @@ export class MailStack extends cdk.Stack {
       // Spam and virus verdicts, which the forwarder uses to skip messages.
       scanEnabled: true,
       actions: [
-        new actions.S3({ bucket: messages, objectKeyPrefix: MESSAGE_PREFIX }),
+        new actions.S3({ bucket: messages, objectKeyPrefix: MESSAGE_KEY_PREFIX }),
         new actions.Lambda({
           function: forwarder,
           invocationType: actions.LambdaInvocationType.EVENT,
         }),
       ],
     });
+
     // CloudFormation cannot make a rule set the active one (SES has one per region), so an SES
-    // call does it, and switches it off again if the stack is deleted.
-    new cr.AwsCustomResource(this, 'ActiveRuleSet', {
+    // call does. There is deliberately no call to switch it off on delete: CloudFormation also
+    // deletes this resource when it replaces it (say the construct moves), and receiving would then
+    // stop without any error. Deleting the stack therefore needs receiving switched off by hand
+    // first, as SES cannot delete the active rule set (see "Mail for the domain" in the README).
+    const activation = new cr.AwsCustomResource(this, 'ActiveRuleSet', {
       onCreate: activate(ruleSet.receiptRuleSetName),
       onUpdate: activate(ruleSet.receiptRuleSetName),
-      onDelete: { service: 'SES', action: 'setActiveReceiptRuleSet', parameters: {} },
       policy: cr.AwsCustomResourcePolicy.fromStatements([
         new iam.PolicyStatement({ actions: ['ses:SetActiveReceiptRuleSet'], resources: ['*'] }),
       ]),
       installLatestAwsSdk: false,
     });
+    // Switched on after everything else exists, so a failed first deploy can still roll back.
+    for (const other of this.node.children) {
+      if (other !== activation) activation.node.addDependency(other);
+    }
 
     new cdk.CfnOutput(this, 'ForwardedAddresses', { value: addresses.join(', ') });
     new cdk.CfnOutput(this, 'MessageBucketName', { value: messages.bucketName });

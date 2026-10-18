@@ -1,5 +1,12 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
+import type { SendEmailCommandInput } from '@aws-sdk/client-sesv2';
+import {
+  forwardReceivedMail,
+  type ForwarderDependencies,
+  type ForwardingOutcome,
+  type SesReceivingEvent,
+} from '../lambda/mail-forwarder/forward-received-mail';
 import {
   checkedForwarderName,
   forwardedAddresses,
@@ -19,6 +26,14 @@ const SUPPORT = 'support@livingwithkrishna.com';
 const HELLO = 'hello@livingwithkrishna.com';
 const NAME = 'Living With Krishna';
 const OPTIONS: ForwardingOptions = { fromAddress: SUPPORT, forwarderName: NAME };
+const SETTINGS: ForwarderSettings = {
+  messageBucketName: 'lwk-mail-messagebucket',
+  messageKeyPrefix: 'inbound/',
+  forwardTo: 'someone@example.com',
+  forwarderName: NAME,
+  forwardedAddresses: [SUPPORT, HELLO],
+  configurationSetName: 'forwarded-mail',
+};
 
 /** Forwards a message given as latin1 text (one character per byte) and returns it the same way. */
 function forward(raw: string): string {
@@ -116,6 +131,15 @@ describe('preparing a received message for forwarding', () => {
     assert.ok(result.subarray(result.length - body.length).equals(body));
   });
 
+  it('reads only its own bytes when they are part of a larger buffer', () => {
+    const raw = message(['From: jane@example.com', 'Subject: Hi'], 'Body\r\n');
+    const shared = Buffer.from(`before|${raw}|after`, 'latin1');
+    const received = shared.subarray('before|'.length, 'before|'.length + raw.length);
+    const result = Buffer.from(prepareForwardedMessage(received, OPTIONS)).toString('latin1');
+    assert.ok(result.startsWith(`From: "jane@example.com via ${NAME}" <${SUPPORT}>\r\n`));
+    assert.ok(result.endsWith('Subject: Hi\r\n\r\nBody\r\n'), result);
+  });
+
   it('still forwards a message without a From header', () => {
     const lines = headerLines(forward(message(['Subject: Hi'])));
     assert.ok(lines.includes(`From: "Unknown sender via ${NAME}" <${SUPPORT}>`));
@@ -182,7 +206,7 @@ describe('forwarded addresses', () => {
     for (const localParts of [[], ['Support'], [SUPPORT], ['support', 'support'], [' support']]) {
       assert.throws(
         () => forwardedAddresses(localParts, 'livingwithkrishna.com'),
-        Error,
+        /^Error: forwardedLocalParts /,
         JSON.stringify(localParts),
       );
     }
@@ -214,22 +238,106 @@ describe('the forwarder name', () => {
 });
 
 describe('forwarder settings', () => {
-  const settings: ForwarderSettings = {
-    messageBucket: 'lwk-mail-messagebucket',
-    messagePrefix: 'inbound/',
-    forwardTo: 'someone@example.com',
-    forwarderName: NAME,
-    forwardedAddresses: [SUPPORT, HELLO],
-  };
-
   it('are read back from the environment exactly as the stack writes them', () => {
-    assert.deepEqual(readForwarderSettings(forwarderEnvironment(settings)), settings);
+    assert.deepEqual(readForwarderSettings(forwarderEnvironment(SETTINGS)), SETTINGS);
   });
 
   it('name each variable that is missing', () => {
-    for (const missing of Object.keys(forwarderEnvironment(settings))) {
-      const environment = { ...forwarderEnvironment(settings), [missing]: undefined };
+    for (const missing of Object.keys(forwarderEnvironment(SETTINGS))) {
+      const environment = { ...forwarderEnvironment(SETTINGS), [missing]: undefined };
       assert.throws(() => readForwarderSettings(environment), new RegExp(`${missing} is not set`));
     }
+  });
+
+  it('refuse a forward-to address that is itself forwarded, without naming it', () => {
+    const looping = forwarderEnvironment({
+      ...SETTINGS,
+      forwardTo: 'Support@LivingWithKrishna.com',
+    });
+    assert.throws(
+      () => readForwarderSettings(looping),
+      (error: Error) =>
+        /^FORWARD_TO must not be one of FORWARDED_ADDRESSES/.test(error.message) &&
+        !error.message.toLowerCase().includes(SUPPORT),
+    );
+  });
+});
+
+describe('forwarding a received event', () => {
+  const stored =
+    'From: Jane <jane@example.com>\r\nTo: hello@livingwithkrishna.com\r\n\r\nHello\r\n';
+
+  function event(receipt: Partial<SesReceipt> = {}): SesReceivingEvent {
+    const clean: SesReceipt = {
+      recipients: [HELLO],
+      spamVerdict: { status: 'PASS' },
+      virusVerdict: { status: 'PASS' },
+      dmarcVerdict: { status: 'PASS' },
+    };
+    return {
+      Records: [{ ses: { mail: { messageId: 'm-1' }, receipt: { ...clean, ...receipt } } }],
+    };
+  }
+
+  /** In-memory stand-ins for S3, SES and the log that record what the forwarder does. */
+  function fakes(sendEmail?: ForwarderDependencies['sendEmail']) {
+    const read: string[] = [];
+    const sent: SendEmailCommandInput[] = [];
+    const logged: ForwardingOutcome[] = [];
+    const dependencies: ForwarderDependencies = {
+      settings: SETTINGS,
+      async readMessage(key) {
+        read.push(key);
+        return Buffer.from(stored, 'latin1');
+      },
+      sendEmail:
+        sendEmail ??
+        (async (request) => {
+          sent.push(request);
+        }),
+      log: (outcome) => logged.push(outcome),
+    };
+    return { dependencies, read, sent, logged };
+  }
+
+  it('sends a copy from the addressed mailbox through the configuration set', async () => {
+    const { dependencies, read, sent, logged } = fakes();
+    await forwardReceivedMail(event(), dependencies);
+    assert.deepEqual(read, ['inbound/m-1']);
+    assert.equal(sent.length, 1);
+    const [request] = sent;
+    assert.equal(request.FromEmailAddress, HELLO);
+    assert.deepEqual(request.Destination, { ToAddresses: [SETTINGS.forwardTo] });
+    assert.equal(request.ConfigurationSetName, SETTINGS.configurationSetName);
+    const copy = Buffer.from(request.Content?.Raw?.Data ?? []).toString('latin1');
+    assert.ok(copy.startsWith(`From: "jane@example.com via ${NAME}" <${HELLO}>\r\n`), copy);
+    assert.deepEqual(logged, [{ messageId: 'm-1', forwarded: true }]);
+  });
+
+  it('logs a skipped message and neither reads nor sends it', async () => {
+    const { dependencies, read, sent, logged } = fakes();
+    await forwardReceivedMail(event({ spamVerdict: { status: 'FAIL' } }), dependencies);
+    assert.deepEqual([read, sent], [[], []]);
+    assert.deepEqual(logged, [{ messageId: 'm-1', forwarded: false, reason: 'spam' }]);
+  });
+
+  it('logs a failure by error name only and rethrows it, so Lambda retries and reports it', async () => {
+    const rejected = Object.assign(
+      new Error(`Email address is not verified: ${SETTINGS.forwardTo}`),
+      {
+        name: 'MessageRejected',
+      },
+    );
+    const { dependencies, logged } = fakes(async () => {
+      throw rejected;
+    });
+    await assert.rejects(forwardReceivedMail(event(), dependencies), (error: Error) => {
+      assert.equal(error.message, 'Forwarding m-1 failed (MessageRejected)');
+      assert.equal(error.cause, undefined);
+      return true;
+    });
+    assert.deepEqual(logged, [
+      { messageId: 'm-1', forwarded: false, reason: 'error', errorName: 'MessageRejected' },
+    ]);
   });
 });
