@@ -41,6 +41,7 @@ describe('finding help', () => {
       /two-step|changing-your-password/,
     );
     expect(slugs(articlesForPath('/admin/users/1', staff))).toContain('managing-users-and-roles');
+    expect(slugs(articlesForPath('/plans-and-pricing', learner))[0]).toBe('prices-and-plans');
     expect(articlesForPath('/admin/users/1', learner)).toHaveLength(0);
   });
 
@@ -54,6 +55,10 @@ describe('finding help', () => {
       'creating-your-account',
     );
     expect(searchHelp('deleting my account', learner)[0].slug).toBe('your-data-and-privacy');
+    expect(searchHelp('How much does a membership cost?', learner)[0].slug).toBe(
+      'prices-and-plans',
+    );
+    expect(searchHelp('can I cancel my subscription', learner)[0].slug).toBe('prices-and-plans');
     expect(searchHelp('the', learner)).toEqual([]);
   });
 });

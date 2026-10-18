@@ -89,7 +89,7 @@ const faqs = [
   {
     question: 'How much does it cost?',
     answer:
-      'During early access every course is free to join. Courses marked Free stay free for everyone, also once subscription plans open.',
+      'During early access every course is free to join, and the courses you join stay yours when paid plans open. Courses marked Free stay free for everyone.',
   },
   {
     question: 'Do I need any experience?',

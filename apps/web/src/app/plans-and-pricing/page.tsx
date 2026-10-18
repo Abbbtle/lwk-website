@@ -1,82 +1,157 @@
+import { Check } from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Faq } from '@/components/faq';
+import {
+  COMMUNITY_MIN_SEATS,
+  communitySeatPrice,
+  courseStartingPrice,
+  FAMILY_MAX_PEOPLE,
+  familyPrice,
+  formatMoney,
+  FOUNDING_MEMBER_PLACES,
+  foundingMemberPrice,
+  freePrice,
+  membershipPrices,
+  monthlyEquivalent,
+  type PriceRegion,
+  regionLabel,
+  taxNote,
+  yearlySavingPercent,
+} from '@/lib/pricing';
+import { viewerPriceRegion } from '@/server/pricing';
 
 export const metadata: Metadata = {
   title: 'Plans & Pricing',
-  description: 'Subscription plans for individuals, groups and classrooms.',
+  description:
+    'Membership, Family and Community plans and single courses, priced for your country. Every course is free during early access.',
 };
 
-// Layout from the POC. Prices are decided in the payments phase (see docs/PLAN.md).
+// The visitor's plans and prices, from the price list in src/lib/pricing. Paid plans open in the
+// payments phase (see docs/PLAN.md); until then their buttons sign people up to learn for free.
+
 type Plan = {
   name: string;
   audience: string;
+  /** The amount, shown large: "R99". */
+  price: string;
+  /** What the amount is for: "a month". */
+  per?: string;
+  /** Another way to pay, or how the price is billed. */
+  billing?: string;
   features: string[];
+  action: { href: string; label: string };
   featured?: boolean;
 };
 
-const plans: Plan[] = [
-  {
-    name: 'Solo Learning',
-    audience: 'Personal use',
-    features: [
-      'Access to every course',
-      'Learn at your own pace',
-      'Track your progress',
-      'Certificates of completion',
-    ],
-  },
-  {
-    name: 'Group Learning',
-    audience: 'Best for 1-3 users',
-    featured: true,
-    features: [
-      'Everything in Solo Learning',
-      'Multiple learners on one plan',
-      'Shared group progress',
-      'Group discussion space',
-    ],
-  },
-  {
-    name: 'Classroom',
-    audience: 'Best for 4-6 users',
-    features: [
-      'Everything in Group Learning',
-      'Seats for a whole class',
-      'Teacher dashboard',
-      'Priority support',
-    ],
-  },
-];
+const joinFree = { href: '/sign-up?returnTo=%2Fcourses', label: 'Join free during early access' };
 
-const faqs = [
-  {
-    question: 'How do I subscribe to a plan?',
-    answer:
-      'Subscriptions are opening soon. Once they are available, choose the plan that fits your needs on this page and follow the checkout steps.',
-  },
-  {
-    question: 'Can I cancel my subscription?',
-    answer: 'Yes. You will be able to cancel at any time from your account settings.',
-  },
-  {
-    question: 'What is Living With Krishna about?',
-    answer:
-      'Living With Krishna is a platform dedicated to sharing the timeless wisdom of the Bhagavad-gita and the teachings of Krishna. Our mission is to make these teachings accessible to everyone, promoting a life of spirituality, mindfulness, and inner peace.',
-  },
-  {
-    question: 'How can I get involved?',
-    answer:
-      'Take a course, join community events, or share your own knowledge by applying to become an instructor.',
-  },
-  {
-    question: 'What type of content do you provide?',
-    answer:
-      'Video lessons, readings and practical exercises covering kirtan, prasadam cooking, Vaisnava etiquette and the study of sacred texts.',
-  },
-];
+/** Monthly, with the yearly saving, where there is monthly billing; otherwise yearly. */
+function membershipPricing(region: PriceRegion): Pick<Plan, 'price' | 'per' | 'billing'> {
+  const { monthly, yearly } = membershipPrices(region);
+  if (monthly) {
+    return {
+      price: formatMoney(monthly),
+      per: 'a month',
+      billing: `or ${formatMoney(yearly)} a year (save ${yearlySavingPercent(monthly, yearly)}%)`,
+    };
+  }
+  return {
+    price: formatMoney(yearly),
+    per: 'a year',
+    billing: `${formatMoney(monthlyEquivalent(yearly))} a month, billed yearly`,
+  };
+}
 
-function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
+function plansFor(region: PriceRegion): Plan[] {
+  return [
+    {
+      name: 'Free',
+      audience: 'For everyone',
+      price: formatMoney(freePrice(region)),
+      features: [
+        'Explore: free talks, kirtan recordings and articles',
+        'Every course marked Free',
+        'Free preview lessons',
+      ],
+      action: { href: '/sign-up?returnTo=%2Fexplore', label: 'Create free account' },
+    },
+    {
+      name: 'Membership',
+      audience: 'For one person',
+      ...membershipPricing(region),
+      features: [
+        'Every paid course',
+        'Try it free for 7 days',
+        'Cancel any time',
+        'More study help each day',
+      ],
+      action: joinFree,
+      featured: true,
+    },
+    {
+      name: 'Family',
+      audience: 'For a household',
+      price: formatMoney(familyPrice(region)),
+      per: 'a year',
+      features: ['Everything in Membership', `Up to ${FAMILY_MAX_PEOPLE} people in one household`],
+      action: joinFree,
+    },
+    {
+      name: 'Community',
+      audience: 'For temples, schools and study groups',
+      price: formatMoney(communitySeatPrice(region)),
+      per: 'a seat a year',
+      features: [
+        'Everything in Membership for each seat',
+        `From ${COMMUNITY_MIN_SEATS} seats`,
+        'A view for group leaders, coming later',
+      ],
+      action: joinFree,
+    },
+  ];
+}
+
+function faqsFor(region: PriceRegion) {
+  return [
+    {
+      question: 'When can I subscribe?',
+      answer:
+        'Paid plans open soon, and we will announce the start date 30 days ahead. Until then every course is free during early access.',
+    },
+    {
+      question: 'Do I keep the courses I join during early access?',
+      answer:
+        'Yes. The courses you join during early access stay yours for good, also when paid plans open. Courses marked Free stay free for everyone.',
+    },
+    {
+      question: 'Why are prices different in my country?',
+      answer: `Prices follow local incomes, as on Udemy, so people everywhere can afford them. The prices on this page are for ${regionLabel(region)}.`,
+    },
+    {
+      question: 'Can I cancel?',
+      answer:
+        'Yes, at any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within 14 days, and in part after that.',
+    },
+    {
+      question: 'Is there a plan for a temple or group?',
+      answer: `Yes. Community plans are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, at ${formatMoney(communitySeatPrice(region))} a seat a year.`,
+    },
+    {
+      question: 'Can I give a membership or sponsor someone?',
+      answer: 'Gifts and sponsored places open together with paid plans.',
+    },
+    {
+      question: 'What type of content do you provide?',
+      answer:
+        'Video lessons, readings and practical exercises covering kirtan, prasadam cooking, Vaisnava etiquette and the study of sacred texts.',
+    },
+  ];
+}
+
+function PlanCard({ plan }: { plan: Plan }) {
   const featured = plan.featured;
+  const muted = featured ? '' : 'text-gray-700';
   return (
     <li
       className={`flex flex-col border p-6 ${
@@ -84,46 +159,35 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: string }) {
       }`}
     >
       <h3 className="text-2xl font-semibold">{plan.name}</h3>
-      <p className="mt-4 text-lg">Price coming soon</p>
-      <p className={`mt-4 text-sm ${featured ? '' : 'text-gray-700'}`}>{plan.audience}</p>
-      <p className={`mt-1 text-sm ${featured ? '' : 'text-gray-700'}`}>{billing}</p>
-      <ul className="mt-8 flex-grow space-y-2">
+      <p className={`mt-1 text-sm ${muted}`}>{plan.audience}</p>
+      <p className="mt-6">
+        <span className="text-4xl font-extrabold">{plan.price}</span>
+        {plan.per && ` ${plan.per}`}
+      </p>
+      {plan.billing && <p className={`mt-1 text-sm ${muted}`}>{plan.billing}</p>}
+      <ul className="mt-6 flex-grow space-y-2">
         {plan.features.map((feature) => (
-          <li key={feature}>{feature}</li>
+          <li key={feature} className="flex gap-2">
+            <Check className="mt-0.5 size-5 shrink-0" aria-hidden />
+            {feature}
+          </li>
         ))}
       </ul>
-      <div className="mt-8 text-center">
-        <a
-          href="/sign-up?returnTo=%2Fexplore"
-          className={
-            featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
-          }
-        >
-          Get started
-        </a>
-      </div>
+      <a
+        href={plan.action.href}
+        className={`mt-8 w-full text-center ${
+          featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
+        }`}
+      >
+        {plan.action.label}
+      </a>
     </li>
   );
 }
 
-function PlanGroup({ title, billing }: { title: string; billing: string }) {
-  return (
-    <section className="page-width pt-12">
-      <h2 className="text-center text-3xl font-semibold">{title}</h2>
-      <p className="mt-2 mb-8 text-center">
-        Access any of our courses with our {billing.toLowerCase().replace(' billing', '')}{' '}
-        subscription plans
-      </p>
-      <ul className="grid gap-8 md:grid-cols-3 md:gap-10">
-        {plans.map((plan) => (
-          <PlanCard key={plan.name} plan={plan} billing={billing} />
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-export default function PlansAndPricingPage() {
+export default async function PlansAndPricingPage() {
+  const region = await viewerPriceRegion();
+  const { yearly } = membershipPrices(region);
   return (
     <>
       <section className="page-width pt-12 text-center">
@@ -131,16 +195,45 @@ export default function PlansAndPricingPage() {
           Elevate Your Spiritual Practice with Tailored Plans
         </h1>
         <p className="mx-auto mt-4 max-w-3xl md:text-lg">
-          Select the path that aligns with your spiritual journey and unlock deeper insights, tools,
-          and guidance.
+          One Membership opens every paid course. Families, temples and study groups can learn
+          together, and single courses are yours to keep.
         </p>
-        <p className="mt-4 text-sm font-semibold text-gray-600">
-          Subscriptions open soon. Every course is free during early access.
+        <p className="mt-4 text-sm text-gray-600">
+          Prices for {regionLabel(region)}, {taxNote(region)}.
+        </p>
+        <p className="mx-auto mt-6 max-w-3xl bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
+          Paid plans open soon. Until then every course is free during early access, and the courses
+          you join now stay yours.
         </p>
       </section>
-      <PlanGroup title="Monthly Deals" billing="Monthly billing" />
-      <PlanGroup title="Annual Deals" billing="Annual billing" />
-      <Faq items={faqs} />
+
+      <section aria-labelledby="plans" className="page-width pt-12">
+        <h2 id="plans" className="sr-only">
+          Plans
+        </h2>
+        <ul className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+          {plansFor(region).map((plan) => (
+            <PlanCard key={plan.name} plan={plan} />
+          ))}
+        </ul>
+        <div className="mt-10 space-y-3 text-center text-gray-700">
+          <p>
+            <strong className="text-gray-900">Founding members:</strong> join during early access,
+            or be one of the first {FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members, and a
+            year of Membership is {formatMoney(foundingMemberPrice(region))} instead of{' '}
+            {formatMoney(yearly)}.
+          </p>
+          <p>
+            Prefer to buy{' '}
+            <Link href="/courses" className="font-semibold text-gray-900 underline">
+              single courses
+            </Link>
+            ? They start at {formatMoney(courseStartingPrice(region))} and are yours to keep.
+          </p>
+        </div>
+      </section>
+
+      <Faq items={faqsFor(region)} />
     </>
   );
 }

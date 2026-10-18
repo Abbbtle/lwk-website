@@ -2,6 +2,23 @@
 // help centre, the help panel on every page, the support form and (later) the assistant.
 // Write in plain language, describe what the site actually does, and keep each article short.
 
+import {
+  COMMUNITY_MIN_SEATS,
+  COURSE_TIERS,
+  communitySeatPrice,
+  coursePrice,
+  courseStartingPrice,
+  courseTierTitle,
+  FAMILY_MAX_PEOPLE,
+  familyPrice,
+  formatMoney,
+  FOUNDING_MEMBER_PLACES,
+  foundingMemberPrice,
+  membershipPrices,
+  PRICE_REGIONS,
+  regionName,
+} from '@/lib/pricing';
+
 export type HelpAudience = 'everyone' | 'instructor' | 'staff';
 
 export type HelpTopic = { slug: string; title: string; description: string };
@@ -51,6 +68,24 @@ export const helpTopics: HelpTopic[] = [
     description: 'Reviews, people and roles, free content and support requests.',
   },
 ];
+
+// Prices in articles come from the price list, so they always match the site.
+
+/** One line per region: what each plan and single courses cost there. */
+const pricesInEachRegion = PRICE_REGIONS.map((region) => {
+  const { monthly, yearly } = membershipPrices(region);
+  const membership = monthly
+    ? `${formatMoney(monthly)} a month or ${formatMoney(yearly)} a year`
+    : `${formatMoney(yearly)} a year`;
+  return `- **${regionName(region)}**: Membership ${membership} (founding members ${formatMoney(foundingMemberPrice(region))} a year), Family ${formatMoney(familyPrice(region))} a year, Community ${formatMoney(communitySeatPrice(region))} a seat a year, single courses from ${formatMoney(courseStartingPrice(region))}.`;
+}).join('\n');
+
+const courseTiers = COURSE_TIERS.map((tier) => `- ${courseTierTitle(tier)}`).join('\n');
+
+/** What a tier 2 course costs in each region. */
+const tierTwoPrices = PRICE_REGIONS.map(
+  (region) => `- ${regionName(region)}: ${formatMoney(coursePrice(2, region))}`,
+).join('\n');
 
 export const helpArticles: HelpArticle[] = [
   // ---- Getting started ----------------------------------------------------------------------
@@ -126,7 +161,7 @@ Too many attempts in a row are paused for a few minutes to protect your account.
     keywords: ['menu', 'navigation', 'where', 'overview', 'tour', 'site'],
     body: `- **Explore**: free courses, videos, audio, articles and PDFs, open to everyone.
 - **Courses**: the full course catalogue, which you can narrow by category, search or filter to free courses only.
-- **Plans & Pricing**: subscription plans (every course is free during early access).
+- **Plans & Pricing**: Membership, Family and Community plans and single-course prices for your country (every course is free during early access).
 - **Become an Instructor**: apply to teach.
 
 Once you are signed in, the menu with your name leads to **My Learning** (your courses and progress), **Notifications**, **Help & support** and your **Account**. Instructors and admins also see their own areas there.
@@ -179,7 +214,8 @@ Use the filters to show one type or one category, or search by title, topic or s
     slug: 'enrolling-in-a-course',
     topic: 'learning',
     title: 'Enrolling in a course',
-    summary: 'Enrollment is free during early access; free courses stay free for everyone.',
+    summary:
+      'Enrollment is free during early access, and the courses you join stay yours when paid plans open.',
     audience: 'everyone',
     paths: ['/courses/*'],
     // British spellings too, so either finds the article.
@@ -195,9 +231,53 @@ Use the filters to show one type or one category, or search by title, topic or s
     ],
     body: `Open the course and choose **Enroll now** (or **Sign up to enroll** if you are not signed in yet). The course then appears in [My Learning](/my-learning).
 
-During early access every course is free to enroll in. Courses marked **Free** stay free for everyone, also when [subscription plans](/plans-and-pricing) start.
+During early access every course is free to enroll in, and the courses you join stay yours when paid plans open. Courses marked **Free** stay free for everyone. Other courses show the price they will have in your country, struck through while they are free; see [Prices and plans](/help/prices-and-plans).
 
 Not sure yet? Choose **Watch a free preview** when a course offers one.`,
+  },
+  {
+    slug: 'prices-and-plans',
+    topic: 'learning',
+    title: 'Prices and plans',
+    summary:
+      'What Membership, single courses, Family and Community plans will cost when paid plans open, and why prices differ by country.',
+    audience: 'everyone',
+    paths: ['/plans-and-pricing'],
+    keywords: [
+      'price',
+      'cost',
+      'membership',
+      'subscription',
+      'plan',
+      'family',
+      'community',
+      'temple',
+      'refund',
+      'cancel',
+      'region',
+      'currency',
+    ],
+    body: `Paid plans open soon, and we will announce the start date 30 days ahead. Until then every course is free during early access, and the courses you join now stay yours, also when paid plans open. Courses marked **Free** stay free for everyone.
+
+When paid plans open:
+
+- **Membership** opens every paid course, with more study help each day. Try it free for 7 days and cancel any time.
+- **Single courses** are yours to keep, if you would rather buy only the courses you want.
+- **Family** gives everything in Membership to up to ${FAMILY_MAX_PEOPLE} people in one household, paid yearly.
+- **Community** seats are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, paid yearly for each seat.
+- **Founding members** (everyone who joins during early access, and the first ${FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members) pay less for a year of Membership.
+
+Gifts and sponsored places open together with paid plans.
+
+## Prices in your country
+
+Prices follow local incomes, so people everywhere can afford them, and include taxes. [Plans & Pricing](/plans-and-pricing) shows the prices for your country:
+
+${pricesInEachRegion}
+
+## Cancelling and refunds
+
+Cancel any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within 14 days, and in part after that.`,
   },
   {
     slug: 'using-the-lesson-player',
@@ -378,7 +458,7 @@ Once approved, **Instructor** appears in your menu and you can start building co
       'course editor',
     ],
     body: `1. Open **Instructor** in your menu, enter a title, choose a category and create the course.
-2. Fill in the **details**: subtitle, level, the name learners see, a description and what learners will learn (one outcome per line).
+2. Fill in the **details**: subtitle, level, the name learners see, a description, what learners will learn (one outcome per line) and the [price](/help/offering-a-free-course).
 3. Build the **curriculum**: add sections, then lessons in each section. A lesson is a video, a PDF or text. Use the arrows to reorder.
 4. Tick **free preview** on a lesson or two so people can try the course.
 5. Add a **cover image** (optional but recommended).
@@ -429,14 +509,24 @@ If an upload fails, check your connection and the file type, then try again. Ver
   {
     slug: 'offering-a-free-course',
     topic: 'teaching',
-    title: 'Offering a course for free',
-    summary: 'Free courses are listed in Explore and stay free for everyone.',
+    title: 'Choosing a price or offering a course for free',
+    summary: 'Choose Free, or one of five price tiers with a local price in every country.',
     audience: 'instructor',
     paths: ['/instructor/courses/*'],
-    keywords: ['free course', 'free', 'explore', 'price'],
-    body: `Tick **Offer this course for free** in the course details. Once the course is published it appears in [Explore](/explore) with a **Free** badge, and it stays free for everyone when paid plans start.
+    keywords: ['free course', 'free', 'explore', 'price', 'tier', 'pricing', 'cost'],
+    body: `Choose a **Price** in the course details: **Free**, or one of five tiers. A course needs one of them before you can submit it for review.
 
-Free courses are a good way to introduce your teaching; a short free course can lead learners to your longer ones.`,
+**Free** courses appear in [Explore](/explore) with a **Free** badge and stay free for everyone, also when paid plans start. A short free course is a good way to introduce your teaching and lead learners to your longer ones.
+
+**Tiers** match how substantial a course is:
+
+${courseTiers}
+
+Each tier has a local price in every country, so learners everywhere pay a price they can afford. For example, a Tier 2 course costs:
+
+${tierTwoPrices}
+
+During early access every course is free to join, so learners see your price struck through until paid plans open.`,
   },
   {
     slug: 'tips-for-a-great-course',
@@ -515,7 +605,7 @@ Open the bell to see recent notifications, or [see them all](/notifications). Op
     audience: 'staff',
     paths: ['/admin/courses', '/admin/courses/*'],
     keywords: ['review queue', 'publish', 'return', 'unpublish', 'course review'],
-    body: `**Admin > Courses** lists courses awaiting review, longest waiting first. Open one to see its details, curriculum and media.
+    body: `**Admin > Courses** lists courses awaiting review, longest waiting first. Open one to see its details (including its price in each region), curriculum and media.
 
 - **Publish** makes it live in the catalogue (and in Explore if it is free).
 - **Return** sends it back to draft with a required note telling the instructor what to change.

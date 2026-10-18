@@ -12,8 +12,8 @@ export function EarlyAccess({ signedIn }: { signedIn: boolean }) {
           Every course is free during early access
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-black/80">
-          Join any course today at no cost. Courses marked Free stay free for everyone, also when
-          subscription plans open.
+          Join any course today at no cost, and the courses you join stay yours when paid plans
+          open. Courses marked Free stay free for everyone.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
           {signedIn ? (
