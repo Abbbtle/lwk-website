@@ -38,7 +38,9 @@ new MailStack(app, 'lwk-mail', {
   terminationProtection: true,
   description: `LWK - mail for ${config.apexDomainName}: SES receiving and forwarding`,
   hostedZone: domain.hostedZone,
-  ...config.mail,
+  forwardedLocalParts: config.mail.forwardedLocalParts,
+  forwardToParameterName: config.mail.forwardToParameterName,
+  forwarderName: config.mail.forwarderName,
 });
 
 // The main address (and www) shows a coming-soon page until production launches. A stage can only

@@ -15,3 +15,7 @@ architecture and which stacks arrive in which phase.
 - `npm run deploy -- <StackName>` - deploy a stack
 
 The first deploy to a region needs `npx cdk bootstrap aws://455280338092/af-south-1`.
+
+Two stacks need personal addresses that stay out of the repository: `lwk-dev-monitoring` reads
+`ALERT_EMAIL` when deploying, and `lwk-mail` reads the Parameter Store parameter
+`/lwk/mail/forward-to`. See "Deploying" in the root README.
