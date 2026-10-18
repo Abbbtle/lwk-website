@@ -1,4 +1,4 @@
-import type { CourseTier } from '@/lib/pricing';
+import type { CoursePricing } from '@/lib/pricing';
 
 export type Level = 'Beginner' | 'Intermediate' | 'Advanced';
 
@@ -24,8 +24,8 @@ export type Course = {
   categorySlug: string;
   instructor: string;
   level: Level;
-  /** Price tier for buying the course on its own; null for free courses and until one is chosen. */
-  priceTier: CourseTier | null;
+  /** Free, a price tier for buying it on its own, or unpriced (no tier chosen yet). */
+  pricing: CoursePricing;
   outcomes: string[];
   sections: Section[];
 };
@@ -38,7 +38,7 @@ export type CourseSummary = Course & {
   coverUrl: string | null;
   /** First free-preview lesson, if any. */
   previewLessonId: string | null;
-  /** Free for everyone (listed in Explore). */
+  /** Free for everyone (listed in Explore): the same as `pricing.kind === 'free'`. */
   isFree: boolean;
   /** Sample content for testing. */
   isSample: boolean;

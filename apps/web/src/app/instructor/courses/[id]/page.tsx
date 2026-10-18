@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { MediaUploader } from '@/components/media-uploader';
 import { StatusBadge } from '@/components/status-badge';
 import { priceFieldValue } from '@/lib/forms/course';
+import { coursePricing } from '@/lib/pricing';
 import { aiConfig } from '@/server/ai/config';
 import { hasRole, requireRole } from '@/server/auth/session';
 import { AuthoringError, getCourseForEditing, reviewChecklist } from '@/server/authoring';
@@ -68,7 +69,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
                 level: course.level,
                 instructorName: course.instructorName,
                 outcomes: course.outcomes.join('\n'),
-                price: priceFieldValue(course),
+                price: priceFieldValue(coursePricing(course)),
               }}
             />
           </section>

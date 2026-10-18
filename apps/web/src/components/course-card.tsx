@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { CoursePrice } from '@/components/course-price';
 import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, joinParts, plural } from '@/lib/format';
-import { coursePrice, formatMoney, type PriceRegion } from '@/lib/pricing';
+import type { PriceRegion } from '@/lib/pricing';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
 export function CourseCard({
@@ -54,11 +55,7 @@ export function CourseCard({
           ])}
         </p>
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <span className="text-lg font-bold">
-            {!course.isFree && course.priceTier !== null
-              ? formatMoney(coursePrice(course.priceTier, region))
-              : 'Free'}
-          </span>
+          <CoursePrice pricing={course.pricing} region={region} variant="card" />
           {/* The whole card links to the course; this is the visual call to action. */}
           <span aria-hidden className="btn-outline px-4 py-2 text-sm">
             {course.isFree ? 'Start free' : 'Enroll Now'}

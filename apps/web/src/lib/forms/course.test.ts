@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { CoursePricing } from '@/lib/pricing';
 import { courseDetailsSchema, priceFieldValue, priceOptions } from './course';
 
 const details = {
@@ -8,7 +9,7 @@ const details = {
   instructorName: 'Japa Teacher',
 };
 
-const priceFrom = (fields: Record<string, string>) =>
+const pricingFrom = (fields: Record<string, string>) =>
   courseDetailsSchema.safeParse({ ...details, ...fields });
 
 describe('course price field', () => {
@@ -17,32 +18,32 @@ describe('course price field', () => {
     expect(priceOptions[2].label).toBe('Tier 2 · Standard · R199 · $19.99 · ₹549');
   });
 
-  it('reads free, a tier, or no choice yet', () => {
-    expect(priceFrom({ price: 'free' }).data?.price).toBe('free');
-    expect(priceFrom({ price: '3' }).data?.price).toBe(3);
-    expect(priceFrom({ price: '' }).data?.price).toBeNull();
+  it('reads free, a tier, or unpriced', () => {
+    expect(pricingFrom({ price: 'free' }).data?.price).toEqual({ kind: 'free' });
+    expect(pricingFrom({ price: '3' }).data?.price).toEqual({ kind: 'tier', tier: 3 });
+    expect(pricingFrom({ price: '' }).data?.price).toEqual({ kind: 'unpriced' });
     // Browsers leave the field out while the placeholder is selected.
-    expect(priceFrom({}).data?.price).toBeNull();
+    expect(pricingFrom({}).data?.price).toEqual({ kind: 'unpriced' });
   });
 
   it('rejects anything else', () => {
     for (const price of ['0', '6', '2.0', 'paid']) {
-      expect(priceFrom({ price }).error?.issues[0], price).toMatchObject({
+      expect(pricingFrom({ price }).error?.issues[0], price).toMatchObject({
         path: ['price'],
         message: 'Choose a price.',
       });
     }
   });
 
-  it('shows the saved choice again', () => {
-    expect(priceFieldValue({ isFree: true, priceTier: null })).toBe('free');
-    expect(priceFieldValue({ isFree: false, priceTier: 4 })).toBe('4');
-    expect(priceFieldValue({ isFree: false, priceTier: null })).toBe('');
-    for (const option of priceOptions) {
-      const price = priceFrom({ price: option.value }).data?.price ?? null;
-      const saved =
-        price === 'free' ? { isFree: true, priceTier: null } : { isFree: false, priceTier: price };
-      expect(priceFieldValue(saved)).toBe(option.value);
+  it('shows the saved pricing again', () => {
+    const kinds: CoursePricing[] = [
+      { kind: 'free' },
+      { kind: 'tier', tier: 4 },
+      { kind: 'unpriced' },
+    ];
+    expect(kinds.map(priceFieldValue)).toEqual(['free', '4', '']);
+    for (const pricing of kinds) {
+      expect(pricingFrom({ price: priceFieldValue(pricing) }).data?.price).toEqual(pricing);
     }
   });
 });

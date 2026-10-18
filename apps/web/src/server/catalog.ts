@@ -1,7 +1,7 @@
 import 'server-only';
 import type { CourseLevel, Prisma } from '@/generated/prisma/client';
 import type { Category, CourseSummary, Level } from '@/lib/catalog/types';
-import { isCourseTier } from '@/lib/pricing';
+import { coursePricing } from '@/lib/pricing';
 import { getDb } from './db';
 import { signedMediaUrl } from './media';
 
@@ -40,6 +40,7 @@ function toCategory(row: CategoryRow): Category {
 }
 
 async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
+  const pricing = coursePricing(row);
   const sections = row.sections.map((s) => ({
     title: s.title,
     lessonCount: s.lessons.length,
@@ -54,16 +55,14 @@ async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
     category: toCategory(row.category),
     instructor: row.instructorName,
     level: levelLabels[row.level],
-    // A free course has no price, even if a tier was left behind (an older release can make a
-    // course free without clearing it).
-    priceTier: !row.isFree && isCourseTier(row.priceTier) ? row.priceTier : null,
+    pricing,
     outcomes: row.outcomes,
     sections,
     coverUrl: row.coverKey ? await signedMediaUrl(row.coverKey) : null,
     previewLessonId: row.sections.flatMap((s) => s.lessons).find((l) => l.isPreview)?.id ?? null,
     lessonCount: sections.reduce((sum, s) => sum + s.lessonCount, 0),
     durationMinutes: sections.reduce((sum, s) => sum + s.durationMinutes, 0),
-    isFree: row.isFree,
+    isFree: pricing.kind === 'free',
     isSample: row.isSample,
   };
 }

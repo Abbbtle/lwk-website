@@ -5,18 +5,17 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { CoursePrice } from '@/components/course-price';
 import { JsonLd } from '@/components/json-ld';
 import { RichText } from '@/components/rich-text';
-import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, joinParts, plural } from '@/lib/format';
 import {
-  coursePrice,
-  toDecimalString,
-  formatMoney,
+  type CoursePricing,
+  courseListPrice,
   formatRecurring,
-  freePrice,
   membershipLeadPrice,
   type PriceRegion,
+  toDecimalString,
 } from '@/lib/pricing';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
@@ -40,15 +39,16 @@ export async function generateMetadata({
   };
 }
 
-/** For search engines: free, or what the course costs the visitor once paid plans open. */
-function courseOffer(course: CourseSummary, region: PriceRegion) {
-  const price = course.isFree
-    ? freePrice(region)
-    : course.priceTier !== null && coursePrice(course.priceTier, region);
+/**
+ * For search engines: free, or what the course costs the visitor once paid plans open. A course
+ * without a price yet has no offer.
+ */
+function courseOffer(pricing: CoursePricing, region: PriceRegion) {
+  const price = courseListPrice(pricing, region);
   if (!price) return undefined;
   return {
     '@type': 'Offer',
-    category: course.isFree ? 'Free' : 'Paid',
+    category: pricing.kind === 'free' ? 'Free' : 'Paid',
     price: toDecimalString(price),
     priceCurrency: price.currency,
   };
@@ -63,8 +63,6 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
   ]);
   if (!course) notFound();
   const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
-  // Null for free courses and courses without a price yet.
-  const price = course.priceTier === null ? null : coursePrice(course.priceTier, region);
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -83,8 +81,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           description: course.subtitle || course.description,
           provider: { '@type': 'Organization', name: 'Living With Krishna' },
           educationalLevel: course.level,
-          isAccessibleForFree: course.priceTier === null,
-          offers: courseOffer(course, region),
+          isAccessibleForFree: course.pricing.kind === 'free',
+          offers: courseOffer(course.pricing, region),
           hasCourseInstance: {
             '@type': 'CourseInstance',
             courseMode: 'online',
@@ -198,22 +196,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               ) : (
                 <>
-                  {course.isFree ? (
-                    <>
-                      <p className="text-3xl font-extrabold">Free</p>
-                      <p className="text-sm text-gray-600">This course is free for everyone.</p>
-                    </>
-                  ) : (
-                    <>
-                      {price && (
-                        <p className="text-3xl font-extrabold">
-                          <span className="text-gray-500 line-through">{formatMoney(price)}</span>{' '}
-                          Free
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-600">Free during early access.</p>
-                    </>
-                  )}
+                  <CoursePrice pricing={course.pricing} region={region} variant="page" />
                   {session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand w-full">

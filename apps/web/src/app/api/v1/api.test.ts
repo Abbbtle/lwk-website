@@ -66,7 +66,12 @@ describe('GET /api/v1/courses/:slug', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toContain('public');
     const { data } = await response.json();
-    expect(data).toMatchObject({ slug: 'kirtan-basics', lessonCount: 15, priceTier: 3 });
+    expect(data).toMatchObject({
+      slug: 'kirtan-basics',
+      lessonCount: 15,
+      pricing: { kind: 'tier', tier: 3 },
+    });
+    expect(data).not.toHaveProperty('priceTier');
     expect(data).not.toHaveProperty('priceUsd');
   });
 

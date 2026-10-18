@@ -1,6 +1,7 @@
 import 'server-only';
 import type { LessonType, Prisma } from '@/generated/prisma/client';
 import type { CourseDetailsInput, LessonInput, NewCourseInput } from '@/lib/forms/course';
+import { type CoursePricing, coursePricing, coursePricingColumns } from '@/lib/pricing';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
 import {
@@ -33,6 +34,13 @@ const editorInclude = {
 } satisfies Prisma.CourseInclude;
 
 export type EditableCourse = Prisma.CourseGetPayload<{ include: typeof editorInclude }>;
+
+const PRICE_MISSING = 'Choose a price, or offer the course for free.';
+
+/** Only drafts may be unpriced: courses in review or live must be free or have a price tier. */
+export function assertPriced(pricing: CoursePricing) {
+  if (pricing.kind === 'unpriced') throw new AuthoringError('incomplete', PRICE_MISSING);
+}
 
 function canManage(session: Session, course: { instructorId: string | null }) {
   if (hasRole(session, 'admin')) return true;
@@ -165,6 +173,7 @@ export async function updateCourseDetails(
   input: CourseDetailsInput,
 ) {
   const course = await loadEditable(session, courseId);
+  if (course.status !== 'DRAFT') assertPriced(input.price);
   await getDb().course.update({
     where: { id: courseId },
     data: {
@@ -176,9 +185,7 @@ export async function updateCourseDetails(
       outcomes: input.outcomes,
       level: input.level,
       instructorName: input.instructorName,
-      // Free for everyone or a price tier, never both.
-      isFree: input.price === 'free',
-      priceTier: input.price === 'free' ? null : input.price,
+      ...coursePricingColumns(input.price),
       categoryId: await categoryId(input.categorySlug),
     },
   });
@@ -364,9 +371,7 @@ export function reviewChecklist(course: EditableCourse): string[] {
   if (!course.subtitle.trim()) missing.push('Add a subtitle.');
   if (!course.description.trim()) missing.push('Add a description.');
   if (course.outcomes.length === 0) missing.push('List at least one thing learners will learn.');
-  if (!course.isFree && course.priceTier === null) {
-    missing.push('Choose a price, or offer the course for free.');
-  }
+  if (coursePricing(course).kind === 'unpriced') missing.push(PRICE_MISSING);
   if (course.sections.length === 0) missing.push('Add at least one section.');
   for (const section of course.sections) {
     if (section.lessons.length === 0) missing.push(`Add a lesson to "${section.title}".`);

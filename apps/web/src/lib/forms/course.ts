@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { joinParts } from '@/lib/format';
 import {
   COURSE_TIERS,
-  type CourseTier,
+  type CoursePricing,
   coursePrice,
   courseTierTitle,
   formatMoney,
@@ -21,11 +21,8 @@ export const lessonTypeOptions = [
   { value: 'TEXT', label: 'Text' },
 ] as const;
 
-// The price field holds "free", a tier ("1" to "5"), or nothing while no price is chosen.
+// The price field holds "free", a tier ("1" to "5"), or nothing while the course is unpriced.
 const FREE = 'free';
-
-/** A course's price as chosen in the editor: free for everyone, a tier, or not chosen yet. */
-export type PriceChoice = 'free' | CourseTier | null;
 
 // Options show a tier's prices for these regions. The rest of the world is left out: a second
 // dollar amount would read as ambiguous.
@@ -43,15 +40,22 @@ export const priceOptions = [
   })),
 ];
 
-/** The price field's value for a course, the reverse of what the form schema reads. */
-export function priceFieldValue(course: { isFree: boolean; priceTier: number | null }): string {
-  if (course.isFree) return FREE;
-  return course.priceTier === null ? '' : String(course.priceTier);
+/** The price field's value for a course's pricing; the form schema reads it back. */
+export function priceFieldValue(pricing: CoursePricing): string {
+  switch (pricing.kind) {
+    case 'free':
+      return FREE;
+    case 'tier':
+      return String(pricing.tier);
+    case 'unpriced':
+      return '';
+  }
 }
 
-function toPriceChoice(value: string | undefined): PriceChoice {
-  if (value === FREE) return 'free';
-  return COURSE_TIERS.find((tier) => String(tier) === value) ?? null;
+function toCoursePricing(value: string | undefined): CoursePricing {
+  if (value === FREE) return { kind: 'free' };
+  const tier = COURSE_TIERS.find((option) => String(option) === value);
+  return tier === undefined ? { kind: 'unpriced' } : { kind: 'tier', tier };
 }
 
 const slug = z.string().regex(/^[a-z0-9-]{1,60}$/, 'Choose a category.');
@@ -72,7 +76,7 @@ export const courseDetailsSchema = z.object({
   price: z
     .enum(['', ...priceOptions.map((option) => option.value)], { error: 'Choose a price.' })
     .optional()
-    .transform(toPriceChoice),
+    .transform(toCoursePricing),
   // One outcome per line in the form.
   outcomes: z
     .string()

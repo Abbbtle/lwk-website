@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import type { ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { Curriculum } from '@/app/instructor/courses/[id]/curriculum';
@@ -9,10 +10,11 @@ import { CourseCover } from '@/components/course-cover';
 import { StatusBadge } from '@/components/status-badge';
 import { levelOptions } from '@/lib/forms/course';
 import {
+  type CoursePricing,
   coursePrice,
+  coursePricing,
   courseTierTitle,
   formatMoney,
-  isCourseTier,
   PRICE_REGIONS,
   regionName,
 } from '@/lib/pricing';
@@ -25,37 +27,38 @@ import { CourseDecisionForm } from './course-decision-form';
 
 export const metadata: Metadata = { title: 'Review course', robots: { index: false } };
 
-/** Whether the course is free, and otherwise its tier with the price in each region. */
-function CoursePriceNote({ isFree, priceTier }: { isFree: boolean; priceTier: number | null }) {
-  if (isFree) {
-    return (
-      <p className="border-l-4 border-brand bg-orange-50 p-3 text-sm">
-        The instructor offers this course <strong>for free</strong>: once published it is listed in
-        Explore and stays free for everyone.
-      </p>
-    );
+/** Whether the course is free, its tier with the price in each region, or that it has no price. */
+function CoursePriceNote({ pricing }: { pricing: CoursePricing }): ReactElement {
+  switch (pricing.kind) {
+    case 'free':
+      return (
+        <p className="border-l-4 border-brand bg-orange-50 p-3 text-sm">
+          The instructor offers this course <strong>for free</strong>: once published it is listed
+          in Explore and stays free for everyone.
+        </p>
+      );
+    case 'tier':
+      return (
+        <div className="border-l-4 border-gray-400 bg-white p-3 text-sm">
+          <p>
+            Price: <strong>{courseTierTitle(pricing.tier)}</strong>
+          </p>
+          <ul className="mt-1 grid gap-x-6 sm:grid-cols-2">
+            {PRICE_REGIONS.map((region) => (
+              <li key={region}>
+                {regionName(region)}: {formatMoney(coursePrice(pricing.tier, region))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    case 'unpriced':
+      return (
+        <p className="border-l-4 border-gray-400 bg-white p-3 text-sm">
+          No price has been chosen yet.
+        </p>
+      );
   }
-  if (!isCourseTier(priceTier)) {
-    return (
-      <p className="border-l-4 border-gray-400 bg-white p-3 text-sm">
-        No price has been chosen yet.
-      </p>
-    );
-  }
-  return (
-    <div className="border-l-4 border-gray-400 bg-white p-3 text-sm">
-      <p>
-        Price: <strong>{courseTierTitle(priceTier)}</strong>
-      </p>
-      <ul className="mt-1 grid gap-x-6 sm:grid-cols-2">
-        {PRICE_REGIONS.map((region) => (
-          <li key={region}>
-            {regionName(region)}: {formatMoney(coursePrice(priceTier, region))}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
 }
 
 export default async function ReviewCoursePage({ params }: PageProps<'/admin/courses/[id]'>) {
@@ -96,7 +99,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
               {course.category.name} · {levelOptions.find((l) => l.value === course.level)?.label} ·
               taught by {course.instructorName}
             </p>
-            <CoursePriceNote isFree={course.isFree} priceTier={course.priceTier} />
+            <CoursePriceNote pricing={coursePricing(course)} />
             <p className="whitespace-pre-line">{course.description}</p>
             {course.outcomes.length > 0 && (
               <ul className="grid gap-2 sm:grid-cols-2">

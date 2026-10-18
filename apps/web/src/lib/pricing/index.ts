@@ -2,6 +2,13 @@
 // code, safe in client components. The visitor's region comes from src/server/price-region.ts.
 
 export {
+  type CoursePricing,
+  type CoursePricingColumns,
+  courseListPrice,
+  coursePricing,
+  coursePricingColumns,
+} from './course-pricing';
+export {
   COURSE_TIERS,
   type CourseTier,
   courseTierName,

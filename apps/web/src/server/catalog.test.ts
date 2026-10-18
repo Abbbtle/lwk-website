@@ -55,7 +55,7 @@ describe('getCourse', () => {
     expect(course).toMatchObject({
       title: 'Mastering Harmonium',
       level: 'Intermediate',
-      priceTier: 3,
+      pricing: { kind: 'tier', tier: 3 },
       lessonCount: 20,
       durationMinutes: 210,
       category: { slug: 'kirtan' },
@@ -73,29 +73,43 @@ describe('getCourse', () => {
   });
 });
 
-describe('course prices', () => {
-  it('never give a free course a price tier', async () => {
+describe('course pricing', () => {
+  it('is free, a tier or unpriced, with free winning over a tier left behind', async () => {
     const db = getDb();
     const category = await db.category.findUniqueOrThrow({ where: { slug: 'kirtan' } });
-    // As an older release can leave it: made free without clearing the tier.
-    const course = await db.course.create({
-      data: {
-        slug: 'free-with-old-tier',
-        title: 'Free With Old Tier',
-        subtitle: 'Free',
-        description: 'Free',
-        level: 'BEGINNER',
-        status: 'PUBLISHED',
-        instructorName: 'Test',
-        categoryId: category.id,
-        isFree: true,
-        priceTier: 4,
-      },
-    });
+    const cases = [
+      // As an older release can leave it: made free without clearing the tier.
+      { slug: 'free-with-old-tier', isFree: true, priceTier: 4, pricing: { kind: 'free' } },
+      // Published before prices existed.
+      { slug: 'published-unpriced', isFree: false, priceTier: null, pricing: { kind: 'unpriced' } },
+    ];
+    const created = await Promise.all(
+      cases.map(({ slug, isFree, priceTier }) =>
+        db.course.create({
+          data: {
+            slug,
+            title: slug,
+            subtitle: 'Pricing',
+            description: 'Pricing',
+            level: 'BEGINNER',
+            status: 'PUBLISHED',
+            instructorName: 'Test',
+            categoryId: category.id,
+            isFree,
+            priceTier,
+          },
+        }),
+      ),
+    );
     try {
-      expect(await getCourse(course.slug)).toMatchObject({ isFree: true, priceTier: null });
+      for (const { slug, pricing } of cases) {
+        expect(await getCourse(slug), slug).toMatchObject({
+          pricing,
+          isFree: pricing.kind === 'free',
+        });
+      }
     } finally {
-      await db.course.delete({ where: { id: course.id } });
+      await db.course.deleteMany({ where: { id: { in: created.map((course) => course.id) } } });
     }
   });
 });
