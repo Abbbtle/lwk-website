@@ -58,7 +58,7 @@ const PRICES: Record<PriceRegion, RegionPrices> = {
 export const FAMILY_MAX_PEOPLE = 5;
 /** Community plans, for temples, schools and study groups, start at this many seats. */
 export const COMMUNITY_MIN_SEATS = 5;
-/** The founding-member price is for everyone who joins during early access and the first members. */
+/** How many first members get the founding price, besides everyone joining in early access. */
 export const FOUNDING_MEMBER_PLACES = 1000;
 
 const MONTHS_IN_A_YEAR = 12;

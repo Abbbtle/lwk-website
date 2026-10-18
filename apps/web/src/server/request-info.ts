@@ -1,5 +1,6 @@
 import 'server-only';
 import { headers } from 'next/headers';
+import { toCountryCode } from '@/lib/country-code';
 
 /**
  * The visitor's IP address. In AWS every request arrives through CloudFront, which sets
@@ -32,8 +33,7 @@ export async function viewerCountry(): Promise<string | null> {
 
 export function countryFromHeaders(h: Headers): string | null {
   const standIn = process.env.NODE_ENV === 'production' ? undefined : process.env.PRICE_COUNTRY;
-  const code = (standIn || h.get('cloudfront-viewer-country'))?.trim().toUpperCase();
-  return code && /^[A-Z]{2}$/.test(code) ? code : null;
+  return toCountryCode(standIn || h.get('cloudfront-viewer-country'));
 }
 
 /** CloudFront's request ID, for matching log lines to a request. */

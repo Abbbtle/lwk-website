@@ -1,3 +1,4 @@
+import { toCountryCode } from '@/lib/country-code';
 import type { Currency } from './money';
 
 // Prices follow local incomes, so people everywhere can afford them: each visitor's country falls
@@ -44,8 +45,8 @@ const HIGH_INCOME_COUNTRIES = new Set(
  * counts as South Africa, the home market (local development has no country either).
  */
 export function regionForCountry(country: string | null | undefined): PriceRegion {
-  const code = country?.trim().toUpperCase();
-  if (!code || !/^[A-Z]{2}$/.test(code) || code === 'ZA') return 'south-africa';
+  const code = toCountryCode(country);
+  if (code === null || code === 'ZA') return 'south-africa';
   if (code === 'IN') return 'india';
   return HIGH_INCOME_COUNTRIES.has(code) ? 'high-income' : 'rest-of-world';
 }
