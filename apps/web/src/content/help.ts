@@ -426,7 +426,7 @@ To change the email address you log in with, [contact support](/support/new?cate
     ],
     body: `Under [Account > Privacy & data](/account/privacy) you can:
 
-- **Download your data**: your profile, enrollments, progress, applications, support requests and account activity, as a file.
+- **Download your data**: your profile, enrollments, progress, course access and memberships, applications, support requests and account activity, as a file.
 - **Delete your account**: removes your sign-in and your learning history for good. You confirm by typing DELETE and entering your password.
 
 Instructors who teach courses, and the last remaining admin, need to [contact support](/support/new?category=ACCOUNT) first so their courses or duties can be handed over.`,

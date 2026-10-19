@@ -21,8 +21,9 @@ export default async function PrivacyPage() {
           Download your data
         </h2>
         <p className="mt-5 text-gray-700">
-          Get a copy of everything we store about you: your profile, enrollments, progress,
-          applications, messages you sent us and your account activity, as a JSON file.
+          Get a copy of everything we store about you: your profile, enrollments, progress, course
+          access and memberships, applications, messages you sent us and your account activity, as a
+          JSON file.
         </p>
         <a href="/api/v1/me/export" download className="btn-outline mt-5">
           Download my data

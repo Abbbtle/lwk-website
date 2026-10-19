@@ -4,7 +4,7 @@ import { CourseCover } from '@/components/course-cover';
 import { GettingStarted } from '@/components/getting-started';
 import { plural } from '@/lib/format';
 import { requireSession } from '@/server/auth/session';
-import { listMyLearning } from '@/server/learning';
+import { accessLockMessage, listMyLearning } from '@/server/learning';
 import { learnerChecklist } from '@/server/onboarding';
 
 export const metadata: Metadata = { title: 'My Learning', robots: { index: false } };
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'My Learning', robots: { index: false
 export default async function MyLearningPage() {
   const session = await requireSession('/my-learning');
   const [courses, checklist] = await Promise.all([
-    listMyLearning(session.userId),
+    listMyLearning(session),
     learnerChecklist(session.userId, session.mfaEnabled),
   ]);
 
@@ -69,6 +69,14 @@ export default async function MyLearningPage() {
                       ? 'Completed'
                       : `${course.percent}% · ${course.completedCount} of ${plural(course.totalLessons, 'lesson')}`}
                   </p>
+                  {course.accessEnded && (
+                    <p className="text-sm text-gray-700">
+                      {accessLockMessage('access_ended')}{' '}
+                      <Link href="/plans-and-pricing" className="font-semibold underline">
+                        See plans
+                      </Link>
+                    </p>
+                  )}
                   <Link href={`/learn/${course.slug}`} className="btn-solid w-full">
                     {course.completed
                       ? 'Review course'

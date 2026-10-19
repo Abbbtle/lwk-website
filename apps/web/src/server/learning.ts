@@ -1,17 +1,70 @@
 import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
-import { hasRole, type Session } from './auth/session';
+import {
+  type AccessDecision,
+  courseAccessColumns,
+  courseAccessFor,
+  courseAccessForEach,
+  type CourseForAccess,
+  recordEarlyAccess,
+} from './access';
+import type { Session } from './auth/session';
 import { getDb } from './db';
 import { signedMediaUrl } from './media';
 
-// Enrollment, the lesson player and progress. Enrollment is free during early access.
+// Enrollment, the lesson player and progress. Whether a course is open to someone is decided in
+// access.ts; learners open its lessons once enrolled, owners and admins without enrolling.
 
 export class LearningError extends Error {
   constructor(
-    readonly code: 'not_found' | 'not_enrolled',
+    readonly code: 'not_found' | 'not_enrolled' | 'payment_required',
     message: string,
   ) {
     super(message);
+  }
+}
+
+/** What keeps a viewer from a course's lessons (free previews always open). */
+export type LessonLock =
+  /** Signed out. */
+  | 'sign_in'
+  /** The course is open to them once they enroll. */
+  | 'enroll'
+  /** A priced course they have no grant or membership for. */
+  | 'payment_required'
+  /** A course without a price yet, once payments are on. */
+  | 'unpriced'
+  /** Enrolled, but their grant or membership no longer opens it. Their progress is kept. */
+  | 'access_ended';
+
+/** Locks that signing in or enrolling cannot lift: the course needs paying for or a price. */
+export type AccessLock = Extract<LessonLock, 'payment_required' | 'unpriced' | 'access_ended'>;
+
+export function isAccessLock(lock: LessonLock | null): lock is AccessLock {
+  return lock === 'payment_required' || lock === 'unpriced' || lock === 'access_ended';
+}
+
+/** What to tell someone a course is closed to, as enrolling refuses it and its pages say it. */
+export function accessLockMessage(lock: AccessLock): string {
+  switch (lock) {
+    case 'payment_required':
+      return 'Join Membership or buy this course to open every lesson.';
+    case 'unpriced':
+      return 'This course is not on sale yet.';
+    case 'access_ended':
+      return 'Your access to this course has ended.';
+  }
+}
+
+function lessonLock(access: AccessDecision, enrolled: boolean): LessonLock | null {
+  switch (access.kind) {
+    case 'manage':
+      return null;
+    case 'open':
+      return enrolled ? null : 'enroll';
+    case 'locked':
+      if (access.reason === 'signed_out') return 'sign_in';
+      return enrolled ? 'access_ended' : access.reason;
   }
 }
 
@@ -37,27 +90,44 @@ async function publishedCourse(slug: string): Promise<PlayerCourse> {
   return course;
 }
 
-/** Owners and admins can open a course without enrolling. */
-function manages(session: Session | null, course: { instructorId: string | null }) {
-  if (!session) return false;
-  return hasRole(session, 'admin') || course.instructorId === session.userId;
-}
-
 export async function getEnrollment(userId: string, courseId: string) {
   return getDb().enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
 }
 
-/** Enrollment state for a course page, by slug. */
-export async function getEnrollmentBySlug(userId: string, slug: string) {
-  return getDb().enrollment.findFirst({ where: { userId, course: { slug } } });
+/** The viewer's enrollment in a published course, and what keeps its lessons from them. */
+async function learnerState(session: Session | null, course: CourseForAccess) {
+  const [enrollment, access] = await Promise.all([
+    session ? getEnrollment(session.userId, course.id) : null,
+    courseAccessFor(session, course),
+  ]);
+  return { enrollment, lock: lessonLock(access, Boolean(enrollment)) };
 }
 
+/** The learner's enrollment and what keeps the lessons locked, for a course page, by slug. */
+export async function getLearnerState(session: Session, slug: string) {
+  const course = await getDb().course.findFirst({
+    where: { slug, status: 'PUBLISHED' },
+    select: courseAccessColumns,
+  });
+  if (!course) throw new LearningError('not_found', 'Course not found.');
+  return learnerState(session, course);
+}
+
+/**
+ * Enroll in a published course that is open to the learner. While payments are off, joining a
+ * course that is not free also records an early-access grant, so it stays theirs once they are on.
+ */
 export async function enroll(session: Session, slug: string) {
   const course = await publishedCourse(slug);
-  await getDb().enrollment.upsert({
-    where: { userId_courseId: { userId: session.userId, courseId: course.id } },
-    create: { userId: session.userId, courseId: course.id },
-    update: { lastActiveAt: new Date() },
+  const { lock } = await learnerState(session, course);
+  if (isAccessLock(lock)) throw new LearningError('payment_required', accessLockMessage(lock));
+  await getDb().$transaction(async (tx) => {
+    await tx.enrollment.upsert({
+      where: { userId_courseId: { userId: session.userId, courseId: course.id } },
+      create: { userId: session.userId, courseId: course.id },
+      update: { lastActiveAt: new Date() },
+    });
+    await recordEarlyAccess(tx, session.userId, course);
   });
   return course;
 }
@@ -68,6 +138,19 @@ async function completedLessonIds(userId: string, lessonIds: string[]) {
     select: { lessonId: true },
   });
   return new Set(rows.map((r) => r.lessonId));
+}
+
+/**
+ * Whether the viewer may read a lesson of a published course (its text, notes and media), as the
+ * player decides: free previews, and every lesson once nothing keeps the course from them.
+ */
+export async function canReadLesson(
+  session: Session | null,
+  lesson: { isPreview: boolean },
+  course: CourseForAccess,
+): Promise<boolean> {
+  if (lesson.isPreview) return true;
+  return (await learnerState(session, course)).lock === null;
 }
 
 export type PlayerLesson = PlayerCourse['sections'][number]['lessons'][number] & {
@@ -82,20 +165,20 @@ export type PlayerLesson = PlayerCourse['sections'][number]['lessons'][number] &
  */
 export async function getPlayer(session: Session | null, slug: string, lessonId?: string) {
   const course = await publishedCourse(slug);
-  const enrollment = session ? await getEnrollment(session.userId, course.id) : null;
-  const fullAccess = Boolean(enrollment) || manages(session, course);
-
   const flat = course.sections.flatMap((s) => s.lessons);
-  const completed = session
-    ? await completedLessonIds(
-        session.userId,
-        flat.map((l) => l.id),
-      )
-    : new Set<string>();
+  const [{ enrollment, lock }, completed] = await Promise.all([
+    learnerState(session, course),
+    session
+      ? completedLessonIds(
+          session.userId,
+          flat.map((l) => l.id),
+        )
+      : new Set<string>(),
+  ]);
   const lessons: PlayerLesson[] = flat.map((l) => ({
     ...l,
     completed: completed.has(l.id),
-    unlocked: fullAccess || l.isPreview,
+    unlocked: lock === null || l.isPreview,
   }));
 
   const current = lessonId
@@ -134,15 +217,18 @@ export async function getPlayer(session: Session | null, slug: string, lessonId?
     previous: lessons[index - 1] ?? null,
     next: lessons[index + 1] ?? null,
     enrolled: Boolean(enrollment),
-    canTrackProgress: Boolean(enrollment),
+    /** What keeps the locked lessons locked, or null when every lesson is open. */
+    lock,
+    canTrackProgress: Boolean(enrollment) && lock === null,
     completedCount: completed.size,
     totalLessons: lessons.length,
   };
 }
 
 /**
- * Save where the learner is and whether the lesson is done. Marks the enrollment complete
- * when every lesson in the course is complete.
+ * Save where the learner is and whether the lesson is done. Needs an enrollment in a course that
+ * is still open to the learner. Marks the enrollment complete when every lesson in the course is
+ * complete.
  */
 export async function saveProgress(
   session: Session,
@@ -151,14 +237,17 @@ export async function saveProgress(
 ) {
   const lesson = await getDb().lesson.findUnique({
     where: { id: lessonId },
-    include: { section: { include: { course: { select: { id: true, status: true } } } } },
+    include: {
+      section: { include: { course: { select: { ...courseAccessColumns, status: true } } } },
+    },
   });
   if (!lesson || lesson.section.course.status !== 'PUBLISHED') {
     throw new LearningError('not_found', 'Lesson not found.');
   }
   const courseId = lesson.section.course.id;
-  const enrollment = await getEnrollment(session.userId, courseId);
+  const { enrollment, lock } = await learnerState(session, lesson.section.course);
   if (!enrollment) throw new LearningError('not_enrolled', 'Enroll to track your progress.');
+  if (isAccessLock(lock)) throw new LearningError('payment_required', accessLockMessage(lock));
 
   const position =
     update.positionSeconds === undefined
@@ -207,10 +296,13 @@ export async function saveProgress(
   return { completedCount: done, totalLessons: total };
 }
 
-/** The learner's courses, most recently active first, with progress. */
-export async function listMyLearning(userId: string) {
+/**
+ * The learner's courses, most recently active first, with progress and whether their access has
+ * ended (their grant or membership no longer opens the course).
+ */
+export async function listMyLearning(session: Session) {
   const enrollments = await getDb().enrollment.findMany({
-    where: { userId, course: { status: 'PUBLISHED' } },
+    where: { userId: session.userId, course: { status: 'PUBLISHED' } },
     orderBy: { lastActiveAt: 'desc' },
     include: {
       course: {
@@ -221,10 +313,14 @@ export async function listMyLearning(userId: string) {
       },
     },
   });
+  const access = await courseAccessForEach(
+    session,
+    enrollments.map((e) => e.course),
+  );
   return Promise.all(
-    enrollments.map(async (e) => {
+    enrollments.map(async (e, index) => {
       const lessonIds = e.course.sections.flatMap((s) => s.lessons.map((l) => l.id));
-      const done = (await completedLessonIds(userId, lessonIds)).size;
+      const done = (await completedLessonIds(session.userId, lessonIds)).size;
       return {
         slug: e.course.slug,
         title: e.course.title,
@@ -238,6 +334,7 @@ export async function listMyLearning(userId: string) {
         completedCount: done,
         totalLessons: lessonIds.length,
         percent: lessonIds.length === 0 ? 0 : Math.round((done / lessonIds.length) * 100),
+        accessEnded: lessonLock(access[index], true) === 'access_ended',
       };
     }),
   );

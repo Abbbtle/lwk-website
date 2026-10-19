@@ -13,11 +13,12 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { z } from 'zod';
 import { enrollInCourse } from '@/app/courses/[slug]/actions';
+import { AccessLockNote } from '@/components/access-lock-note';
 import { HelpLink } from '@/components/help-link';
 import { RichText } from '@/components/rich-text';
 import { formatDuration, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
-import { getPlayer, LearningError, type PlayerLesson } from '@/server/learning';
+import { getPlayer, isAccessLock, LearningError, type PlayerLesson } from '@/server/learning';
 import { CompleteButton } from './complete-button';
 import { StudyHelp } from './study-help';
 import { VideoPlayer } from './video-player';
@@ -99,21 +100,27 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
           {!lesson.unlocked ? (
             <div className="space-y-4 rounded-card bg-surface p-8 text-center">
               <Lock className="mx-auto size-8 text-gray-500" aria-hidden />
-              <p className="text-lg font-semibold">Enroll to open this lesson.</p>
-              <p className="text-gray-700">Free during early access.</p>
-              {session ? (
-                <form action={enrollInCourse.bind(null, course.slug)}>
-                  <button type="submit" className="btn-brand">
-                    Enroll now
-                  </button>
-                </form>
+              {isAccessLock(player.lock) ? (
+                <AccessLockNote lock={player.lock} variant="lesson" />
               ) : (
-                <a
-                  href={`/sign-up?returnTo=${encodeURIComponent(lessonHref(lesson))}`}
-                  className="btn-brand"
-                >
-                  Sign up to enroll
-                </a>
+                <>
+                  <p className="text-lg font-semibold">Enroll to open this lesson.</p>
+                  <p className="text-gray-700">Free during early access.</p>
+                  {session ? (
+                    <form action={enrollInCourse.bind(null, course.slug)}>
+                      <button type="submit" className="btn-brand">
+                        Enroll now
+                      </button>
+                    </form>
+                  ) : (
+                    <a
+                      href={`/sign-up?returnTo=${encodeURIComponent(lessonHref(lesson))}`}
+                      className="btn-brand"
+                    >
+                      Sign up to enroll
+                    </a>
+                  )}
+                </>
               )}
             </div>
           ) : lesson.type === 'VIDEO' ? (

@@ -79,6 +79,62 @@ describe('self-service account', () => {
     expect(data.contactMessages).toHaveLength(1);
     expect(data.contactMessages[0]).not.toHaveProperty('id');
   });
+
+  it('exports course access, memberships and seats, without provider codes', async () => {
+    const [session, friend] = await Promise.all([person(), person()]);
+    const course = await getDb().course.findUniqueOrThrow({ where: { slug: 'kirtan-basics' } });
+    await getDb().courseAccess.create({
+      data: { userId: session.userId, courseId: course.id, source: 'EARLY_ACCESS' },
+    });
+    const membership = (payerId: string, plan: 'FAMILY_YEARLY' | 'COMMUNITY') =>
+      getDb().membership.create({
+        data: {
+          payerId,
+          plan,
+          region: 'south-africa',
+          currency: 'ZAR',
+          amountMinorUnits: 129900,
+          status: 'ACTIVE',
+          currentPeriodEnd: new Date('2027-11-01T00:00:00Z'),
+          providerCustomerCode: 'CUS_test',
+        },
+      });
+    const family = await membership(session.userId, 'FAMILY_YEARLY');
+    await getDb().membershipSeat.create({
+      data: { membershipId: family.id, invitedEmail: 'family@example.org' },
+    });
+    const community = await membership(friend.userId, 'COMMUNITY');
+    await getDb().membershipSeat.create({
+      data: {
+        membershipId: community.id,
+        userId: session.userId,
+        invitedEmail: session.email,
+        acceptedAt: new Date(),
+      },
+    });
+
+    const data = await exportAccountData(session.userId);
+    expect(data.courseAccess).toEqual([
+      {
+        course: 'Kirtan Basics',
+        source: 'EARLY_ACCESS',
+        grantedAt: expect.any(Date),
+        revokedAt: null,
+      },
+    ]);
+    expect(data.memberships).toEqual([
+      expect.objectContaining({
+        plan: 'FAMILY_YEARLY',
+        status: 'ACTIVE',
+        amountMinorUnits: 129900,
+        seats: [{ invitedEmail: 'family@example.org', acceptedAt: null }],
+      }),
+    ]);
+    expect(data.memberships[0]).not.toHaveProperty('providerCustomerCode');
+    expect(data.membershipSeats).toEqual([
+      expect.objectContaining({ plan: 'COMMUNITY', invitedEmail: session.email }),
+    ]);
+  });
 });
 
 describe('deleting an account', () => {

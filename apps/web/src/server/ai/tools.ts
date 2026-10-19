@@ -5,6 +5,7 @@ import { getArticle, searchHelp } from '@/lib/help';
 import { hasRole, type Session } from '../auth/session';
 import * as authoring from '../authoring';
 import { getDb } from '../db';
+import { canReadLesson } from '../learning';
 import { rateLimit } from '../rate-limit';
 import { getTicketForStaff } from '../support';
 import { AiToolError, generateStructured, WRITING_RULES } from './structured';
@@ -43,7 +44,7 @@ export const quizSchema = z.object({
 });
 export type Quiz = z.infer<typeof quizSchema>;
 
-/** The lesson, if this person may read it (enrolled, free preview, its instructor or an admin). */
+/** The lesson, if this person may read it, as the player decides (see canReadLesson). */
 async function readableLesson(session: Session, lessonId: string) {
   const lesson = await getDb().lesson.findUnique({
     where: { id: lessonId },
@@ -51,12 +52,7 @@ async function readableLesson(session: Session, lessonId: string) {
   });
   const course = lesson?.section.course;
   if (!lesson || !course || course.status !== 'PUBLISHED') return null;
-  if (lesson.isPreview || hasRole(session, 'admin') || course.instructorId === session.userId)
-    return lesson;
-  const enrolled = await getDb().enrollment.findUnique({
-    where: { userId_courseId: { userId: session.userId, courseId: course.id } },
-  });
-  return enrolled ? lesson : null;
+  return (await canReadLesson(session, lesson, course)) ? lesson : null;
 }
 
 /**

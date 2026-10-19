@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { coursePricingColumns } from '@/lib/pricing';
 import { testSession } from '../../../test/sessions';
 import type { Role } from '../auth/session';
 import * as authoring from '../authoring';
@@ -108,6 +109,10 @@ beforeEach(async () => {
   await getDb().rateLimit.deleteMany({});
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 afterAll(async () => {
   await getDb().course.deleteMany({ where: { slug: { startsWith: 'ai-tools-' } } });
   await getDb().course.deleteMany({ where: { instructorId: { not: null } } });
@@ -123,6 +128,28 @@ describe('practice quizzes', () => {
       'Lesson not found',
     );
     expect(bedrock.inputs).toHaveLength(0);
+  });
+
+  it('follow the access rule: enrollment while payments are off, then access too', async () => {
+    const course = await publishedCourse(lessonText);
+    await getDb().course.update({
+      where: { id: course.id },
+      data: coursePricingColumns({ kind: 'tier', tier: 2 }),
+    });
+    const lessonId = course.sections[0].lessons[0].id;
+    const student = await person();
+    await getDb().enrollment.create({ data: { userId: student.userId, courseId: course.id } });
+    bedrock.results.push(quiz);
+    expect((await lessonQuiz(student, lessonId)).questions).toHaveLength(3);
+
+    vi.stubEnv('PAYMENTS_ENABLED', 'true');
+    await expect(lessonQuiz(student, lessonId)).rejects.toThrow('Lesson not found');
+    await getDb().courseAccess.create({
+      data: { userId: student.userId, courseId: course.id, source: 'PURCHASE' },
+    });
+    // The stored quiz: no second model call.
+    expect((await lessonQuiz(student, lessonId)).questions).toHaveLength(3);
+    expect(bedrock.inputs).toHaveLength(1);
   });
 
   it('are made once, shared, and made again when the lesson changes', async () => {

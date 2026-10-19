@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { coursePricingColumns } from '@/lib/pricing';
 import { testSession } from '../../../test/sessions';
 import type { Role } from '../auth/session';
 import { getDb } from '../db';
@@ -89,6 +90,10 @@ beforeEach(async () => {
   bedrock.inputs = [];
   resetAiCircuit();
   await getDb().aiUsage.deleteMany({});
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 afterAll(async () => {
@@ -241,7 +246,20 @@ describe('assistant context', () => {
     const path = `/learn/${course.slug}/${course.sections[0].lessons[0].id}`;
     expect(await describePage(path, null)).not.toContain('hidden lesson text');
     const learner = await person();
+    expect(await describePage(path, learner)).not.toContain('hidden lesson text');
     await getDb().enrollment.create({ data: { userId: learner.userId, courseId: course.id } });
+    expect(await describePage(path, learner)).toContain('hidden lesson text');
+
+    // Once payments are on, a priced course needs access as well as enrollment.
+    await getDb().course.update({
+      where: { id: course.id },
+      data: coursePricingColumns({ kind: 'tier', tier: 2 }),
+    });
+    vi.stubEnv('PAYMENTS_ENABLED', 'true');
+    expect(await describePage(path, learner)).not.toContain('hidden lesson text');
+    await getDb().courseAccess.create({
+      data: { userId: learner.userId, courseId: course.id, source: 'EARLY_ACCESS' },
+    });
     expect(await describePage(path, learner)).toContain('hidden lesson text');
     await getDb().course.delete({ where: { id: course.id } });
   });

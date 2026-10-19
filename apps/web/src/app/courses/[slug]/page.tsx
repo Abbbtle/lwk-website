@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import { AccessLockNote } from '@/components/access-lock-note';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
 import { CoursePrice } from '@/components/course-price';
@@ -19,7 +20,7 @@ import {
 } from '@/lib/pricing';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
-import { getEnrollmentBySlug } from '@/server/learning';
+import { getLearnerState, isAccessLock, LearningError } from '@/server/learning';
 import { viewerPriceRegion } from '@/server/price-region';
 import { enrollInCourse } from './actions';
 
@@ -62,7 +63,14 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
     viewerPriceRegion(),
   ]);
   if (!course) notFound();
-  const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
+  const learner = session
+    ? await getLearnerState(session, slug).catch((error) => {
+        if (error instanceof LearningError) notFound();
+        throw error;
+      })
+    : null;
+  const enrollment = learner?.enrollment ?? null;
+  const lock = learner?.lock ?? null;
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -185,7 +193,9 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <div className="overflow-hidden rounded-card bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
-              {enrollment ? (
+              {lock === 'access_ended' ? (
+                <AccessLockNote lock={lock} variant="course" />
+              ) : enrollment ? (
                 <>
                   <p className="font-semibold">
                     {enrollment.completedAt ? 'You completed this course.' : 'You are enrolled.'}
@@ -197,7 +207,9 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
               ) : (
                 <>
                   <CoursePrice pricing={course.pricing} region={region} variant="page" />
-                  {session ? (
+                  {isAccessLock(lock) ? (
+                    <AccessLockNote lock={lock} variant="course" />
+                  ) : session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand w-full">
                         Enroll now
