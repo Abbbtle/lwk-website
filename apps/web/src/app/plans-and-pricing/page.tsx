@@ -208,7 +208,7 @@ export default async function PlansAndPricingPage() {
         <p className="mt-4 text-sm text-gray-600">
           Prices for {visitorRegionPhrase(region)}, {regionTaxNote(region)}.
         </p>
-        <p className="mx-auto mt-6 max-w-3xl bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
+        <p className="mx-auto mt-6 max-w-3xl rounded-card bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
           Paid plans open soon. Until then every course is free during early access, and the courses
           you join now stay yours.
         </p>
