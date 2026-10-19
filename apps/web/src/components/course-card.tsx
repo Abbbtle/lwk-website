@@ -1,16 +1,21 @@
 import Link from 'next/link';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { CoursePrice } from '@/components/course-price';
 import type { CourseSummary } from '@/lib/catalog/types';
-import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
+import { formatDuration, joinParts, plural } from '@/lib/format';
+import type { PriceRegion } from '@/lib/pricing';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
 export function CourseCard({
   course,
+  region,
   eager = false,
   sizes,
 }: {
   course: CourseSummary;
+  /** Whose prices to show (see viewerPriceRegion). */
+  region: PriceRegion;
   eager?: boolean;
   /** How wide the cover shows, when it differs from the usual grid (see CourseCover). */
   sizes?: string;
@@ -50,9 +55,7 @@ export function CourseCard({
           ])}
         </p>
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <span className="text-lg font-bold">
-            {!course.isFree && course.priceUsd !== null ? formatPrice(course.priceUsd) : 'Free'}
-          </span>
+          <CoursePrice pricing={course.pricing} region={region} variant="card" />
           {/* The whole card links to the course; this is the visual call to action. */}
           <span aria-hidden className="btn-outline px-4 py-2 text-sm">
             {course.isFree ? 'Start free' : 'Enroll Now'}
@@ -63,11 +66,11 @@ export function CourseCard({
   );
 }
 
-export function CourseGrid({ courses }: { courses: CourseSummary[] }) {
+export function CourseGrid({ courses, region }: { courses: CourseSummary[]; region: PriceRegion }) {
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((course, index) => (
-        <CourseCard key={course.slug} course={course} eager={index < 3} />
+        <CourseCard key={course.slug} course={course} region={region} eager={index < 3} />
       ))}
     </div>
   );
@@ -78,7 +81,7 @@ export function CourseGrid({ courses }: { courses: CourseSummary[] }) {
  * below the fold: covers load as the visitor scrolls, which keeps the first load light on slow
  * connections.
  */
-export function CourseRow({ courses }: { courses: CourseSummary[] }) {
+export function CourseRow({ courses, region }: { courses: CourseSummary[]; region: PriceRegion }) {
   return (
     <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3">
       {courses.map((course) => (
@@ -86,6 +89,7 @@ export function CourseRow({ courses }: { courses: CourseSummary[] }) {
           {/* Cards are 82% of the screen wide on phones, so a smaller cover is enough. */}
           <CourseCard
             course={course}
+            region={region}
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 82vw"
           />
         </li>

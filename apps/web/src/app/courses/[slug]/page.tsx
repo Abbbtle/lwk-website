@@ -5,12 +5,22 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
+import { CoursePrice } from '@/components/course-price';
 import { JsonLd } from '@/components/json-ld';
 import { RichText } from '@/components/rich-text';
-import { formatDuration, formatPrice, joinParts, plural } from '@/lib/format';
+import { formatDuration, joinParts, plural } from '@/lib/format';
+import {
+  type CoursePricing,
+  courseListPrice,
+  formatRecurring,
+  membershipLeadPrice,
+  type PriceRegion,
+  toDecimalString,
+} from '@/lib/pricing';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
 import { getEnrollmentBySlug } from '@/server/learning';
+import { viewerPriceRegion } from '@/server/price-region';
 import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.
@@ -29,9 +39,28 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * For search engines: free, or what the course costs the visitor once paid plans open. A course
+ * without a price yet has no offer.
+ */
+function courseOffer(pricing: CoursePricing, region: PriceRegion) {
+  const price = courseListPrice(pricing, region);
+  if (!price) return undefined;
+  return {
+    '@type': 'Offer',
+    category: pricing.kind === 'free' ? 'Free' : 'Paid',
+    price: toDecimalString(price),
+    priceCurrency: price.currency,
+  };
+}
+
 export default async function CoursePage({ params }: PageProps<'/courses/[slug]'>) {
   const { slug } = await params;
-  const [course, session] = await Promise.all([loadCourse(slug), getSession()]);
+  const [course, session, region] = await Promise.all([
+    loadCourse(slug),
+    getSession(),
+    viewerPriceRegion(),
+  ]);
   if (!course) notFound();
   const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
 
@@ -52,7 +81,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           description: course.subtitle || course.description,
           provider: { '@type': 'Organization', name: 'Living With Krishna' },
           educationalLevel: course.level,
-          isAccessibleForFree: course.isFree || course.priceUsd === null,
+          isAccessibleForFree: course.pricing.kind === 'free',
+          offers: courseOffer(course.pricing, region),
           hasCourseInstance: {
             '@type': 'CourseInstance',
             courseMode: 'online',
@@ -166,24 +196,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               ) : (
                 <>
-                  {course.isFree ? (
-                    <>
-                      <p className="text-3xl font-extrabold">Free</p>
-                      <p className="text-sm text-gray-600">This course is free for everyone.</p>
-                    </>
-                  ) : (
-                    <>
-                      {course.priceUsd !== null && (
-                        <p className="text-3xl font-extrabold">
-                          <span className="text-gray-500 line-through">
-                            {formatPrice(course.priceUsd)}
-                          </span>{' '}
-                          Free
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-600">Free during early access.</p>
-                    </>
-                  )}
+                  <CoursePrice pricing={course.pricing} region={region} variant="page" />
                   {session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand w-full">
@@ -209,10 +222,11 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               )}
               <p className="text-center text-sm text-gray-600">
-                Or access every course with a{' '}
+                Or get every course with a{' '}
                 <Link href="/plans-and-pricing" className="font-semibold underline">
-                  subscription plan
+                  Membership
                 </Link>
+                , {formatRecurring(membershipLeadPrice(region))}, when paid plans open.
               </p>
             </div>
           </div>

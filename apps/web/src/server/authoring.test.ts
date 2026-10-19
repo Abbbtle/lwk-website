@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
+import type { CourseDetailsInput } from '@/lib/forms/course';
+import type { CoursePricing } from '@/lib/pricing';
 import type { Session } from './auth/session';
 import * as authoring from './authoring';
 import { getDb } from './db';
@@ -24,16 +26,18 @@ async function person(roles: Session['roles'], name = 'Person'): Promise<Session
   return testSession(user, roles);
 }
 
-const details = {
+const details: CourseDetailsInput = {
   title: 'Japa Foundations',
   subtitle: 'Chant with attention',
   description: 'A practical course on japa.',
   categorySlug: 'vaisnava-etiquette',
-  level: 'BEGINNER' as const,
+  level: 'BEGINNER',
   instructorName: 'Japa Teacher',
-  isFree: false,
+  price: { kind: 'tier', tier: 2 },
   outcomes: ['Chant sixteen rounds steadily'],
 };
+
+const PRICE_MISSING = 'Choose a price, or offer the course for free.';
 
 describe('slugify', () => {
   it('makes readable, URL-safe slugs', () => {
@@ -152,6 +156,65 @@ describe('course authoring', () => {
     await authoring.withdrawSubmission(teacher, course.id);
     await authoring.addSection(teacher, course.id, 'Back to editing');
     expect((await authoring.getCourseForEditing(teacher, course.id)).status).toBe('DRAFT');
+  });
+
+  it('stores free, a price tier or unpriced, and asks for a price before review', async () => {
+    const teacher = await person(['instructor']);
+    const course = await authoring.createCourse(teacher, {
+      title: 'Pricing',
+      categorySlug: 'kirtan',
+    });
+    const reload = () => authoring.getCourseForEditing(teacher, course.id);
+    expect(authoring.reviewChecklist(await reload())).toContain(PRICE_MISSING);
+
+    const withPrice = (price: CoursePricing) =>
+      authoring.updateCourseDetails(teacher, course.id, { ...details, title: 'Pricing', price });
+    await withPrice({ kind: 'tier', tier: 4 });
+    expect(await reload()).toMatchObject({ isFree: false, priceTier: 4 });
+    expect(authoring.reviewChecklist(await reload())).not.toContain(PRICE_MISSING);
+
+    await withPrice({ kind: 'free' });
+    expect(await reload()).toMatchObject({ isFree: true, priceTier: null });
+    expect(authoring.reviewChecklist(await reload())).not.toContain(PRICE_MISSING);
+
+    // A draft may be unpriced again.
+    await withPrice({ kind: 'unpriced' });
+    expect(await reload()).toMatchObject({ isFree: false, priceTier: null });
+    expect(authoring.reviewChecklist(await reload())).toContain(PRICE_MISSING);
+  });
+
+  it('keeps a submitted course priced', async () => {
+    const teacher = await person(['instructor']);
+    const admin = await person(['admin']);
+    const course = await authoring.createCourse(teacher, {
+      title: 'Priced',
+      categorySlug: 'kirtan',
+    });
+    await authoring.updateCourseDetails(teacher, course.id, { ...details, title: 'Priced' });
+    await authoring.addSection(teacher, course.id, 'Section');
+    const section = (await authoring.getCourseForEditing(teacher, course.id)).sections[0];
+    const lesson = await authoring.addLesson(teacher, section.id, { title: 'L', type: 'TEXT' });
+    await authoring.updateLesson(teacher, lesson.id, {
+      title: 'L',
+      type: 'TEXT',
+      body: 'Text',
+      isPreview: true,
+      durationMinutes: 3,
+    });
+    await authoring.submitForReview(teacher, course.id);
+
+    const withPrice = (price: CoursePricing) =>
+      authoring.updateCourseDetails(admin, course.id, { ...details, title: 'Priced', price });
+    await expect(withPrice({ kind: 'unpriced' })).rejects.toMatchObject({
+      code: 'incomplete',
+      message: PRICE_MISSING,
+    });
+    await withPrice({ kind: 'free' });
+    expect(await authoring.getCourseForEditing(admin, course.id)).toMatchObject({
+      status: 'IN_REVIEW',
+      isFree: true,
+      priceTier: null,
+    });
   });
 
   it('flags video and PDF lessons that still need a file', async () => {

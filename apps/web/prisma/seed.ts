@@ -4,6 +4,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { config } from 'dotenv';
 import { type CourseLevel, PrismaClient } from '../src/generated/prisma/client';
 import type { Level } from '../src/lib/catalog/types';
+import { coursePricingColumns } from '../src/lib/pricing';
 import { categories, courses } from './seed-data';
 
 config({ path: ['.env.local', '.env'], quiet: true });
@@ -48,7 +49,7 @@ async function main() {
         level: levels[c.level],
         status: 'PUBLISHED' as const,
         instructorName: c.instructor,
-        priceCents: c.priceUsd === null ? null : c.priceUsd * 100,
+        ...coursePricingColumns(c.pricing),
         categoryId: categoryIds.get(c.categorySlug)!,
         publishedAt: new Date('2024-01-01T00:00:00Z'),
       };

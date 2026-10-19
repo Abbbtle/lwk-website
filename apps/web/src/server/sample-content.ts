@@ -1,5 +1,6 @@
 import 'server-only';
 import type { CourseLevel, ResourceType } from '@/generated/prisma/client';
+import { type CoursePricing, coursePricingColumns } from '@/lib/pricing';
 import { recordAudit } from './audit';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
@@ -9,6 +10,9 @@ import { getDb } from './db';
 // by "LWK Team", and admins remove it all in one step before launch.
 
 const AUTHOR = 'LWK Team';
+const FREE: CoursePricing = { kind: 'free' };
+// Paid samples carry a price, so testers see prices before real courses have them.
+const PAID: CoursePricing = { kind: 'tier', tier: 2 };
 const NOTE =
   'This is a sample course used to test the platform. It will be replaced by courses from our instructors.';
 
@@ -20,7 +24,7 @@ type SampleCourse = {
   subtitle: string;
   description: string;
   level: CourseLevel;
-  isFree: boolean;
+  pricing: CoursePricing;
   outcomes: string[];
   sections: { title: string; lessons: SampleLesson[] }[];
 };
@@ -33,7 +37,7 @@ const courses: SampleCourse[] = [
     subtitle: 'Sample course for testing: join your first kirtan with confidence.',
     description: `A short introduction to congregational chanting for newcomers.\n\n${NOTE}`,
     level: 'BEGINNER',
-    isFree: true,
+    pricing: FREE,
     outcomes: [
       'Understand what kirtan is and why devotees sing together',
       'Follow the call-and-response pattern of a kirtan',
@@ -100,7 +104,7 @@ Afterwards, thank the musicians. Many temples serve prasadam after kirtan, which
     subtitle: 'Sample course for testing: cook and offer a simple meal.',
     description: `Learn the standards of a devotional kitchen and cook a first simple offering.\n\n${NOTE}`,
     level: 'BEGINNER',
-    isFree: false,
+    pricing: PAID,
     outcomes: [
       'Explain what prasadam is',
       'Prepare your kitchen with care before cooking an offering',
@@ -160,7 +164,7 @@ After the offering, the food is prasadam. Eat it gratefully, share it, and avoid
     subtitle: 'Sample course for testing: feel at home on your first temple visit.',
     description: `What to expect when you visit a temple, and how to take part respectfully.\n\n${NOTE}`,
     level: 'BEGINNER',
-    isFree: true,
+    pricing: FREE,
     outcomes: [
       'Know what to expect on your first temple visit',
       'Greet devotees respectfully',
@@ -215,7 +219,7 @@ ${NOTE}`,
     subtitle: 'Sample course for testing: start reading the Gita with a steady habit.',
     description: `The setting and structure of the Bhagavad Gita, and how to read it day by day.\n\n${NOTE}`,
     level: 'BEGINNER',
-    isFree: false,
+    pricing: PAID,
     outcomes: [
       'Know the setting and structure of the Bhagavad Gita',
       'Read a verse with its translation and purport',
@@ -402,7 +406,7 @@ export async function loadSampleContent(session: Session) {
           level: course.level,
           status: 'PUBLISHED',
           instructorName: AUTHOR,
-          isFree: course.isFree,
+          ...coursePricingColumns(course.pricing),
           isSample: true,
           publishedAt: now,
           categoryId: categoryId(course.category),

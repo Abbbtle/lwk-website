@@ -12,14 +12,15 @@ We are building it ourselves from scratch in Next.js (the earlier Vite + React P
 `lwk/` was retired; its logo and icon were kept), targeting an enterprise-grade
 product hosted on AWS.
 
-**Decisions made (Sept 2026):**
+**Decisions made (Sept 2026, updated Oct 2026):**
 
 | Topic           | Decision                                                                                                                                |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | First milestone | Core web MVP (see Phase 1). Payments, quizzes, certificates, forums, DRM, CMS, mobile come later.                                       |
 | Framework       | Next.js 16 (App Router) full-stack: pages, server components and `/api/v1` Route Handlers in one app; replaces the separate Express API |
 | Hosting         | Next.js standalone Node server on one EC2 instance, PostgreSQL on RDS, CloudFront in front                                              |
-| Payments        | Decide later (Paystack, PayFast and Stripe are the candidates)                                                                          |
+| Payments        | Paystack for South Africa first; a merchant of record (Paddle, else Lemon Squeezy) for other countries. Built in Phase 14               |
+| Pricing         | Membership first, with regional prices; single courses too, in five tiers. One price matrix in `apps/web/src/lib/pricing` (Phase 13)    |
 | Domain          | None yet - use the CloudFront URL; add Route 53 + ACM certificate later                                                                 |
 | Git flow        | Feature branch -> `dev` -> `uat` -> `main`. Pull requests always target `dev` first.                                                    |
 | Design          | Follow the earlier POC at https://livingwithkrishna.netlify.app (see "Reference POC" below)                                             |
@@ -47,9 +48,9 @@ content reference: https://livingwithkrishna.netlify.app
   Temple), Sastra Study (Bhagavad Gita Deep Dive, Upanishads Study, Vedic Literature
   Overview, Sacred Texts Mastery, Philosophy of Bhakti).
 - **The POC's business model is subscriptions,** not per-course purchases: Solo,
-  Group and Classroom plans, monthly or annual billing, 14-day free trial. **Open
-  question for the payments phase:** subscriptions only, per-course purchases, or both.
-  The data model keeps both possible.
+  Group and Classroom plans, monthly or annual billing, 14-day free trial. **Decided
+  (Oct 2026): both** - Membership first, with single courses too; Membership, Family and
+  Community plans replace the POC's plans (see Phase 13).
 - **Instructor application form:** legal and initiated name, contact details,
   nationality, expertise, years of experience, degree, certifications, work and
   teaching experience, languages, motivation, teaching philosophy, strengths. This
@@ -137,7 +138,8 @@ packages/*         later: code shared between web and mobile
 - `Category` - id, name, slug
 - `Course` - id, slug, title, subtitle, description, thumbnailKey, language, level,
   categoryId, instructorId, status (`DRAFT` | `IN_REVIEW` | `PUBLISHED` | `ARCHIVED`),
-  priceCents (nullable, unused until payments), publishedAt
+  isFree and priceTier (1-5), read together as one pricing: free, a tier or unpriced (Phase 13;
+  replaced the deprecated priceCents), publishedAt
 - `Section` - id, courseId, title, position
 - `Lesson` - id, sectionId, title, type (`VIDEO` | `PDF` | `TEXT`), mediaKey, body,
   durationSec, isPreview, position
@@ -560,6 +562,73 @@ Status: DONE.
   follow changes made by replies; the remove-samples button stays, so its confirmation shows.
 - The browser tests of Phases 7 to 11 (106 checks) and 119 unit and integration tests pass.
 
+**Phase 13 - Pricing on the site**
+Regional prices on the site, for display only: checkout stays "opening soon" and enrolment stays
+free during early access. No payments, orders or checkout code.
+
+Status: DONE.
+
+- One price matrix in `apps/web/src/lib/pricing` (pure, client-safe, unit-tested) is the only
+  source of prices: Membership monthly and yearly, the founding-member yearly price (members who
+  join during early access and the first 1,000), Family yearly (up to 5 people in one household),
+  Community seats a year (from 5 seats) and five course tiers (Short, Standard, Full course,
+  In-depth, Major programme), each in four price regions. Amounts are whole minor units made by
+  one checked constructor, and include VAT or GST. India and the rest of the world have yearly
+  Membership only. The terms that go with the prices (Family size, minimum seats, founding
+  places, the 7-day trial, the 30-day refund window for every payment, 30 days' notice before paid plans open) are
+  constants beside them.
+- Price regions: South Africa (ZAR), India (INR), high-income countries (the World Bank list,
+  classification of 1 July 2026, reviewed each July; USD) and the rest of the world (USD). The
+  country comes from CloudFront's `CloudFront-Viewer-Country` header, which the origin request
+  policy `AllViewerAndCloudFrontHeaders-2022-06` forwards, and must be one of the 249 assigned ISO
+  3166-1 codes (`src/lib/country-code.ts`; "UK" is not one). Every country maps to a region; a
+  missing or unrecognised country gets the home region, South Africa. Pages read the region once
+  (`viewerPriceRegion()` in `src/server/price-region.ts`) and pass it down.
+- `PRICE_COUNTRY` (for example `PRICE_COUNTRY=IN` in `.env.local`) stands in for the header
+  outside production, to see another region's prices locally; production ignores it.
+- Courses have `price_tier` (1-5, enforced by a CHECK constraint). A course's pricing is one value,
+  free, a tier or unpriced (`CoursePricing` in `src/lib/pricing/course-pricing.ts`), read from
+  `is_free` and `price_tier` and written back in one place; free wins over a tier left behind.
+  Instructors choose Free or a tier in the course editor (the options show each tier's prices).
+  Only drafts may be unpriced: the review checklist asks for a price, admins cannot remove the
+  price of a submitted or live course, and a course without a price cannot be published. The admin
+  review page shows the tier's price in every region. Existing USD prices were mapped to the
+  nearest high-income tier; paid sample courses use tier 2.
+- During early access every course shows its price the same way, on cards and course pages (the
+  `CoursePrice` component): a free course says Free ("This course is free for everyone" on its
+  page); a priced course shows its local price struck through, then Free ("Free during early
+  access"); an unpriced course says Free on cards and "Free during early access" on its page. In
+  schema.org data `isAccessibleForFree` is true only for free courses, and there is an `Offer` for
+  free courses (price 0, category Free) and priced ones (the local price, category Paid), none for
+  unpriced ones.
+- The course page names the region's Membership price. `/plans-and-pricing` shows Free,
+  Membership, Family and Community for the visitor's region, the founding-member price and where
+  single courses start, with an FAQ; the help centre has a "Prices and plans" article. The public
+  API returns `pricing` (`{ kind: 'free' }`, `{ kind: 'tier', tier }` or `{ kind: 'unpriced' }`)
+  instead of `priceUsd`: the same in every region, so responses stay cacheable.
+- `price_cents` and `currency` are deprecated and no longer read or written. They stay for now
+  because deploys run migrations while the previous release still serves traffic (and can roll
+  back to it), and that release reads them; a later release drops them.
+- Verified: unit tests of the price list, money, billing periods, country codes, regions (every
+  country reaches a region, every region is reached), course pricing and the editor's price field,
+  service tests of pricing in authoring, review and the catalogue, and the pages rendered for each
+  region and each kind of pricing (CloudFront's country header sent to a local production build)
+  at desktop and 390 px phone width, with no horizontal scrolling.
+
+**Phase 14 - Payments** (next)
+Paystack checkout for South Africa first; a merchant of record (Paddle, else Lemon Squeezy) for
+other countries. Memberships (monthly and yearly, founding members, Family, Community seats) and
+single-course purchases; access rules (members open every paid course; bought courses and courses
+joined during early access stay); instructor earnings. Everything stays behind a
+`PAYMENTS_ENABLED` setting until paid plans open, and the start date is announced 30 days ahead.
+
+Status: NOT STARTED.
+
+- Follow-ups from Phase 13: a region-neutral, cacheable price-list endpoint and an uncached
+  endpoint for the visitor's price region, for the mobile apps; orders and subscriptions store the
+  amount, currency and region actually charged; checkout decides whether CloudFront's country
+  alone is trusted for the price region.
+
 **Turning AI on** (one time):
 
 1. Upgrade the AWS account to the Paid plan (Billing console, "Upgrade plan"). The Free plan
@@ -591,6 +660,9 @@ request each:
    review anything that is published.
 6. Phase 12 - Polish: accessibility audit, search engines, error pages and clean-up jobs
    (above).
+7. Phase 13 - Pricing on the site: regional prices for memberships and single courses, display
+   only (above).
+8. Phase 14 - Payments: checkout, memberships, access rules and instructor earnings.
 
 **AI access (checked 2026-09-30):** Bedrock lists the current Claude models in
 `af-south-1`, but the account cannot call them yet. The Anthropic use-case form has been
@@ -606,7 +678,7 @@ features fall back to non-AI help until access works.
 
 **Later phases (from the proposal)**
 
-- Payments and paid enrollment (provider TBD), revenue dashboard
+- Revenue dashboard (payments themselves are Phase 14)
 - Quizzes and assessments; automatic completion certificates (PDF)
 - Discussion forums / Q&A with moderator role and content flagging
 - Notifications and reminders (SES email, course calendars)

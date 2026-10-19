@@ -1,6 +1,7 @@
 import 'server-only';
 import type { CourseLevel, Prisma } from '@/generated/prisma/client';
 import type { Category, CourseSummary, Level } from '@/lib/catalog/types';
+import { coursePricing } from '@/lib/pricing';
 import { getDb } from './db';
 import { signedMediaUrl } from './media';
 
@@ -39,6 +40,7 @@ function toCategory(row: CategoryRow): Category {
 }
 
 async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
+  const pricing = coursePricing(row);
   const sections = row.sections.map((s) => ({
     title: s.title,
     lessonCount: s.lessons.length,
@@ -53,15 +55,14 @@ async function toCourseSummary(row: CourseRow): Promise<CourseSummary> {
     category: toCategory(row.category),
     instructor: row.instructorName,
     level: levelLabels[row.level],
-    // Prices are optional until pricing is decided; the UI hides a missing price.
-    priceUsd: row.priceCents === null ? null : row.priceCents / 100,
+    pricing,
     outcomes: row.outcomes,
     sections,
     coverUrl: row.coverKey ? await signedMediaUrl(row.coverKey) : null,
     previewLessonId: row.sections.flatMap((s) => s.lessons).find((l) => l.isPreview)?.id ?? null,
     lessonCount: sections.reduce((sum, s) => sum + s.lessonCount, 0),
     durationMinutes: sections.reduce((sum, s) => sum + s.durationMinutes, 0),
-    isFree: row.isFree,
+    isFree: pricing.kind === 'free',
     isSample: row.isSample,
   };
 }

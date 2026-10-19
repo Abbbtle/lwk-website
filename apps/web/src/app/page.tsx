@@ -13,6 +13,7 @@ import { ResourceGrid } from '@/components/resource-card';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
 import { getSession } from '@/server/auth/session';
 import { getCategories, searchCourses } from '@/server/catalog';
+import { viewerPriceRegion } from '@/server/price-region';
 import { listPublishedResources } from '@/server/resources';
 
 /** Two rows of the course grid. */
@@ -88,7 +89,7 @@ const faqs = [
   {
     question: 'How much does it cost?',
     answer:
-      'During early access every course is free to join. Courses marked Free stay free for everyone, also once subscription plans open.',
+      'During early access every course is free to join, and the courses you join stay yours when paid plans open. Courses marked Free stay free for everyone.',
   },
   {
     question: 'Do I need any experience?',
@@ -119,11 +120,12 @@ const faqs = [
 
 export default async function HomePage() {
   await connection();
-  const [categories, courses, resources, session] = await Promise.all([
+  const [categories, courses, resources, session, region] = await Promise.all([
     getCategories(),
     searchCourses(),
     listPublishedResources({ take: 3 }),
     getSession(),
+    viewerPriceRegion(),
   ]);
   const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
   const hasFreeContent = resources.length > 0 || courses.some((course) => course.isFree);
@@ -159,7 +161,7 @@ export default async function HomePage() {
                 View all courses
               </Link>
             </div>
-            <CourseRow courses={beginners} />
+            <CourseRow courses={beginners} region={region} />
           </div>
         </section>
       )}

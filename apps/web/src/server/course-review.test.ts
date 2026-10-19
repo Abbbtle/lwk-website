@@ -36,7 +36,7 @@ async function submittedCourse(teacher: Session, title: string) {
     categorySlug: 'prasadam',
     level: 'BEGINNER',
     instructorName: 'Teacher',
-    isFree: false,
+    price: { kind: 'tier', tier: 2 },
     outcomes: ['Cook'],
   });
   await authoring.addSection(teacher, course.id, 'Section');
@@ -63,7 +63,12 @@ describe('course review', () => {
 
     await publishCourse(admin, course.id);
     const live = await getCourse(course.slug);
-    expect(live).toMatchObject({ title: 'Festival Sweets', lessonCount: 1, instructor: 'Teacher' });
+    expect(live).toMatchObject({
+      title: 'Festival Sweets',
+      lessonCount: 1,
+      instructor: 'Teacher',
+      pricing: { kind: 'tier', tier: 2 },
+    });
 
     // Deciding twice fails instead of silently changing a live course.
     await expect(publishCourse(admin, course.id)).rejects.toMatchObject({ code: 'locked' });
@@ -76,6 +81,20 @@ describe('course review', () => {
       title: '"Festival Sweets" is published',
       href: `/courses/${course.slug}`,
     });
+  });
+
+  it('refuses to publish a course without a price', async () => {
+    const [teacher, admin] = await Promise.all([person(['instructor']), person(['admin'])]);
+    const course = await submittedCourse(teacher, 'Unpriced Sweets');
+    // As a course submitted before prices existed: in review without a tier.
+    await getDb().course.update({ where: { id: course.id }, data: { priceTier: null } });
+
+    await expect(publishCourse(admin, course.id)).rejects.toMatchObject({
+      code: 'incomplete',
+      message: 'Choose a price, or offer the course for free.',
+    });
+    expect((await authoring.getCourseForEditing(admin, course.id)).status).toBe('IN_REVIEW');
+    expect(await getCourse(course.slug)).toBeUndefined();
   });
 
   it('returning requires a note and sends the course back to draft', async () => {
@@ -113,7 +132,7 @@ describe('course review', () => {
       categorySlug: 'prasadam',
       level: 'BEGINNER',
       instructorName: 'Teacher',
-      isFree: false,
+      price: { kind: 'tier', tier: 2 },
       outcomes: ['Cook'],
     });
     expect((await authoring.getCourseForEditing(teacher, course.id)).slug).toBe(course.slug);

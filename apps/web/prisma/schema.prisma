@@ -59,7 +59,11 @@ model Course {
   instructor     User?        @relation("taught", fields: [instructorId], references: [id])
   // Name shown to learners ("Taught by"); defaults to the owner's name.
   instructorName String       @map("instructor_name")
-  // Nullable until pricing is decided in the payments phase.
+  // Price tier 1-5 for single-course sales; each tier has a price per region in src/lib/pricing.
+  // Null for free courses and until the instructor chooses a price.
+  priceTier      Int?         @map("price_tier") @db.SmallInt
+  // Deprecated: replaced by priceTier and no longer read or written. A later release drops both;
+  // until then they stay because the previous release, which a deploy can roll back to, reads them.
   priceCents     Int?         @map("price_cents")
   currency       String       @default("USD") @db.Char(3)
   // S3 key of the cover image, if uploaded.

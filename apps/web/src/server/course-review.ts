@@ -1,7 +1,8 @@
 import 'server-only';
+import { coursePricing } from '@/lib/pricing';
 import { recordAudit } from './audit';
 import { hasRole, type Session } from './auth/session';
-import { AuthoringError } from './authoring';
+import { assertPriced, AuthoringError } from './authoring';
 import { getDb } from './db';
 import { notify } from './notifications';
 
@@ -80,7 +81,10 @@ async function transition(
 }
 
 export async function publishCourse(session: Session, courseId: string) {
+  assertAdmin(session);
   const course = await getDb().course.findUnique({ where: { id: courseId } });
+  // Courses submitted before prices existed can still be in the queue without one.
+  if (course) assertPriced(coursePricing(course));
   await transition(
     session,
     courseId,
