@@ -237,7 +237,9 @@ model InstructorApplication {
   @@map("instructor_applications")
 }
 
-// A learner's place in a course. Free during early access; payments come later.
+// A learner's place in a course. enrolled_at records who joined during early access (src/server/
+// access.ts), so it is never rewritten. Enrolments are deleted only with the account or the course:
+// a future "unenrol" must hide the place, not delete it.
 model Enrollment {
   id           String    @id @default(uuid(7)) @db.Uuid
   userId       String    @map("user_id") @db.Uuid

@@ -3,7 +3,8 @@ import type { AccessSource, Prisma } from '@/generated/prisma/client';
 import { type CoursePricing, coursePricing } from '@/lib/pricing';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
-import { earlyAccessEndsAt, salesPhase } from './early-access';
+import { salesPhase } from '@/lib/early-access';
+import { earlyAccessEndsAt } from './early-access';
 import {
   type MembershipStanding,
   membershipOpensCourses,

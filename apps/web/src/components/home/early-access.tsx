@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatEarlyAccessEnd } from '@/server/early-access';
+import { formatEarlyAccessEnd } from '@/lib/early-access';
 
 /**
  * The early access offer, as a large saffron panel, with its end date once one is set. Shown only

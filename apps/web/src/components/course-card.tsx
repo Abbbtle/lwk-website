@@ -5,7 +5,7 @@ import { CoursePrice } from '@/components/course-price';
 import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, joinParts, plural } from '@/lib/format';
 import type { PriceRegion } from '@/lib/pricing';
-import type { SalesPhase } from '@/server/early-access';
+import type { SalesPhase } from '@/lib/early-access';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
 export function CourseCard({

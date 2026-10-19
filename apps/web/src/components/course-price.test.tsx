@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CoursePricing } from '@/lib/pricing';
-import type { SalesPhase } from '@/server/early-access';
+import type { SalesPhase } from '@/lib/early-access';
 import { CoursePrice } from './course-price';
 
 /** The price box's text on a course page, without markup. */

@@ -2,6 +2,7 @@ import { Check } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Faq } from '@/components/faq';
+import { formatEarlyAccessEnd, type SalesPhase } from '@/lib/early-access';
 import {
   billingPeriodPhrase,
   COMMUNITY_MIN_SEATS,
@@ -27,16 +28,11 @@ import {
   REFUND_WINDOW_DAYS,
   yearlySavingPercent,
 } from '@/lib/pricing';
-import {
-  earlyAccessEndsAt,
-  formatEarlyAccessEnd,
-  salesPhase,
-  type SalesPhase,
-} from '@/server/early-access';
+import { currentSalesMoment, currentSalesPhase } from '@/server/early-access';
 import { viewerPriceRegion } from '@/server/price-region';
 
 export function generateMetadata(): Metadata {
-  const earlyAccess = salesPhase(earlyAccessEndsAt(), new Date()) === 'early_access';
+  const earlyAccess = currentSalesPhase() === 'early_access';
   return {
     title: 'Plans & Pricing',
     description: `Membership, Family and Community plans and single courses, priced for your country.${
@@ -227,8 +223,7 @@ function PlanCard({ plan }: { plan: Plan }) {
 
 export default async function PlansAndPricingPage() {
   const region = await viewerPriceRegion();
-  const endsAt = earlyAccessEndsAt();
-  const phase = salesPhase(endsAt, new Date());
+  const { phase, earlyAccessEndsAt: endsAt } = currentSalesMoment();
   const earlyAccess = phase === 'early_access';
   const { yearly } = membershipPrices(region);
   return (

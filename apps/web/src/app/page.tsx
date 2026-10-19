@@ -11,9 +11,10 @@ import { MissionTile } from '@/components/home/mission-tile';
 import { sectionHeading, textLink } from '@/components/home/styles';
 import { ResourceGrid } from '@/components/resource-card';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
+import type { SalesPhase } from '@/lib/early-access';
 import { getSession } from '@/server/auth/session';
 import { getCategories, searchCourses } from '@/server/catalog';
-import { earlyAccessEndsAt, salesPhase, type SalesPhase } from '@/server/early-access';
+import { currentSalesMoment } from '@/server/early-access';
 import { viewerPriceRegion } from '@/server/price-region';
 import { listPublishedResources } from '@/server/resources';
 
@@ -132,8 +133,7 @@ export default async function HomePage() {
     getSession(),
     viewerPriceRegion(),
   ]);
-  const endsAt = earlyAccessEndsAt();
-  const phase = salesPhase(endsAt, new Date());
+  const { phase, earlyAccessEndsAt: endsAt } = currentSalesMoment();
   const earlyAccess = phase === 'early_access';
   const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
   const hasFreeContent = resources.length > 0 || courses.some((course) => course.isFree);

@@ -635,10 +635,13 @@ payouts, 14f learners outside South Africa.
 
 Status: 14a DONE (records and access rules); 14b next.
 
-- **Early access ends on a date, once.** `EARLY_ACCESS_ENDS_AT` (an ISO date-time with its time
-  zone, read by `src/server/early-access.ts`) ends it; while it is unset early access goes on.
-  Until the end every course is open to everyone signed in; from the end on, paid plans apply, and
-  switching checkout off never brings early access back. Pages read the phase once per request, as
+- **Early access ends on a date, once.** The date is a reviewed constant, `EARLY_ACCESS_ENDS_AT`
+  in `src/lib/early-access.ts`: null until the pull request that announces the end sets it, and
+  never removed or moved once that moment has passed. Until the end every course is open to
+  everyone signed in; from the end on, paid plans apply, and switching checkout off never brings
+  early access back. Outside production an `EARLY_ACCESS_ENDS_AT` environment value may stand in
+  for the constant, for tests and local checks (as `PRICE_COUNTRY` does for the country);
+  production ignores it. Pages read the phase once per request, as
   they read the price region, and the copy follows it: course prices (struck through and Free
   during early access, as they are afterwards, "Not on sale yet" without a price), the home banner,
   hero, early-access panel and cost answer, Plans & Pricing (banner, buttons, founding offer, FAQ),
@@ -688,7 +691,9 @@ Status: 14a DONE (records and access rules); 14b next.
 
 - **Early learners keep their courses.** A course the learner enrolled in before the end stays
   open to them for good, whatever its price then or later (also one that was free when joined or
-  has no price), from the enrolment date alone: no grants or backfill.
+  has no price), from the enrolment date alone: no grants or backfill. So `enrolled_at` is never
+  rewritten, and enrolments are deleted only with the account or the course: a future "unenrol"
+  must hide the place, not delete it.
 - **Callers.** Enrolling, the lesson player, saving progress, My Learning and the AI lesson readers
   (practice quizzes, lesson text for the assistant) ask the rule. Learners open a course's lessons
   once enrolled in a course that is open to them, owners and admins without enrolling, so nothing
@@ -707,11 +712,10 @@ Status: 14a DONE (records and access rules); 14b next.
   2. Reword the help articles for after early access (they still say every course is free:
      "Prices and plans", "Enrolling in a course", "Finding your way around", and the others that
      mention early access).
-  3. Announce the date at least 30 days ahead (`PAID_PLANS_NOTICE_DAYS`), then create
-     `/lwk/<stage>/web/EARLY_ACCESS_ENDS_AT` in Parameter Store by hand, for example
-     `2027-03-01T00:00:00+02:00`, and deploy, since a release reads the settings when it starts.
-     CDK leaves the parameter out because the documentation does not say whether Parameter Store
-     accepts an empty value. Never remove or move it back once the end has passed.
+  3. Announce the date at least 30 days ahead (`PAID_PLANS_NOTICE_DAYS`) in a pull request that
+     sets `EARLY_ACCESS_ENDS_AT` in `src/lib/early-access.ts`, for example to
+     `isoDateTime('2027-03-01T00:00:00+02:00')`, and deploy it before that date. Never remove or
+     move it once the end has passed.
   4. Set `PAYMENTS_ENABLED` to `true` in `infra/lib/app-stack.ts` for the stage once checkout is
      ready.
 - Verified: table tests of the rule (every pricing kind, published or not, during and after early

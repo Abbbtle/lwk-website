@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { type CoursePricing, coursePrice, formatMoney, type PriceRegion } from '@/lib/pricing';
-import type { SalesPhase } from '@/server/early-access';
+import type { SalesPhase } from '@/lib/early-access';
 
 // What a course costs. During early access every course is free to join: free courses say Free, a
 // priced course shows its local price struck through and then Free, and a course without a price
