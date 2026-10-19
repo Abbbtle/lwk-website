@@ -21,7 +21,14 @@ export {
   courseTierTitle,
   isCourseTier,
 } from './course-tiers';
-export { type Currency, formatMoney, type Money, money, toDecimalString } from './money';
+export {
+  type Currency,
+  formatMoney,
+  isCurrency,
+  type Money,
+  money,
+  toDecimalString,
+} from './money';
 export {
   COMMUNITY_MIN_SEATS,
   FAMILY_MAX_PEOPLE,

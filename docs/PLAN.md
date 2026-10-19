@@ -665,11 +665,14 @@ Status: 14a DONE (records and access rules); 14b next.
     also matches the refunded order). Any unrevoked row opens the course, so a gift or an admin
     grant outlives a refunded purchase. The history lives in orders and the audit log.
   - `memberships`: the payer, the plan (monthly, yearly, founding yearly, family yearly, community
-    yearly), the price charged (price region, currency and amount in minor units, read and written
-    through `chargedPrice` in `src/lib/pricing`, with CHECKs keeping them to the price list's
-    regions and currencies), the status (trialing, active, past due, expired), the trial end (for
-    reminders, required while trialing), the current period end (the end of what is paid for, or of
-    the trial), cancel at period end (cancelling is not a status) and Paystack's codes (from 14c).
+    yearly), the price charged, the status (trialing, active, past due, expired), the trial end
+    (for reminders, required while trialing), the current period end (the end of what is paid for,
+    or of the trial), cancel at period end (cancelling is not a status) and Paystack's codes (from
+    14c). The price charged is a price region, a currency and an amount in minor units, written
+    through `chargedPriceColumns` in the region's currency of the day and read through
+    `chargedPrice` (`src/lib/pricing`), which accepts any currency the site knows, so a price
+    charged before a region's currency changes still reads. CHECKs keep the region and the currency
+    to known values, each on its own rather than as a pair, for the same reason.
   - `membership_seats`: Family and Community places: the invited email, and the person and the
     acceptance time, which are set together.
   - Orders and payment events arrive with checkout in 14b, where they are first used.

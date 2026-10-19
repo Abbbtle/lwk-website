@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, type Money, money, toDecimalString } from './money';
+import { formatMoney, isCurrency, type Money, money, toDecimalString } from './money';
 
 describe('money', () => {
   it('holds a whole, non-negative number of minor units', () => {
@@ -13,6 +13,15 @@ describe('money', () => {
     );
     for (const minorUnits of [-5, Number.NaN, Number.POSITIVE_INFINITY, 2 ** 53]) {
       expect(() => money('USD', minorUnits), String(minorUnits)).toThrow(RangeError);
+    }
+  });
+});
+
+describe('isCurrency', () => {
+  it('recognises the currencies the site uses and nothing else', () => {
+    expect(['ZAR', 'USD', 'INR'].every((code) => isCurrency(code))).toBe(true);
+    for (const value of ['EUR', 'zar', '', null, 840]) {
+      expect(isCurrency(value), String(value)).toBe(false);
     }
   });
 });

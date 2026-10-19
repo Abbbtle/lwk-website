@@ -2,7 +2,12 @@
 // paise), so sums and comparisons are exact. Payment providers take minor units too, so their
 // payloads use `minorUnits` as it is; decimal strings are only for schema.org.
 
-export type Currency = 'ZAR' | 'USD' | 'INR';
+export const CURRENCIES = ['ZAR', 'USD', 'INR'] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+export function isCurrency(value: unknown): value is Currency {
+  return CURRENCIES.some((currency) => currency === value);
+}
 
 declare const checked: unique symbol;
 

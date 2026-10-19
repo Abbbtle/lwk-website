@@ -21,18 +21,28 @@ describe('charged prices', () => {
     }
   });
 
-  it('refuse an unknown region, another currency and part of a minor unit', () => {
+  it('read a price charged in a currency the region no longer uses, as it was charged', () => {
+    expect(chargedPrice({ region: 'india', currency: 'USD', amountMinorUnits: 2999 })).toEqual({
+      region: 'india',
+      amount: money('USD', 2999),
+    });
+  });
+
+  it("are written only in the region's currency today", () => {
+    expect(() => chargedPriceColumns({ region: 'india', amount: money('USD', 100) })).toThrow(
+      new RangeError('Expected INR for india but got "USD".'),
+    );
+  });
+
+  it('refuse an unknown region or currency and part of a minor unit', () => {
     expect(() =>
       chargedPrice({ region: 'atlantis', currency: 'USD', amountMinorUnits: 100 }),
     ).toThrow(new RangeError('Expected a price region but got "atlantis".'));
-    expect(() => chargedPrice({ region: 'india', currency: 'USD', amountMinorUnits: 100 })).toThrow(
-      new RangeError('Expected INR for india but got "USD".'),
+    expect(() => chargedPrice({ region: 'india', currency: 'EUR', amountMinorUnits: 100 })).toThrow(
+      new RangeError('Expected a currency but got "EUR".'),
     );
     expect(() =>
       chargedPrice({ region: 'south-africa', currency: 'ZAR', amountMinorUnits: 99.5 }),
     ).toThrow(RangeError);
-    expect(() => chargedPriceColumns({ region: 'india', amount: money('USD', 100) })).toThrow(
-      RangeError,
-    );
   });
 });
