@@ -145,6 +145,12 @@ packages/*         later: code shared between web and mobile
   durationSec, isPreview, position
 - `Enrollment` - userId, courseId, enrolledAt (unique pair)
 - `LessonProgress` - userId, lessonId, lastPositionSec, completedAt (unique pair)
+- `CourseAccess` - userId, courseId (unique pair), source (`EARLY_ACCESS` | `PURCHASE` | `GIFT` |
+  `ADMIN`), grantedAt, revokedAt: lifetime access to a course (Phase 14a)
+- `Membership` - payerId, plan, region, currency, amount in minor units, status, trialEndsAt,
+  currentPeriodEnd, cancelAtPeriodEnd, provider codes (Phase 14a)
+- `MembershipSeat` - membershipId, userId, invitedEmail, acceptedAt (Family and Community seats,
+  Phase 14a)
 
 Roles come from Cognito groups in the token, not the database.
 
@@ -615,15 +621,67 @@ Status: DONE.
   region and each kind of pricing (CloudFront's country header sent to a local production build)
   at desktop and 390 px phone width, with no horizontal scrolling.
 
-**Phase 14 - Payments** (next)
+**Phase 14 - Payments** (in progress)
 Paystack checkout for South Africa first; a merchant of record (Paddle, else Lemon Squeezy) for
 other countries. Memberships (monthly and yearly, founding members, Family, Community seats) and
 single-course purchases; access rules (members open every paid course; bought courses and courses
 joined during early access stay); instructor earnings. Everything stays behind a
 `PAYMENTS_ENABLED` setting until paid plans open, and the start date is announced 30 days ahead.
+Six milestones, each its own pull request: 14a records and access rules, 14b Paystack checkout for
+single courses, 14c memberships, 14d billing screens and admin, 14e instructor earnings and
+payouts, 14f learners outside South Africa.
 
-Status: NOT STARTED.
+Status: 14a DONE (records and access rules); 14b next.
 
+- **The switch.** `PAYMENTS_ENABLED` is a Parameter Store setting like `AI_ENABLED`, `false` in
+  every stage (`infra/lib/app-stack.ts`), read by `src/server/payments/config.ts` together with the
+  grace period for past-due memberships (3 days). Off is the default: until it is switched on,
+  everything behaves as during early access.
+- **Records** (migration `payments_access`): `course_access` holds lifetime access to one course
+  (source early access, purchase, gift or admin; a revoked grant, after a refund, is kept for the
+  record); `memberships` holds the payer, plan (monthly, yearly, founding yearly, family yearly,
+  community), price region, currency and amount in minor units, status (trialing, active, past due,
+  cancelled, expired), trial end, current period end, cancel at period end and Paystack's codes
+  (filled from 14c); `membership_seats` holds Family and Community places (invited email, the person
+  who accepted, when). Orders and payment events arrive with checkout in 14b, where they are first
+  used.
+- **One access rule** (`src/server/access.ts`): a pure decision, tested case by case, and a loader
+  that reads the viewer's grant, memberships and seats (two queries, run together) only when the
+  decision depends on them. It answers manage (owner or admin), open (free, early access, a grant,
+  a membership or a seat) or locked (signed out, payment required, unpriced), so pages can say why:
+
+  | Course                       | Payments off                      | Payments on                                             |
+  | ---------------------------- | --------------------------------- | ------------------------------------------------------- |
+  | Any, for owners and admins   | Manage                            | Manage                                                  |
+  | Any, for signed-out visitors | Free previews                     | Free previews                                           |
+  | Free                         | Everyone signed in                | Everyone signed in                                      |
+  | Priced (a tier)              | Everyone signed in (early access) | An unrevoked grant, or a membership or seat that counts |
+  | Unpriced                     | Everyone signed in (early access) | Staff only                                              |
+
+  A membership counts while trialing or active before its period ends (a trial also ends at its
+  trial end date), when cancelled until the period ends, and when past due until the grace days
+  after the period end; an expired one never counts. A seat counts when its membership does.
+
+- **Early-access grants**, the promise to early learners: the migration granted early access for
+  every existing enrolment in a course that is not free, dated when the learner enrolled, and
+  enrolling in a course that is not free while payments are off records the same grant (a grant
+  already there is kept). Free courses get none: they stay free.
+- **Callers.** Enrolling, the lesson player, saving progress, My Learning and the AI lesson readers
+  (practice quizzes, lesson text for the assistant) ask the rule instead of "enrolled means
+  access". Learners open a course's lessons once enrolled in a course that is open to them, owners
+  and admins without enrolling, so nothing changes while payments are off. Once payments are on,
+  enrolling in a course that is not open is refused (`payment_required`) and the course page and
+  the player say why with a link to Plans & Pricing (checkout comes in 14b); saving progress is
+  refused when access has ended, the progress made is kept, and My Learning says the access has
+  ended. The AI tools read lesson text exactly when the player would show it.
+- **Admin > Courses** marks live courses without a price ("No price"): once payments are on only
+  staff can open them, so each needs a tier or Free first. The data export includes course access,
+  memberships and seats.
+- Verified: a table test of the rule (every pricing kind, payments off and on, signed out, owners,
+  admins, each grant source and a revoked grant, trials, active, cancelled, past due inside and
+  outside the grace days, expired, seats), loader tests against the database, a test of the
+  migration's backfill (grants only for enrolments in courses that are not free), and service tests
+  of enrolling, the player, progress, My Learning, the AI tools and the export.
 - Follow-ups from Phase 13: a region-neutral, cacheable price-list endpoint and an uncached
   endpoint for the visitor's price region, for the mobile apps; orders and subscriptions store the
   amount, currency and region actually charged; checkout decides whether CloudFront's country
