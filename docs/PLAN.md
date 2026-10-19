@@ -575,7 +575,7 @@ Status: DONE.
   In-depth, Major programme), each in four price regions. Amounts are whole minor units made by
   one checked constructor, and include VAT or GST. India and the rest of the world have yearly
   Membership only. The terms that go with the prices (Family size, minimum seats, founding
-  places, the 7-day trial, the 14-day full refund, 30 days' notice before paid plans open) are
+  places, the 7-day trial, the 30-day refund window for every payment, 30 days' notice before paid plans open) are
   constants beside them.
 - Price regions: South Africa (ZAR), India (INR), high-income countries (the World Bank list,
   classification of 1 July 2026, reviewed each July; USD) and the rest of the world (USD). The

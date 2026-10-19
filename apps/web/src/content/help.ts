@@ -21,7 +21,7 @@ import {
   perSeatPhrase,
   PRICE_REGIONS,
   regionName,
-  YEARLY_FULL_REFUND_DAYS,
+  REFUND_WINDOW_DAYS,
 } from '@/lib/pricing';
 
 export type HelpAudience = 'everyone' | 'instructor' | 'staff';
@@ -283,7 +283,7 @@ ${pricesInEachRegion}
 
 ## Cancelling and refunds
 
-Cancel any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within ${YEARLY_FULL_REFUND_DAYS} days, and in part after that.`,
+Cancel any time: no further payments are taken, and your membership runs to the end of the time you have paid for. Any payment, for a single course or a membership, is refunded in full if you ask within ${REFUND_WINDOW_DAYS} days of paying.`,
   },
   {
     slug: 'using-the-lesson-player',

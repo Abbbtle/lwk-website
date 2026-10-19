@@ -24,7 +24,7 @@ import {
   type RecurringPrice,
   regionTaxNote,
   visitorRegionPhrase,
-  YEARLY_FULL_REFUND_DAYS,
+  REFUND_WINDOW_DAYS,
   yearlySavingPercent,
 } from '@/lib/pricing';
 import { viewerPriceRegion } from '@/server/price-region';
@@ -138,7 +138,7 @@ function faqsFor(region: PriceRegion) {
     },
     {
       question: 'Can I cancel?',
-      answer: `Yes, at any time. A monthly membership runs to the end of the month you have paid for. A yearly membership is refunded in full within ${YEARLY_FULL_REFUND_DAYS} days, and in part after that.`,
+      answer: `Yes, at any time. Cancelling stops the next payment, and your membership runs to the end of the time you have paid for. Any payment, for a single course or a membership, is refunded in full if you ask within ${REFUND_WINDOW_DAYS} days of paying.`,
     },
     {
       question: 'Is there a plan for a temple or group?',

@@ -9,7 +9,7 @@ export const COMMUNITY_MIN_SEATS = 5;
 export const FOUNDING_MEMBER_PLACES = 1000;
 /** Days of Membership free before the first payment. */
 export const MEMBERSHIP_TRIAL_DAYS = 7;
-/** Days after paying in which a yearly membership is refunded in full (in part after that). */
-export const YEARLY_FULL_REFUND_DAYS = 14;
+/** Days after any payment (a single course, or a monthly or yearly membership) in which it is refunded in full. */
+export const REFUND_WINDOW_DAYS = 30;
 /** Days of notice given before paid plans open. */
 export const PAID_PLANS_NOTICE_DAYS = 30;

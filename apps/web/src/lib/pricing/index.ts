@@ -22,7 +22,7 @@ export {
   FOUNDING_MEMBER_PLACES,
   MEMBERSHIP_TRIAL_DAYS,
   PAID_PLANS_NOTICE_DAYS,
-  YEARLY_FULL_REFUND_DAYS,
+  REFUND_WINDOW_DAYS,
 } from './plan-terms';
 export {
   communitySeatPrice,
