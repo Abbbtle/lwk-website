@@ -21,6 +21,7 @@ export default defineConfig({
     globalSetup: ['test/global-setup.ts'],
     // All test files share one database, so run them one at a time.
     fileParallelism: false,
-    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? '' },
+    // Payments start off whatever .env.local says; tests that need them on stub PAYMENTS_ENABLED.
+    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? '', PAYMENTS_ENABLED: 'false' },
   },
 });
