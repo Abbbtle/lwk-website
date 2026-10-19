@@ -18,7 +18,14 @@ import { HelpLink } from '@/components/help-link';
 import { RichText } from '@/components/rich-text';
 import { formatDuration, plural } from '@/lib/format';
 import { getSession } from '@/server/auth/session';
-import { getPlayer, isAccessLock, LearningError, type PlayerLesson } from '@/server/learning';
+import { currentSalesPhase } from '@/server/early-access';
+import {
+  getPlayer,
+  isAccessLock,
+  LearningError,
+  openAccessMessage,
+  type PlayerLesson,
+} from '@/server/learning';
 import { CompleteButton } from './complete-button';
 import { StudyHelp } from './study-help';
 import { VideoPlayer } from './video-player';
@@ -59,6 +66,15 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
     ? Math.round((player.completedCount / player.totalLessons) * 100)
     : 0;
   const lessonHref = (l: { id: string }) => `/learn/${course.slug}/${l.id}`;
+  const phase = currentSalesPhase();
+  // Why the course would open once they enroll: said by how it is open to them, or, for
+  // visitors who are signed out, by whether every course is free during early access.
+  const enrollNote =
+    player.access.kind === 'open'
+      ? openAccessMessage(player.access)
+      : phase === 'early_access'
+        ? 'Free during early access.'
+        : null;
 
   return (
     <div className="page-width py-6">
@@ -100,12 +116,12 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
           {!lesson.unlocked ? (
             <div className="space-y-4 rounded-card bg-surface p-8 text-center">
               <Lock className="mx-auto size-8 text-gray-500" aria-hidden />
-              {isAccessLock(player.lock) ? (
-                <AccessLockNote lock={player.lock} enrolled={player.enrolled} variant="lesson" />
+              {isAccessLock(lesson.lock) ? (
+                <AccessLockNote lock={lesson.lock} enrolled={player.enrolled} variant="lesson" />
               ) : (
                 <>
                   <p className="text-lg font-semibold">Enroll to open this lesson.</p>
-                  <p className="text-gray-700">Free during early access.</p>
+                  {enrollNote && <p className="text-gray-700">{enrollNote}</p>}
                   {session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand">

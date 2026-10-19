@@ -4,6 +4,7 @@ import { CourseCover } from '@/components/course-cover';
 import { GettingStarted } from '@/components/getting-started';
 import { plural } from '@/lib/format';
 import { requireSession } from '@/server/auth/session';
+import { currentSalesPhase } from '@/server/early-access';
 import { accessLockMessage, listMyLearning } from '@/server/learning';
 import { learnerChecklist } from '@/server/onboarding';
 
@@ -15,6 +16,7 @@ export default async function MyLearningPage() {
     listMyLearning(session),
     learnerChecklist(session.userId, session.mfaEnabled),
   ]);
+  const earlyAccess = currentSalesPhase() === 'early_access';
 
   return (
     <div className="page-width py-12">
@@ -30,8 +32,8 @@ export default async function MyLearningPage() {
       {courses.length === 0 ? (
         <div className="mt-8 rounded-card bg-white p-10 text-center shadow-md">
           <p className="text-lg text-gray-700">
-            You have not enrolled in a course yet. Start with a free course, or browse the
-            catalogue: every course is free during early access.
+            You have not enrolled in a course yet. Start with a free course, or browse the catalogue
+            {earlyAccess ? ': every course is free during early access' : ''}.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link href="/explore?type=courses" className="btn-solid">

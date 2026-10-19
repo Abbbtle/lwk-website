@@ -27,16 +27,27 @@ import {
   REFUND_WINDOW_DAYS,
   yearlySavingPercent,
 } from '@/lib/pricing';
+import {
+  earlyAccessEndsAt,
+  formatEarlyAccessEnd,
+  salesPhase,
+  type SalesPhase,
+} from '@/server/early-access';
 import { viewerPriceRegion } from '@/server/price-region';
 
-export const metadata: Metadata = {
-  title: 'Plans & Pricing',
-  description:
-    'Membership, Family and Community plans and single courses, priced for your country. Every course is free during early access.',
-};
+export function generateMetadata(): Metadata {
+  const earlyAccess = salesPhase(earlyAccessEndsAt(), new Date()) === 'early_access';
+  return {
+    title: 'Plans & Pricing',
+    description: `Membership, Family and Community plans and single courses, priced for your country.${
+      earlyAccess ? ' Every course is free during early access.' : ''
+    }`,
+  };
+}
 
-// The visitor's plans and prices, from the price list in src/lib/pricing. Paid plans open in the
-// payments phase (see docs/PLAN.md); until then their buttons sign people up to learn for free.
+// The visitor's plans and prices, from the price list in src/lib/pricing. During early access the
+// paid plans' buttons sign people up to learn for free; after it they open with checkout (Phase
+// 14b), and until then they say so.
 
 type Plan = {
   name: string;
@@ -48,11 +59,17 @@ type Plan = {
   /** Another way to pay, or how the price is billed. */
   billing?: string;
   features: string[];
-  action: { href: string; label: string };
+  /** Null while the plan cannot be bought yet. */
+  action: { href: string; label: string } | null;
   featured?: boolean;
 };
 
-const joinFree = { href: '/sign-up?returnTo=%2Fcourses', label: 'Join free during early access' };
+/** The paid plans' button: join free during early access; nothing to buy until checkout opens. */
+function paidPlanAction(phase: SalesPhase): Plan['action'] {
+  return phase === 'early_access'
+    ? { href: '/sign-up?returnTo=%2Fcourses', label: 'Join free during early access' }
+    : null;
+}
 
 /** A recurring price as a card shows it: the amount, then what it is for. */
 function shownPrice(price: RecurringPrice, per = billingPeriodPhrase(price.period)) {
@@ -72,8 +89,9 @@ function membershipPricing(region: PriceRegion): Pick<Plan, 'price' | 'per' | 'b
   };
 }
 
-function plansFor(region: PriceRegion): Plan[] {
+function plansFor(region: PriceRegion, phase: SalesPhase): Plan[] {
   const seat = communitySeatPrice(region);
+  const joinPaidPlan = paidPlanAction(phase);
   return [
     {
       name: 'Free',
@@ -96,7 +114,7 @@ function plansFor(region: PriceRegion): Plan[] {
         'Cancel any time',
         'More study help each day',
       ],
-      action: joinFree,
+      action: joinPaidPlan,
       featured: true,
     },
     {
@@ -104,7 +122,7 @@ function plansFor(region: PriceRegion): Plan[] {
       audience: 'For a household',
       ...shownPrice(familyPrice(region)),
       features: ['Everything in Membership', `Up to ${FAMILY_MAX_PEOPLE} people in one household`],
-      action: joinFree,
+      action: joinPaidPlan,
     },
     {
       name: 'Community',
@@ -115,23 +133,32 @@ function plansFor(region: PriceRegion): Plan[] {
         `From ${COMMUNITY_MIN_SEATS} seats`,
         'A view for group leaders, coming later',
       ],
-      action: joinFree,
+      action: joinPaidPlan,
     },
   ];
 }
 
-function faqsFor(region: PriceRegion) {
+function faqsFor(region: PriceRegion, phase: SalesPhase, endsAt: Date | null) {
   const seat = communitySeatPrice(region);
+  const earlyAccess = phase === 'early_access';
   return [
-    {
+    earlyAccess && {
       question: 'When can I subscribe?',
-      answer: `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead. Until then every course is free during early access.`,
+      answer: endsAt
+        ? `Paid plans open on ${formatEarlyAccessEnd(endsAt)}. Until then every course is free during early access.`
+        : `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead. Until then every course is free during early access.`,
     },
-    {
-      question: 'Do I keep the courses I join during early access?',
-      answer:
-        'Yes. The courses you join during early access stay yours for good, also when paid plans open. Courses marked Free stay free for everyone.',
-    },
+    earlyAccess
+      ? {
+          question: 'Do I keep the courses I join during early access?',
+          answer:
+            'Yes. The courses you join during early access stay yours for good, also when paid plans open. Courses marked Free stay free for everyone.',
+        }
+      : {
+          question: 'Do I keep the courses I joined during early access?',
+          answer:
+            'Yes. The courses you joined during early access stay yours for good. Courses marked Free stay free for everyone.',
+        },
     {
       question: 'Why are prices different in my country?',
       answer: `Prices follow local incomes, as on Udemy, so people everywhere can afford them. The prices on this page are for ${visitorRegionPhrase(region)}.`,
@@ -146,14 +173,16 @@ function faqsFor(region: PriceRegion) {
     },
     {
       question: 'Can I give a membership or sponsor someone?',
-      answer: 'Gifts and sponsored places open together with paid plans.',
+      answer: earlyAccess
+        ? 'Gifts and sponsored places open together with paid plans.'
+        : 'Not yet: gifts and sponsored places come later.',
     },
     {
       question: 'What type of content do you provide?',
       answer:
         'Video lessons, readings and practical exercises covering kirtan, prasadam cooking, Vaisnava etiquette and the study of sacred texts.',
     },
-  ];
+  ].filter((faq) => faq !== false);
 }
 
 function PlanCard({ plan }: { plan: Plan }) {
@@ -180,20 +209,27 @@ function PlanCard({ plan }: { plan: Plan }) {
           </li>
         ))}
       </ul>
-      <a
-        href={plan.action.href}
-        className={`mt-8 w-full text-center ${
-          featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
-        }`}
-      >
-        {plan.action.label}
-      </a>
+      {plan.action ? (
+        <a
+          href={plan.action.href}
+          className={`mt-8 w-full text-center ${
+            featured ? 'btn border-white bg-white text-black hover:bg-gray-100' : 'btn-solid'
+          }`}
+        >
+          {plan.action.label}
+        </a>
+      ) : (
+        <p className={`mt-8 text-center font-semibold ${muted}`}>Opening soon</p>
+      )}
     </li>
   );
 }
 
 export default async function PlansAndPricingPage() {
   const region = await viewerPriceRegion();
+  const endsAt = earlyAccessEndsAt();
+  const phase = salesPhase(endsAt, new Date());
+  const earlyAccess = phase === 'early_access';
   const { yearly } = membershipPrices(region);
   return (
     <>
@@ -208,10 +244,13 @@ export default async function PlansAndPricingPage() {
         <p className="mt-4 text-sm text-gray-600">
           Prices for {visitorRegionPhrase(region)}, {regionTaxNote(region)}.
         </p>
-        <p className="mx-auto mt-6 max-w-3xl rounded-card bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
-          Paid plans open soon. Until then every course is free during early access, and the courses
-          you join now stay yours.
-        </p>
+        {earlyAccess && (
+          <p className="mx-auto mt-6 max-w-3xl rounded-card bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
+            {endsAt
+              ? `Early access ends on ${formatEarlyAccessEnd(endsAt)}. Until then every course is free, and the courses you join stay yours.`
+              : 'Paid plans open soon. Until then every course is free during early access, and the courses you join now stay yours.'}
+          </p>
+        )}
       </section>
 
       <section aria-labelledby="plans" className="page-width pt-12">
@@ -219,16 +258,16 @@ export default async function PlansAndPricingPage() {
           Plans
         </h2>
         <ul className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
-          {plansFor(region).map((plan) => (
+          {plansFor(region, phase).map((plan) => (
             <PlanCard key={plan.name} plan={plan} />
           ))}
         </ul>
         <div className="mt-10 space-y-3 text-center text-gray-700">
           <p>
-            <strong className="text-gray-900">Founding members:</strong> join during early access,
-            or be one of the first {FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members, and
-            Membership is {formatRecurring(foundingMemberPrice(region))} instead of{' '}
-            {formatRecurring(yearly)}.
+            <strong className="text-gray-900">Founding members:</strong>{' '}
+            {earlyAccess ? 'join during early access, or be' : 'be'} one of the first{' '}
+            {FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members, and Membership is{' '}
+            {formatRecurring(foundingMemberPrice(region))} instead of {formatRecurring(yearly)}.
           </p>
           <p>
             Prefer to buy{' '}
@@ -240,7 +279,7 @@ export default async function PlansAndPricingPage() {
         </div>
       </section>
 
-      <Faq items={faqsFor(region)} />
+      <Faq items={faqsFor(region, phase, endsAt)} />
     </>
   );
 }

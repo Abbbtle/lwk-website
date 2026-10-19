@@ -5,17 +5,21 @@ import { CoursePrice } from '@/components/course-price';
 import type { CourseSummary } from '@/lib/catalog/types';
 import { formatDuration, joinParts, plural } from '@/lib/format';
 import type { PriceRegion } from '@/lib/pricing';
+import type { SalesPhase } from '@/server/early-access';
 
 /** Image-led card (as on Udemy) with the POC's price and "Enroll Now" button. */
 export function CourseCard({
   course,
   region,
+  phase,
   eager = false,
   sizes,
 }: {
   course: CourseSummary;
   /** Whose prices to show (see viewerPriceRegion). */
   region: PriceRegion;
+  /** Early access or paid plans (see currentSalesPhase). */
+  phase: SalesPhase;
   eager?: boolean;
   /** How wide the cover shows, when it differs from the usual grid (see CourseCover). */
   sizes?: string;
@@ -55,7 +59,7 @@ export function CourseCard({
           ])}
         </p>
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <CoursePrice pricing={course.pricing} region={region} variant="card" />
+          <CoursePrice pricing={course.pricing} region={region} phase={phase} variant="card" />
           {/* The whole card links to the course; this is the visual call to action. */}
           <span aria-hidden className="btn-outline px-4 py-2 text-sm">
             {course.isFree ? 'Start free' : 'Enroll Now'}
@@ -66,11 +70,19 @@ export function CourseCard({
   );
 }
 
-export function CourseGrid({ courses, region }: { courses: CourseSummary[]; region: PriceRegion }) {
+type CourseListProps = { courses: CourseSummary[]; region: PriceRegion; phase: SalesPhase };
+
+export function CourseGrid({ courses, region, phase }: CourseListProps) {
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((course, index) => (
-        <CourseCard key={course.slug} course={course} region={region} eager={index < 3} />
+        <CourseCard
+          key={course.slug}
+          course={course}
+          region={region}
+          phase={phase}
+          eager={index < 3}
+        />
       ))}
     </div>
   );
@@ -81,7 +93,7 @@ export function CourseGrid({ courses, region }: { courses: CourseSummary[]; regi
  * below the fold: covers load as the visitor scrolls, which keeps the first load light on slow
  * connections.
  */
-export function CourseRow({ courses, region }: { courses: CourseSummary[]; region: PriceRegion }) {
+export function CourseRow({ courses, region, phase }: CourseListProps) {
   return (
     <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3">
       {courses.map((course) => (
@@ -90,6 +102,7 @@ export function CourseRow({ courses, region }: { courses: CourseSummary[]; regio
           <CourseCard
             course={course}
             region={region}
+            phase={phase}
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 82vw"
           />
         </li>

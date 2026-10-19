@@ -18,14 +18,24 @@ import {
   type PriceRegion,
   toDecimalString,
 } from '@/lib/pricing';
+import type { VisibleAccess } from '@/server/access';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
-import { getLearnerState, isAccessLock, LearningError } from '@/server/learning';
+import { currentSalesPhase } from '@/server/early-access';
+import { getLearnerState, isAccessLock, LearningError, openAccessMessage } from '@/server/learning';
 import { viewerPriceRegion } from '@/server/price-region';
 import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.
 const loadCourse = cache(getCourse);
+
+/** A line for access the viewer holds (a grant or a membership); the price box says the rest. */
+function heldAccessNote(access: VisibleAccess | undefined): string | null {
+  if (access?.kind !== 'open') return null;
+  const held =
+    access.reason === 'grant' || access.reason === 'membership' || access.reason === 'seat';
+  return held ? openAccessMessage(access) : null;
+}
 
 export async function generateMetadata({
   params,
@@ -71,6 +81,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
     : null;
   const enrollment = learner?.enrollment ?? null;
   const lock = learner?.lock ?? null;
+  const heldNote = heldAccessNote(learner?.access);
+  const phase = currentSalesPhase();
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -193,8 +205,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <div className="overflow-hidden rounded-card bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
-              {lock === 'access_ended' ? (
-                <AccessLockNote lock={lock} enrolled={Boolean(enrollment)} variant="course" />
+              {enrollment && isAccessLock(lock) ? (
+                <AccessLockNote lock={lock} enrolled variant="course" />
               ) : enrollment ? (
                 <>
                   <p className="font-semibold">
@@ -206,15 +218,23 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               ) : (
                 <>
-                  <CoursePrice pricing={course.pricing} region={region} variant="page" />
+                  <CoursePrice
+                    pricing={course.pricing}
+                    region={region}
+                    phase={phase}
+                    variant="page"
+                  />
                   {isAccessLock(lock) ? (
-                    <AccessLockNote lock={lock} enrolled={Boolean(enrollment)} variant="course" />
+                    <AccessLockNote lock={lock} enrolled={false} variant="course" />
                   ) : session ? (
-                    <form action={enrollInCourse.bind(null, course.slug)}>
-                      <button type="submit" className="btn-brand w-full">
-                        Enroll now
-                      </button>
-                    </form>
+                    <>
+                      {heldNote && <p className="font-semibold">{heldNote}</p>}
+                      <form action={enrollInCourse.bind(null, course.slug)}>
+                        <button type="submit" className="btn-brand w-full">
+                          Enroll now
+                        </button>
+                      </form>
+                    </>
                   ) : (
                     <a
                       href={`/sign-up?returnTo=${encodeURIComponent(`/courses/${course.slug}`)}`}
@@ -238,7 +258,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 <Link href="/plans-and-pricing" className="font-semibold underline">
                   Membership
                 </Link>
-                , {formatRecurring(membershipLeadPrice(region))}, when paid plans open.
+                , {formatRecurring(membershipLeadPrice(region))}
+                {phase === 'early_access' && ', when paid plans open'}.
               </p>
             </div>
           </div>
