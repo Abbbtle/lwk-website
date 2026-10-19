@@ -641,12 +641,15 @@ Status: 14a DONE (records and access rules); 14b next.
   everyone signed in; from the end on, paid plans apply, and switching checkout off never brings
   early access back. Outside production an `EARLY_ACCESS_ENDS_AT` environment value may stand in
   for the constant, for tests and local checks (as `PRICE_COUNTRY` does for the country);
-  production ignores it. Pages read the phase once per request, as
-  they read the price region, and the copy follows it: course prices (struck through and Free
-  during early access, as they are afterwards, "Not on sale yet" without a price), the home banner,
-  hero, early-access panel and cost answer, Plans & Pricing (banner, buttons, founding offer, FAQ),
-  the enroll panels and My Learning. With an end date set, the home panel and Plans & Pricing say
-  when early access ends.
+  production ignores it.
+- **The copy follows the phase.** Pages read it once per request, as they read the price region,
+  and pass it down: course prices (struck through and Free during early access, as they are
+  afterwards, "Not on sale yet" without a price), the home banner, hero, early-access panel and
+  cost answer, Plans & Pricing (banner, buttons, founding offer, FAQ), the enroll panels, My
+  Learning, and the help articles about prices, enrolling and choosing a price, which the help
+  centre, its search and the assistant read at the current moment (`src/server/help-viewer.ts`).
+  With an end date set, the home panel, Plans & Pricing and the articles about prices and
+  enrolling say when early access ends.
 - **Checkout has its own switch.** `PAYMENTS_ENABLED` (Parameter Store, `false` in every stage,
   read by `src/server/payments/config.ts`) only opens or closes checkout (Phase 14b). It never
   decides who may open a course, so switching it off after launch keeps paid courses closed.
@@ -709,14 +712,11 @@ Status: 14a DONE (records and access rules); 14b next.
   data export includes course access, memberships (with the price charged) and seats.
 - **At launch** (a release after 14b and 14c):
   1. Price every live course (Admin > Courses shows the ones without a price).
-  2. Reword the help articles for after early access (they still say every course is free:
-     "Prices and plans", "Enrolling in a course", "Finding your way around", and the others that
-     mention early access).
-  3. Announce the date at least 30 days ahead (`PAID_PLANS_NOTICE_DAYS`) in a pull request that
+  2. Announce the date at least 30 days ahead (`PAID_PLANS_NOTICE_DAYS`) in a pull request that
      sets `EARLY_ACCESS_ENDS_AT` in `src/lib/early-access.ts`, for example to
      `isoDateTime('2027-03-01T00:00:00+02:00')`, and deploy it before that date. Never remove or
      move it once the end has passed.
-  4. Set `PAYMENTS_ENABLED` to `true` in `infra/lib/app-stack.ts` for the stage once checkout is
+  3. Set `PAYMENTS_ENABLED` to `true` in `infra/lib/app-stack.ts` for the stage once checkout is
      ready.
 - Verified: table tests of the rule (every pricing kind, published or not, during and after early
   access and exactly at its end, signed out, owners, admins, early learners including a course

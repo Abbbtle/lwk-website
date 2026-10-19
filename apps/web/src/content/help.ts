@@ -1,7 +1,8 @@
 // Help centre articles. Kept in the repository so changes are reviewed like code, and used by the
-// help centre, the help panel on every page, the support form and (later) the assistant.
+// help centre, the help panel on every page, the support form and the assistant.
 // Write in plain language, describe what the site actually does, and keep each article short.
 
+import { formatEarlyAccessEnd, type SalesMoment } from '@/lib/early-access';
 import {
   COMMUNITY_MIN_SEATS,
   COURSE_TIERS,
@@ -93,7 +94,20 @@ const tierTwoPrices = PRICE_REGIONS.map(
   (region) => `- ${regionName(region)}: ${formatMoney(coursePrice(2, region))}`,
 ).join('\n');
 
-export const helpArticles: HelpArticle[] = [
+// Passages about early access and paid plans follow the sales moment, as prices follow the price
+// list, so the articles read true during early access and after it.
+
+/** When paid plans open, as far as it is known during early access. */
+function whenPaidPlansOpen({ earlyAccessEndsAt }: SalesMoment) {
+  return earlyAccessEndsAt
+    ? `Paid plans open on ${formatEarlyAccessEnd(earlyAccessEndsAt)}.`
+    : `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead.`;
+}
+
+/** An article, or one whose passages about early access and paid plans follow the moment. */
+type HelpArticleSource = HelpArticle | ((moment: SalesMoment) => HelpArticle);
+
+const articleSources: HelpArticleSource[] = [
   // ---- Getting started ----------------------------------------------------------------------
   {
     slug: 'creating-your-account',
@@ -167,7 +181,7 @@ Too many attempts in a row are paused for a few minutes to protect your account.
     keywords: ['menu', 'navigation', 'where', 'overview', 'tour', 'site'],
     body: `- **Explore**: free courses, videos, audio, articles and PDFs, open to everyone.
 - **Courses**: the full course catalogue, which you can narrow by category, search or filter to free courses only.
-- **Plans & Pricing**: Membership, Family and Community plans and single-course prices for your country (every course is free during early access).
+- **Plans & Pricing**: Membership, Family and Community plans and single-course prices for your country.
 - **Become an Instructor**: apply to teach.
 
 Once you are signed in, the menu with your name leads to **My Learning** (your courses and progress), **Notifications**, **Help & support** and your **Account**. Instructors and admins also see their own areas there.
@@ -216,64 +230,81 @@ Many courses have a **free preview** lesson you can try before enrolling. Free v
 
 Use the filters to show one type or one category, or search by title, topic or speaker. Items marked **Sample** are examples used while we test the site.`,
   },
-  {
-    slug: 'enrolling-in-a-course',
-    topic: 'learning',
-    title: 'Enrolling in a course',
-    summary:
-      'Enrollment is free during early access, and the courses you join stay yours when paid plans open.',
-    audience: 'everyone',
-    paths: ['/courses/*'],
-    // British spellings too, so either finds the article.
-    keywords: [
-      'enroll',
-      'enrol',
-      'enrolment',
-      'join course',
-      'start course',
-      'price',
-      'cost',
-      'free',
-    ],
-    body: `Open the course and choose **Enroll now** (or **Sign up to enroll** if you are not signed in yet). The course then appears in [My Learning](/my-learning).
+  (moment) => {
+    const earlyAccess = moment.phase === 'early_access';
+    return {
+      slug: 'enrolling-in-a-course',
+      topic: 'learning',
+      title: 'Enrolling in a course',
+      summary: earlyAccess
+        ? 'Enrollment is free during early access, and the courses you join stay yours when paid plans open.'
+        : 'Enroll in free courses, and in paid ones through Membership or by buying them; courses joined during early access stay yours.',
+      audience: 'everyone',
+      paths: ['/courses/*'],
+      // British spellings too, so either finds the article.
+      keywords: [
+        'enroll',
+        'enrol',
+        'enrolment',
+        'join course',
+        'start course',
+        'price',
+        'cost',
+        'free',
+      ],
+      body: `Open the course and choose **Enroll now** (or **Sign up to enroll** if you are not signed in yet). The course then appears in [My Learning](/my-learning).
 
-During early access every course is free to enroll in, and the courses you join stay yours when paid plans open. Courses marked **Free** stay free for everyone. Other courses show the price they will have in your country, struck through while they are free; see [Prices and plans](/help/prices-and-plans).
+${
+  earlyAccess
+    ? `During early access every course is free to enroll in, and the courses you join stay yours when paid plans open.${moment.earlyAccessEndsAt ? ` Early access ends on ${formatEarlyAccessEnd(moment.earlyAccessEndsAt)}.` : ''} Courses marked **Free** stay free for everyone. Other courses show the price they will have in your country, struck through while they are free; see [Prices and plans](/help/prices-and-plans).`
+    : 'Courses marked **Free** are free for everyone. Other courses show their price in your country: [Membership](/plans-and-pricing) opens all of them, or you can buy one on its own, and the courses you joined during early access stay yours. See [Prices and plans](/help/prices-and-plans).'
+}
 
 Not sure yet? Choose **Watch a free preview** when a course offers one.`,
+    };
   },
-  {
-    slug: 'prices-and-plans',
-    topic: 'learning',
-    title: 'Prices and plans',
-    summary:
-      'What Membership, single courses, Family and Community plans will cost when paid plans open, and why prices differ by country.',
-    audience: 'everyone',
-    paths: ['/plans-and-pricing'],
-    keywords: [
-      'price',
-      'cost',
-      'membership',
-      'subscription',
-      'plan',
-      'family',
-      'community',
-      'temple',
-      'refund',
-      'cancel',
-      'region',
-      'currency',
-    ],
-    body: `Paid plans open soon, and we will announce the start date ${PAID_PLANS_NOTICE_DAYS} days ahead. Until then every course is free during early access, and the courses you join now stay yours, also when paid plans open. Courses marked **Free** stay free for everyone.
+  (moment) => {
+    const earlyAccess = moment.phase === 'early_access';
+    return {
+      slug: 'prices-and-plans',
+      topic: 'learning',
+      title: 'Prices and plans',
+      summary: earlyAccess
+        ? 'What Membership, single courses, Family and Community plans will cost when paid plans open, and why prices differ by country.'
+        : 'What Membership, single courses, Family and Community plans cost, and why prices differ by country.',
+      audience: 'everyone',
+      paths: ['/plans-and-pricing'],
+      keywords: [
+        'price',
+        'cost',
+        'membership',
+        'subscription',
+        'plan',
+        'family',
+        'community',
+        'temple',
+        'refund',
+        'cancel',
+        'region',
+        'currency',
+      ],
+      body: `${
+        earlyAccess
+          ? `${whenPaidPlansOpen(moment)} Until then every course is free during early access, and the courses you join now stay yours, also when paid plans open. Courses marked **Free** stay free for everyone.
 
-When paid plans open:
+When paid plans open:`
+          : `Courses marked **Free** are free for everyone, and the courses you joined during early access stay yours.
+
+The plans:`
+      }
 
 - **Membership** opens every paid course, with more study help each day. Try it free for ${MEMBERSHIP_TRIAL_DAYS} days and cancel any time.
 - **Single courses** are yours to keep, if you would rather buy only the courses you want.
 - **Family** gives everything in Membership to up to ${FAMILY_MAX_PEOPLE} people in one household, paid yearly.
 - **Community** seats are for temples, schools and study groups, from ${COMMUNITY_MIN_SEATS} seats, paid yearly for each seat.
-- **Founding members** (everyone who joins during early access, and the first ${FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members) pay less for a year of Membership.
+- **Founding members** (everyone who ${earlyAccess ? 'joins' : 'joined'} during early access, and the first ${FOUNDING_MEMBER_PLACES.toLocaleString('en-US')} members) pay less for a year of Membership.
 
-Gifts and sponsored places open together with paid plans.
+${earlyAccess ? 'Gifts and sponsored places open together with paid plans.' : 'Gifts and sponsored places come later.'}
 
 ## Prices in your country
 
@@ -284,6 +315,7 @@ ${pricesInEachRegion}
 ## Cancelling and refunds
 
 Cancel any time: no further payments are taken, and your membership runs to the end of the time you have paid for. Any payment, for a single course or a membership, is refunded in full if you ask within ${REFUND_WINDOW_DAYS} days of paying.`,
+    };
   },
   {
     slug: 'using-the-lesson-player',
@@ -512,7 +544,7 @@ If an upload fails, check your connection and the file type, then try again. Ver
 - An admin either **publishes** it (it appears in the catalogue straight away) or **returns** it with a note explaining what to change. You get a notification either way.
 - Once published, only an admin can change a course. Ask one to unpublish it if you need to make larger changes.`,
   },
-  {
+  (moment) => ({
     slug: 'offering-a-free-course',
     topic: 'teaching',
     title: 'Choosing a price or offering a course for free',
@@ -522,7 +554,7 @@ If an upload fails, check your connection and the file type, then try again. Ver
     keywords: ['free course', 'free', 'explore', 'price', 'tier', 'pricing', 'cost'],
     body: `Choose a **Price** in the course details: **Free**, or one of five tiers. A course needs one of them before you can submit it for review.
 
-**Free** courses appear in [Explore](/explore) with a **Free** badge and stay free for everyone, also when paid plans start. A short free course is a good way to introduce your teaching and lead learners to your longer ones.
+**Free** courses appear in [Explore](/explore) with a **Free** badge and stay free for everyone. A short free course is a good way to introduce your teaching and lead learners to your longer ones.
 
 **Tiers** match how substantial a course is:
 
@@ -532,8 +564,12 @@ Each tier has a local price in every country, so learners everywhere pay a price
 
 ${tierTwoPrices}
 
-During early access every course is free to join, so learners see your price struck through until paid plans open.`,
-  },
+${
+  moment.phase === 'early_access'
+    ? 'During early access every course is free to join, so learners see your price struck through until paid plans open.'
+    : 'Learners pay this price to buy the course on its own, or open it with Membership.'
+}`,
+  }),
   {
     slug: 'tips-for-a-great-course',
     topic: 'teaching',
@@ -680,5 +716,10 @@ Contact form messages from people without an account are under **Messages**; rep
 **Sample content** loads short sample courses and articles marked "Sample" so testers have something to try. Remove it all in one step before launch.`,
   },
 ];
+
+/** The help articles as they read at this moment: during early access or after it. */
+export function helpArticles(moment: SalesMoment): HelpArticle[] {
+  return articleSources.map((source) => (typeof source === 'function' ? source(moment) : source));
+}
 
 export const staffTopic = 'staff';

@@ -7,6 +7,7 @@ import { listOwnCourses, reviewChecklist, getCourseForEditing } from '../authori
 import { getCourse, searchCourses } from '../catalog';
 import { countCoursesInReview } from '../course-review';
 import { getDb } from '../db';
+import { helpViewer } from '../help-viewer';
 import { countPendingApplications } from '../instructor-applications';
 import { canReadLesson, listMyLearning } from '../learning';
 import { listPublishedResources } from '../resources';
@@ -107,8 +108,7 @@ export async function describePage(path: string, session: Session | null): Promi
 }
 
 function knowledge(session: Session | null) {
-  const staff = Boolean(session && hasRole(session, 'support'));
-  return visibleArticles({ staff })
+  return visibleArticles(helpViewer(session))
     .map((a) => `### ${a.title}\nArticle: /help/${a.slug}\n${a.body}`)
     .join('\n\n');
 }
@@ -354,8 +354,7 @@ const tools: ToolDef[] = [
 
 /** Help articles for the question, when the AI cannot answer it. */
 function fallbackArticles(session: Session | null, question: string) {
-  const staff = Boolean(session && hasRole(session, 'support'));
-  return searchHelp(question, { staff }, 3).map(({ slug, title, summary }) => ({
+  return searchHelp(question, helpViewer(session), 3).map(({ slug, title, summary }) => ({
     slug,
     title,
     summary,

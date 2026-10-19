@@ -5,6 +5,7 @@ import { getArticle, searchHelp } from '@/lib/help';
 import { hasRole, type Session } from '../auth/session';
 import * as authoring from '../authoring';
 import { getDb } from '../db';
+import { helpViewer } from '../help-viewer';
 import { canReadLesson } from '../learning';
 import { rateLimit } from '../rate-limit';
 import { getTicketForStaff } from '../support';
@@ -332,8 +333,10 @@ export async function draftSupportReply(session: Session, ticketNumber: number) 
     )
     .join('\n\n');
   const question = `${ticket.subject} ${ticket.messages.find((m) => !m.fromStaff)?.body ?? ''}`;
-  const articles = searchHelp(question, { staff: false }, 3)
-    .map((a) => getArticle(a.slug, { staff: false })!)
+  // The articles the person who asked can read.
+  const reader = helpViewer(null);
+  const articles = searchHelp(question, reader, 3)
+    .map((a) => getArticle(a.slug, reader)!)
     .map((a) => `### ${a.title} (/help/${a.slug})\n${a.body}`)
     .join('\n\n');
   return generateStructured({

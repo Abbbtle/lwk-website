@@ -1,20 +1,24 @@
 import { type HelpArticle, helpArticles, helpTopics } from '@/content/help';
+import type { SalesMoment } from '@/lib/early-access';
 
 // Finding help articles: who may see them, which fit the current page, and search.
 
-export type HelpViewer = { staff: boolean };
+/**
+ * Who reads the help centre, and when: staff also see staff articles, and passages about early
+ * access and paid plans read as they are at `moment` (src/server/help-viewer.ts builds it).
+ */
+export type HelpViewer = { staff: boolean; moment: SalesMoment };
 
 export function visibleTo(article: HelpArticle, viewer: HelpViewer) {
   return article.audience !== 'staff' || viewer.staff;
 }
 
 export function visibleArticles(viewer: HelpViewer) {
-  return helpArticles.filter((article) => visibleTo(article, viewer));
+  return helpArticles(viewer.moment).filter((article) => visibleTo(article, viewer));
 }
 
 export function getArticle(slug: string, viewer: HelpViewer) {
-  const article = helpArticles.find((a) => a.slug === slug);
-  return article && visibleTo(article, viewer) ? article : undefined;
+  return visibleArticles(viewer).find((article) => article.slug === slug);
 }
 
 export function topicsFor(viewer: HelpViewer) {
