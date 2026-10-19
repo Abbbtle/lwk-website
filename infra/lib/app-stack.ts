@@ -295,6 +295,8 @@ export class AppStack extends cdk.Stack {
       AI_ASSISTANT_MODEL: ai.assistantModel,
       AI_WRITER_MODEL: ai.writerModel,
       AI_MONTHLY_BUDGET_USD: String(ai.monthlyBudgetUsd),
+      // Paid plans stay off (every course open during early access) until they are announced.
+      PAYMENTS_ENABLED: 'false',
       // Sample courses and articles for UAT; set to "off" for production stages.
       SAMPLE_CONTENT: 'on',
     };
