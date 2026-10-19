@@ -11,6 +11,7 @@ import { grantCourseAccess, revokeCourseAccess } from './access';
 import type { Session } from './auth/session';
 import { getDb } from './db';
 import {
+  AccessLockedError,
   canReadLesson,
   enroll,
   enrollLearner,
@@ -123,6 +124,21 @@ async function member() {
   return session;
 }
 
+describe('learning errors', () => {
+  it('carry the lock when a course is closed, and only then', () => {
+    const error = new AccessLockedError('unpriced');
+    expect(error).toBeInstanceOf(LearningError);
+    expect(error).toMatchObject({
+      code: 'access_locked',
+      lock: 'unpriced',
+      message: 'This course is not on sale yet.',
+    });
+    expect(new LearningError('not_found', 'Course not found.')).not.toHaveProperty('lock');
+    // @ts-expect-error A plain LearningError cannot be access_locked: it would have no lock.
+    void new LearningError('access_locked', 'Closed.');
+  });
+});
+
 describe('lesson locks', () => {
   it('are lifted by signing in or enrolling, or else only by access', () => {
     expect(LESSON_LOCKS.filter((lock) => !isAccessLock(lock))).toEqual([
@@ -214,6 +230,7 @@ describe('after early access', () => {
   it('refuses to enroll in a course that is not open, says why, and records nothing', async () => {
     endEarlyAccess();
     const student = await learner();
+    await expect(enroll(student, SLUG)).rejects.toBeInstanceOf(AccessLockedError);
     await expect(enroll(student, SLUG)).rejects.toMatchObject({
       code: 'access_locked',
       lock: 'payment_required',
@@ -350,8 +367,8 @@ describe('enrollLearner', () => {
   it('enrolls without a session and keeps the first enrolment date', async () => {
     const student = await learner();
     const courseId = await courseIdOf(SLUG);
-    const first = await enrollLearner(getDb(), student.userId, courseId);
-    const again = await enrollLearner(getDb(), student.userId, courseId);
+    const first = await enrollLearner(getDb(), { userId: student.userId, courseId });
+    const again = await enrollLearner(getDb(), { userId: student.userId, courseId });
     expect(again.id).toBe(first.id);
     expect(again.enrolledAt).toEqual(first.enrolledAt);
   });

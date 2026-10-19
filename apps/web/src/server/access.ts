@@ -22,15 +22,15 @@ import {
 // This module never imports from src/server/payments: checkout depends on access, not the other
 // way round. Payments code may import this module and learning.ts.
 
-/** Why a course is open to someone; a grant also says where it came from. */
-export type OpenReason = 'free' | 'early_access' | 'joined_in_early_access' | 'membership' | 'seat';
-
 /** Whether someone may open a course's lessons, and why, so callers can word it. */
 export type AccessDecision =
   /** Owners and admins: every lesson, without enrolling or paying. */
   | { readonly kind: 'manage'; readonly role: 'owner' | 'admin' }
   /** Every lesson, once enrolled. */
-  | { readonly kind: 'open'; readonly reason: OpenReason }
+  | {
+      readonly kind: 'open';
+      readonly reason: 'free' | 'early_access' | 'joined_in_early_access' | 'membership' | 'seat';
+    }
   /** Every lesson, once enrolled, for life: bought, a gift or given by an admin. */
   | { readonly kind: 'open'; readonly reason: 'grant'; readonly source: AccessSource }
   /** Free previews only. */
@@ -39,6 +39,9 @@ export type AccessDecision =
   | { readonly kind: 'locked'; readonly reason: 'unpublished' };
 
 export type OpenAccess = Extract<AccessDecision, { readonly kind: 'open' }>;
+
+/** Why a course is open to someone, a grant included. */
+export type OpenReason = OpenAccess['reason'];
 
 /** A decision about a course the viewer may see: anything but unpublished. */
 export type VisibleAccess = Exclude<AccessDecision, { readonly reason: 'unpublished' }>;

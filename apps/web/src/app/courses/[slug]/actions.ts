@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { getSession } from '@/server/auth/session';
-import { enroll, getPlayer, LearningError } from '@/server/learning';
+import { AccessLockedError, enroll, getPlayer } from '@/server/learning';
 
 const slug = z.string().regex(/^[a-z0-9-]{1,80}$/);
 
@@ -14,7 +14,7 @@ export async function enrollInCourse(courseSlug: string) {
   const enrolled = await enroll(session, parsed).then(
     () => true,
     (error) => {
-      if (error instanceof LearningError && error.code === 'access_locked') return false;
+      if (error instanceof AccessLockedError) return false;
       throw error;
     },
   );

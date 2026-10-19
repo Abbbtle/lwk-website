@@ -657,7 +657,7 @@ Status: 14a DONE (records and access rules); 14b next.
   `learning.ts`, `memberships.ts`, `early-access.ts` and everything in `src/lib`) never import from
   `src/server/payments`; a `no-restricted-imports` rule in `apps/web/eslint.config.mjs` fails lint
   if one does. Payments code may import them. access.ts is the only writer of `course_access`, and
-  learning.ts has a session-free `enrollLearner` for checkout to call.
+  learning.ts has a session-free `enrollLearner(db, { userId, courseId })` for checkout to call.
 - **Records** (migration `payments_access`):
   - `course_access`: lifetime access to one course, one row per person, course and source
     (purchase, gift or admin), written only through `grantCourseAccess` (an upsert of its own
@@ -704,8 +704,9 @@ Status: 14a DONE (records and access rules); 14b next.
   once enrolled in a course that is open to them, owners and admins without enrolling, so nothing
   changed during early access. What keeps lessons locked is named by condition: signed out, not
   enrolled, payment required, unpriced or access ended (enrolled, but a purchase or membership no
-  longer counts). Enrolling in a closed course is refused with `access_locked` and the lock; the
-  course page and the player say why, with a link to Plans & Pricing where paying can open it
+  longer counts). Enrolling in a closed course is refused with an `AccessLockedError` (code
+  `access_locked`), which always carries the lock; the course page and the player say why, with a
+  link to Plans & Pricing where paying can open it
   (checkout comes in 14b). Saving progress is refused once access has ended, the progress made is
   kept, and My Learning says the access has ended. The player never returns the text or media of a
   locked lesson, and the AI tools read lesson text exactly when the player would show it.

@@ -44,14 +44,28 @@ export function isAccessLock(lock: LessonLock | null): lock is AccessLock {
   return ACCESS_LOCKS.some((accessLock) => accessLock === lock);
 }
 
+// Lets AccessLockedError, and nothing else, make an access_locked LearningError: the symbol is
+// private to this module.
+const ACCESS_LOCKED = Symbol('access_locked');
+
+/** Why the learning service refused. A closed course is an AccessLockedError, with its lock. */
 export class LearningError extends Error {
-  constructor(
-    readonly code: 'not_found' | 'not_enrolled' | 'access_locked',
-    message: string,
-    /** With `access_locked`: what keeps the course closed, for callers to branch on. */
-    readonly lock?: AccessLock,
-  ) {
+  readonly code: 'not_found' | 'not_enrolled' | 'access_locked';
+
+  constructor(code: 'not_found' | 'not_enrolled', message: string);
+  constructor(code: typeof ACCESS_LOCKED, message: string);
+  constructor(code: 'not_found' | 'not_enrolled' | typeof ACCESS_LOCKED, message: string) {
     super(message);
+    this.code = code === ACCESS_LOCKED ? 'access_locked' : code;
+  }
+}
+
+/** The course is closed to the learner: `lock` says why, for callers to branch on. */
+export class AccessLockedError extends LearningError {
+  declare readonly code: 'access_locked';
+
+  constructor(readonly lock: AccessLock) {
+    super(ACCESS_LOCKED, accessLockMessage(lock));
   }
 }
 
@@ -82,10 +96,6 @@ export function openAccessMessage(access: OpenAccess): string {
     case 'seat':
       return 'Included in your membership.';
   }
-}
-
-function accessLocked(lock: AccessLock): LearningError {
-  return new LearningError('access_locked', accessLockMessage(lock), lock);
 }
 
 /** What keeps the viewer from the course's lessons, or null when nothing does. */
@@ -187,8 +197,7 @@ export async function getLearnerState(session: Session, slug: string): Promise<L
  */
 export async function enrollLearner(
   db: Prisma.TransactionClient,
-  userId: string,
-  courseId: string,
+  { userId, courseId }: { userId: string; courseId: string },
 ) {
   return db.enrollment.upsert({
     where: { userId_courseId: { userId, courseId } },
@@ -201,8 +210,8 @@ export async function enrollLearner(
 export async function enroll(session: Session, slug: string): Promise<void> {
   const course = await publishedCourse(slug);
   const { lock } = await visibleLearnerState(session, course);
-  if (isAccessLock(lock)) throw accessLocked(lock);
-  await enrollLearner(getDb(), session.userId, course.id);
+  if (isAccessLock(lock)) throw new AccessLockedError(lock);
+  await enrollLearner(getDb(), { userId: session.userId, courseId: course.id });
 }
 
 async function completedLessonIds(userId: string, lessonIds: string[]) {
@@ -336,7 +345,7 @@ export async function saveProgress(
   const courseId = lesson.section.course.id;
   const { enrollment, lock } = await visibleLearnerState(session, lesson.section.course);
   if (!enrollment) throw new LearningError('not_enrolled', 'Enroll to track your progress.');
-  if (isAccessLock(lock)) throw accessLocked(lock);
+  if (isAccessLock(lock)) throw new AccessLockedError(lock);
 
   const position =
     update.positionSeconds === undefined
