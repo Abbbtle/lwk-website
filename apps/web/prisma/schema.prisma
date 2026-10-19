@@ -513,10 +513,11 @@ enum AccessSource {
   ADMIN
 }
 
-// Lifetime access to one course for one person (Phase 14): bought, a gift, or given by an admin.
-// Priced courses open with an unrevoked grant or a membership (src/server/access.ts, the only
-// writer of this table). One row per person and course: a later grant revives a revoked one, and a
-// refund revokes only a grant from its own source. The history lives in orders and the audit log.
+// Lifetime access to one course for one person (Phase 14), one row per source (bought, a gift, or
+// given by an admin), so each can be revoked on its own: a refunded purchase leaves a gift or an
+// admin grant in place. Any unrevoked row opens the course (src/server/access.ts, the only writer
+// of this table). grantedAt is when that source first granted it; the history lives in orders and
+// the audit log.
 model CourseAccess {
   id        String       @id @default(uuid(7)) @db.Uuid
   userId    String       @map("user_id") @db.Uuid
@@ -529,7 +530,7 @@ model CourseAccess {
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
 
-  @@unique([userId, courseId])
+  @@unique([userId, courseId, source])
   @@index([courseId])
   @@map("course_access")
 }

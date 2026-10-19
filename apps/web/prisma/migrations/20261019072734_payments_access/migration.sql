@@ -62,7 +62,7 @@ CREATE TABLE "membership_seats" (
 CREATE INDEX "course_access_course_id_idx" ON "course_access"("course_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "course_access_user_id_course_id_key" ON "course_access"("user_id", "course_id");
+CREATE UNIQUE INDEX "course_access_user_id_course_id_source_key" ON "course_access"("user_id", "course_id", "source");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "memberships_provider_subscription_code_key" ON "memberships"("provider_subscription_code");

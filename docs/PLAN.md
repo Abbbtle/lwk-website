@@ -145,8 +145,8 @@ packages/*         later: code shared between web and mobile
   durationSec, isPreview, position
 - `Enrollment` - userId, courseId, enrolledAt (unique pair)
 - `LessonProgress` - userId, lessonId, lastPositionSec, completedAt (unique pair)
-- `CourseAccess` - userId, courseId (unique pair), source (`PURCHASE` | `GIFT` | `ADMIN`),
-  grantedAt, revokedAt: lifetime access to a course (Phase 14a)
+- `CourseAccess` - userId, courseId, source (`PURCHASE` | `GIFT` | `ADMIN`) (unique together),
+  grantedAt, revokedAt: lifetime access to a course, one row per source (Phase 14a)
 - `Membership` - payerId, plan, the price charged (region, currency, amount in minor units),
   status (`TRIALING` | `ACTIVE` | `PAST_DUE` | `EXPIRED`), trialEndsAt, currentPeriodEnd,
   cancelAtPeriodEnd, provider codes (Phase 14a)
@@ -659,11 +659,11 @@ Status: 14a DONE (records and access rules); 14b next.
   if one does. Payments code may import them. access.ts is the only writer of `course_access`, and
   learning.ts has a session-free `enrollLearner` for checkout to call.
 - **Records** (migration `payments_access`):
-  - `course_access`: lifetime access to one course (source purchase, gift or admin), one row per
-    person and course, written through `grantCourseAccess` and `revokeCourseAccess`. A grant
-    revives a revoked one and never replaces a live one; a revoke only takes back a grant from its
-    own source (14b also matches the refunded order). The history lives in orders and the audit
-    log.
+  - `course_access`: lifetime access to one course, one row per person, course and source
+    (purchase, gift or admin), written only through `grantCourseAccess` (an upsert of its own
+    source's row, reviving it if revoked) and `revokeCourseAccess` (its own source's row only; 14b
+    also matches the refunded order). Any unrevoked row opens the course, so a gift or an admin
+    grant outlives a refunded purchase. The history lives in orders and the audit log.
   - `memberships`: the payer, the plan (monthly, yearly, founding yearly, family yearly, community
     yearly), the price charged (price region, currency and amount in minor units, read and written
     through `chargedPrice` in `src/lib/pricing`, with CHECKs keeping them to the price list's

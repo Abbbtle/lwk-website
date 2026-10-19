@@ -39,7 +39,7 @@ const owner = { isOwner: true, isAdmin: false };
 const admin = { isOwner: false, isAdmin: true };
 const nothing: Entitlements = {
   enrolledAt: null,
-  grant: null,
+  grants: [],
   memberships: [],
   seatMemberships: [],
 };
@@ -118,7 +118,7 @@ describe('the access rule', () => {
     ])('opens %s to everyone signed in, whatever they hold', (_case, pricing) => {
       const lapsed: Entitlements = {
         enrolledAt: null,
-        grant: { source: 'PURCHASE', revoked: true },
+        grants: [{ source: 'PURCHASE', revoked: true }],
         memberships: [standing('EXPIRED', daysFromNow(-30))],
         seatMemberships: [],
       };
@@ -160,18 +160,25 @@ describe('the access rule', () => {
     it.each(['PURCHASE', 'GIFT', 'ADMIN'] as const)(
       'opens a priced course with an unrevoked %s grant',
       (source) => {
-        expect(decide({ entitlements: { ...nothing, grant: { source, revoked: false } } })).toEqual(
-          { kind: 'open', reason: 'grant', source },
-        );
+        expect(
+          decide({ entitlements: { ...nothing, grants: [{ source, revoked: false }] } }),
+        ).toEqual({ kind: 'open', reason: 'grant', source });
       },
     );
 
-    it('does not open it with a revoked grant, unless a membership counts', () => {
-      const revoked = { source: 'PURCHASE', revoked: true } as const;
-      expect(decide({ entitlements: { ...nothing, grant: revoked } })).toEqual(PAYMENT_REQUIRED);
+    it('does not open it with a revoked grant, unless another grant or a membership counts', () => {
+      const refunded = { source: 'PURCHASE', revoked: true } as const;
+      expect(decide({ entitlements: { ...nothing, grants: [refunded] } })).toEqual(
+        PAYMENT_REQUIRED,
+      );
+      expect(
+        decide({
+          entitlements: { ...nothing, grants: [refunded, { source: 'ADMIN', revoked: false }] },
+        }),
+      ).toEqual({ kind: 'open', reason: 'grant', source: 'ADMIN' });
       const member: Entitlements = {
         ...nothing,
-        grant: revoked,
+        grants: [refunded],
         memberships: [standing('ACTIVE', daysFromNow(9))],
       };
       expect(decide({ entitlements: member })).toEqual({ kind: 'open', reason: 'membership' });
@@ -180,7 +187,7 @@ describe('the access rule', () => {
     it('names the grant when there is a membership too, since the grant lasts', () => {
       const both: Entitlements = {
         ...nothing,
-        grant: { source: 'GIFT', revoked: false },
+        grants: [{ source: 'GIFT', revoked: false }],
         memberships: [standing('ACTIVE', daysFromNow(9))],
       };
       expect(decide({ entitlements: both })).toEqual({
@@ -204,7 +211,7 @@ describe('the access rule', () => {
     it('keeps an unpriced course closed to all but its owner and admins, and early learners', () => {
       const holdsEverything: Entitlements = {
         enrolledAt: null,
-        grant: { source: 'PURCHASE', revoked: false },
+        grants: [{ source: 'PURCHASE', revoked: false }],
         memberships: [standing('ACTIVE', daysFromNow(9))],
         seatMemberships: [standing('ACTIVE', daysFromNow(9))],
       };
@@ -322,6 +329,20 @@ describe('courseAccessFor', () => {
     expect(await courseAccessFor(viewer, bought)).toEqual(PAYMENT_REQUIRED);
   });
 
+  it('keeps a course open after a refund when an admin grant came before it', async () => {
+    const viewer = await person();
+    const paid = await course(tier);
+    const grant = { userId: viewer.userId, courseId: paid.id };
+    await grantCourseAccess(getDb(), { ...grant, source: 'ADMIN' });
+    await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    expect(await courseAccessFor(viewer, paid)).toEqual({
+      kind: 'open',
+      reason: 'grant',
+      source: 'ADMIN',
+    });
+  });
+
   it('reads the memberships the viewer pays for and the seats they accepted', async () => {
     const [payer, member, invited] = await Promise.all([person(), person(), person()]);
     const paid = await course(tier);
@@ -420,42 +441,43 @@ describe('courseAccessFor', () => {
 });
 
 describe('granting access', () => {
-  async function grantRow(userId: string, courseId: string) {
-    return getDb().courseAccess.findUniqueOrThrow({
-      where: { userId_courseId: { userId, courseId } },
+  async function rowsOf(userId: string, courseId: string) {
+    return getDb().courseAccess.findMany({
+      where: { userId, courseId },
+      orderBy: { source: 'asc' },
       select: { source: true, grantedAt: true, revokedAt: true },
     });
   }
 
-  it('never replaces an unrevoked grant, and revokes only a grant from the same source', async () => {
+  it('keeps one grant per source, each revoked on its own', async () => {
     const viewer = await person();
     const paid = await course(tier);
     const grant = { userId: viewer.userId, courseId: paid.id };
-    expect(await grantCourseAccess(getDb(), { ...grant, source: 'GIFT' })).toBe(true);
-    expect(await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' })).toBe(false);
-    expect(await grantRow(viewer.userId, paid.id)).toMatchObject({
-      source: 'GIFT',
-      revokedAt: null,
-    });
+    await grantCourseAccess(getDb(), { ...grant, source: 'GIFT' });
+    await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    expect(await rowsOf(viewer.userId, paid.id)).toEqual([
+      expect.objectContaining({ source: 'PURCHASE', revokedAt: null }),
+      expect.objectContaining({ source: 'GIFT', revokedAt: null }),
+    ]);
 
-    // A refund of a purchase does not take away a gift.
-    expect(await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' })).toBe(false);
-    expect(await revokeCourseAccess(getDb(), { ...grant, source: 'GIFT' })).toBe(true);
-    expect((await grantRow(viewer.userId, paid.id)).revokedAt).toBeInstanceOf(Date);
+    // A refunded purchase does not take away the gift.
+    await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    const [purchase, gift] = await rowsOf(viewer.userId, paid.id);
+    expect(purchase.revokedAt).toBeInstanceOf(Date);
+    expect(gift.revokedAt).toBeNull();
   });
 
-  it('revives a revoked grant with the new source and date', async () => {
+  it('revives a revoked grant of the same source, keeping when it was first granted', async () => {
     const viewer = await person();
     const paid = await course(tier);
-    const grant = { userId: viewer.userId, courseId: paid.id };
-    await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
-    await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
-    const revoked = await grantRow(viewer.userId, paid.id);
-
-    expect(await grantCourseAccess(getDb(), { ...grant, source: 'ADMIN' })).toBe(true);
-    const revived = await grantRow(viewer.userId, paid.id);
-    expect(revived).toMatchObject({ source: 'ADMIN', revokedAt: null });
-    expect(revived.grantedAt.getTime()).toBeGreaterThanOrEqual(revoked.grantedAt.getTime());
-    expect(await getDb().courseAccess.count({ where: grant })).toBe(1);
+    const grant = { userId: viewer.userId, courseId: paid.id, source: 'PURCHASE' } as const;
+    await grantCourseAccess(getDb(), grant);
+    const [first] = await rowsOf(viewer.userId, paid.id);
+    await revokeCourseAccess(getDb(), grant);
+    await grantCourseAccess(getDb(), grant);
+    expect(await rowsOf(viewer.userId, paid.id)).toEqual([
+      { source: 'PURCHASE', grantedAt: first.grantedAt, revokedAt: null },
+    ]);
   });
 });

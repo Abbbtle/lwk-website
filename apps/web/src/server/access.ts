@@ -50,14 +50,15 @@ export function isVisible(access: AccessDecision): access is VisibleAccess {
 /** The viewer as the rule sees them. */
 export type AccessViewer = { readonly isOwner: boolean; readonly isAdmin: boolean };
 
-/** The viewer's grant for the course. */
+/** One of the viewer's grants for the course: one per source. */
 export type AccessGrant = { readonly source: AccessSource; readonly revoked: boolean };
 
 /** What the viewer holds that can open a course once early access has ended. */
 export type Entitlements = {
   /** When they enrolled in the course, if they have. */
   readonly enrolledAt: Date | null;
-  readonly grant: AccessGrant | null;
+  /** Their grants for the course, earliest first; any unrevoked one opens it. */
+  readonly grants: readonly AccessGrant[];
   /** Memberships the viewer pays for. */
   readonly memberships: readonly MembershipStanding[];
   /** Memberships the viewer holds a seat on (Family and Community). */
@@ -106,8 +107,8 @@ function decisionBeforeEntitlements({
 
 /**
  * After early access: a course joined before the end stays open whatever its price; a course
- * without a price opens to no one else; a priced course opens with a grant (it lasts), then a
- * membership, then a seat.
+ * without a price opens to no one else; a priced course opens with any unrevoked grant (it lasts),
+ * then a membership, then a seat.
  */
 function decisionFromEntitlements({
   pricing,
@@ -115,12 +116,13 @@ function decisionFromEntitlements({
   entitlements,
   now,
 }: AccessFacts): AccessDecision {
-  const { enrolledAt, grant, memberships, seatMemberships } = entitlements;
+  const { enrolledAt, grants, memberships, seatMemberships } = entitlements;
   if (enrolledAt && earlyAccessEndsAt && enrolledAt.getTime() < earlyAccessEndsAt.getTime()) {
     return { kind: 'open', reason: 'joined_in_early_access' };
   }
   if (pricing.kind === 'unpriced') return { kind: 'locked', reason: 'unpriced' };
-  if (grant && !grant.revoked) return { kind: 'open', reason: 'grant', source: grant.source };
+  const grant = grants.find((held) => !held.revoked);
+  if (grant) return { kind: 'open', reason: 'grant', source: grant.source };
   const opens = (standing: MembershipStanding) => membershipOpensCourses(standing, now);
   if (memberships.some(opens)) return { kind: 'open', reason: 'membership' };
   if (seatMemberships.some(opens)) return { kind: 'open', reason: 'seat' };
@@ -142,7 +144,7 @@ export type CourseForAccess = Prisma.CourseGetPayload<{ select: typeof courseAcc
 
 const NO_ENTITLEMENTS: Entitlements = {
   enrolledAt: null,
-  grant: null,
+  grants: [],
   memberships: [],
   seatMemberships: [],
 };
@@ -162,6 +164,7 @@ async function readEntitlements(
     db.enrollment.findMany({ where: forCourses, select: { courseId: true, enrolledAt: true } }),
     db.courseAccess.findMany({
       where: forCourses,
+      orderBy: { grantedAt: 'asc' },
       select: { courseId: true, source: true, revokedAt: true },
     }),
     db.membership.findMany({
@@ -170,12 +173,12 @@ async function readEntitlements(
     }),
   ]);
   const enrolledAt = new Map(enrollmentRows.map((row) => [row.courseId, row.enrolledAt]));
-  const grants = new Map(
-    grantRows.map((grant) => [
-      grant.courseId,
-      { source: grant.source, revoked: grant.revokedAt !== null },
-    ]),
-  );
+  const grants = new Map<string, AccessGrant[]>();
+  for (const row of grantRows) {
+    const forCourse = grants.get(row.courseId) ?? [];
+    forCourse.push({ source: row.source, revoked: row.revokedAt !== null });
+    grants.set(row.courseId, forCourse);
+  }
   const memberships: MembershipStanding[] = [];
   const seatMemberships: MembershipStanding[] = [];
   for (const { payerId, ...standing } of membershipRows) {
@@ -183,7 +186,7 @@ async function readEntitlements(
   }
   return (courseId) => ({
     enrolledAt: enrolledAt.get(courseId) ?? null,
-    grant: grants.get(courseId) ?? null,
+    grants: grants.get(courseId) ?? [],
     memberships,
     seatMemberships,
   });
@@ -238,7 +241,7 @@ export async function courseAccessForMany(
 
 // ---- Granting access ------------------------------------------------------------------------
 
-/** Lifetime access to one course for one person, and where it came from. */
+/** Lifetime access to one course for one person, from one source. */
 export type CourseGrant = {
   readonly userId: string;
   readonly courseId: string;
@@ -246,38 +249,32 @@ export type CourseGrant = {
 };
 
 /**
- * Gives the person lifetime access to the course, inside the caller's transaction. A revoked grant
- * is revived with the new source and date; an unrevoked one is never replaced, so a purchase does
- * not overwrite a gift. Returns whether access was granted (false when it already was).
+ * Gives the person lifetime access to the course from this source, inside the caller's
+ * transaction, reviving that source's grant if it was revoked. Grants from other sources are
+ * separate rows and stay as they are.
  */
 export async function grantCourseAccess(
   db: Prisma.TransactionClient,
   { userId, courseId, source }: CourseGrant,
-): Promise<boolean> {
-  const revived = await db.courseAccess.updateMany({
-    where: { userId, courseId, revokedAt: { not: null } },
-    data: { source, grantedAt: new Date(), revokedAt: null },
+): Promise<void> {
+  await db.courseAccess.upsert({
+    where: { userId_courseId_source: { userId, courseId, source } },
+    create: { userId, courseId, source },
+    update: { revokedAt: null },
   });
-  if (revived.count > 0) return true;
-  const created = await db.courseAccess.createMany({
-    data: [{ userId, courseId, source }],
-    skipDuplicates: true,
-  });
-  return created.count > 0;
 }
 
 /**
- * Revokes the person's grant for the course if it came from `source` (a refunded purchase, a
- * withdrawn gift), inside the caller's transaction; a grant from another source stays. The row is
- * kept, revoked. Returns whether a grant was revoked. Phase 14b also matches the refunded order.
+ * Revokes the person's grant for the course from this source (a refunded purchase, a withdrawn
+ * gift), inside the caller's transaction; grants from other sources keep the course open. The row
+ * is kept, revoked. Phase 14b also matches the refunded order.
  */
 export async function revokeCourseAccess(
   db: Prisma.TransactionClient,
   { userId, courseId, source }: CourseGrant,
-): Promise<boolean> {
-  const { count } = await db.courseAccess.updateMany({
+): Promise<void> {
+  await db.courseAccess.updateMany({
     where: { userId, courseId, source, revokedAt: null },
     data: { revokedAt: new Date() },
   });
-  return count > 0;
 }
