@@ -653,9 +653,11 @@ Status: 14a DONE (records and access rules); 14b next.
 - **Checkout has its own switch.** `PAYMENTS_ENABLED` (Parameter Store, `false` in every stage,
   read by `src/server/payments/config.ts`) only opens or closes checkout (Phase 14b). It never
   decides who may open a course, so switching it off after launch keeps paid courses closed.
-- **Dependencies point inwards.** `src/server/access.ts` never imports from `src/server/payments`;
-  payments code may import access.ts and learning.ts. access.ts is the only writer of
-  `course_access`, and learning.ts has a session-free `enrollLearner` for checkout to call.
+- **Dependencies point inwards.** The access rule and what it builds on (`src/server/access.ts`,
+  `learning.ts`, `memberships.ts`, `early-access.ts` and everything in `src/lib`) never import from
+  `src/server/payments`; a `no-restricted-imports` rule in `apps/web/eslint.config.mjs` fails lint
+  if one does. Payments code may import them. access.ts is the only writer of `course_access`, and
+  learning.ts has a session-free `enrollLearner` for checkout to call.
 - **Records** (migration `payments_access`):
   - `course_access`: lifetime access to one course (source purchase, gift or admin), one row per
     person and course, written through `grantCourseAccess` and `revokeCourseAccess`. A grant
