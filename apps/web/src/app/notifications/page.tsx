@@ -34,14 +34,14 @@ export default async function NotificationsPage() {
         </div>
 
         {notifications.length === 0 ? (
-          <div className="mt-8 flex flex-col items-center gap-3 bg-white p-10 text-center shadow-md">
+          <div className="mt-8 flex flex-col items-center gap-3 rounded-card bg-white p-10 text-center shadow-md">
             <Bell className="size-10 text-gray-400" aria-hidden />
             <p className="text-gray-700">
               Replies from support and news about your applications and courses will appear here.
             </p>
           </div>
         ) : (
-          <ul className="mt-8 divide-y divide-gray-200 bg-white shadow-md">
+          <ul className="card-clip mt-8 divide-y divide-gray-200 rounded-card bg-white shadow-md">
             {notifications.map((n) => (
               <li key={n.id}>
                 <a

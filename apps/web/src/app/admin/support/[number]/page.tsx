@@ -63,13 +63,13 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
             </span>
           </div>
           <TicketThread messages={ticket.messages} viewer="staff" />
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <StaffReplyForm ticketNumber={ticket.number} ai={aiConfig().enabled} />
           </section>
         </div>
 
         <aside className="space-y-6">
-          <section className="bg-white p-5 shadow-md">
+          <section className="rounded-card bg-white p-5 shadow-md">
             <h2 className="mb-4 font-bold">Request</h2>
             <TicketDetailsForm
               ticketNumber={ticket.number}
@@ -89,7 +89,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
               }))}
             />
           </section>
-          <section className="space-y-2 bg-white p-5 text-sm shadow-md">
+          <section className="space-y-2 rounded-card bg-white p-5 text-sm shadow-md">
             <h2 className="font-bold">From</h2>
             <p className="font-semibold">{ticket.requester.name}</p>
             <p className="break-all text-gray-700">{ticket.requester.email}</p>
@@ -112,7 +112,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
             )}
           </section>
           {(ticket.pageUrl || ticket.userAgent) && (
-            <section className="space-y-2 bg-white p-5 text-sm shadow-md">
+            <section className="space-y-2 rounded-card bg-white p-5 text-sm shadow-md">
               <h2 className="font-bold">Context</h2>
               {ticket.pageUrl && (
                 <p>

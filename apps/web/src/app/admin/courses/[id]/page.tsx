@@ -123,7 +123,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
           <CourseCover
             categorySlug={course.category.slug}
             imageUrl={coverUrl}
-            className="shadow-md"
+            className="rounded-card shadow-md"
           />
           {missing.length > 0 && (
             <div className="border-l-4 border-red-600 bg-red-50 p-4 text-sm">

@@ -151,7 +151,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
         </div>
 
         {total === 0 ? (
-          <div className="bg-white p-10 text-center shadow-md">
+          <div className="rounded-card bg-white p-10 text-center shadow-md">
             <p className="text-lg font-semibold">
               {filtered ? 'Nothing matches yet.' : 'Free content is on its way.'}
             </p>
@@ -234,7 +234,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
           </>
         )}
 
-        <section className="flex flex-col items-center gap-4 bg-white p-10 text-center shadow-md">
+        <section className="flex flex-col items-center gap-4 rounded-card bg-white p-10 text-center shadow-md">
           <h2 className="text-2xl font-extrabold">Ready to go deeper?</h2>
           <p className="max-w-xl text-gray-700">
             Our full courses guide you step by step, with progress tracking to keep you going.

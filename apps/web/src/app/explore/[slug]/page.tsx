@@ -81,18 +81,20 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
                 controls
                 preload="metadata"
                 src={resource.mediaUrl}
-                className="aspect-video w-full bg-black"
+                className="aspect-video w-full rounded-card bg-black"
               />
             ) : (
-              <p className="bg-white p-8 text-center text-gray-700">This video is not available.</p>
+              <p className="rounded-card bg-white p-8 text-center text-gray-700">
+                This video is not available.
+              </p>
             ))}
           {resource.type === 'AUDIO' &&
             (resource.mediaUrl ? (
-              <div className="bg-white p-6 shadow-md">
+              <div className="rounded-card bg-white p-6 shadow-md">
                 <audio controls preload="metadata" src={resource.mediaUrl} className="w-full" />
               </div>
             ) : (
-              <p className="bg-white p-8 text-center text-gray-700">
+              <p className="rounded-card bg-white p-8 text-center text-gray-700">
                 This recording is not available.
               </p>
             ))}
@@ -102,7 +104,7 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
                 <iframe
                   src={resource.mediaUrl}
                   title={resource.title}
-                  className="h-[75vh] w-full border border-gray-300 bg-white"
+                  className="h-[75vh] w-full rounded-card border border-gray-300 bg-white"
                 />
                 <a
                   href={resource.mediaUrl}
@@ -114,12 +116,12 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
                 </a>
               </div>
             ) : (
-              <p className="bg-white p-8 text-center text-gray-700">
+              <p className="rounded-card bg-white p-8 text-center text-gray-700">
                 This document is not available.
               </p>
             ))}
           {resource.type === 'ARTICLE' && (
-            <article className="bg-white p-6 shadow-md sm:p-10">
+            <article className="rounded-card bg-white p-6 shadow-md sm:p-10">
               <RichText text={resource.body} />
             </article>
           )}

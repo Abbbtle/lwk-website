@@ -38,9 +38,11 @@ export default async function ApplicationsPage({ searchParams }: PageProps<'/adm
       </nav>
 
       {applications.length === 0 ? (
-        <p className="bg-surface p-8 text-center text-gray-700">No applications here.</p>
+        <p className="rounded-card bg-surface p-8 text-center text-gray-700">
+          No applications here.
+        </p>
       ) : (
-        <ul className="divide-y divide-gray-300 border border-gray-300">
+        <ul className="card-clip divide-y divide-gray-300 rounded-card border border-gray-300">
           {applications.map((a) => (
             <li key={a.id}>
               <Link

@@ -8,6 +8,7 @@ import { DataStack } from '../lib/data-stack';
 import { DeployAccessStack } from '../lib/deploy-access-stack';
 import { DomainStack } from '../lib/domain-stack';
 import { EdgeStack } from '../lib/edge-stack';
+import { MailStack } from '../lib/mail-stack';
 import { MonitoringStack } from '../lib/monitoring-stack';
 import { NetworkStack } from '../lib/network-stack';
 import { StorageStack } from '../lib/storage-stack';
@@ -29,6 +30,17 @@ const domain = new DomainStack(app, 'lwk-domain', {
   terminationProtection: true,
   description: `LWK - public DNS for ${config.apexDomainName} (Route 53)`,
   apexDomainName: config.apexDomainName,
+});
+
+// Mail for the domain: SES receives the forwarded mailboxes (support@) and forwards their mail.
+new MailStack(app, 'lwk-mail', {
+  env,
+  terminationProtection: true,
+  description: `LWK - mail for ${config.apexDomainName}: SES receiving and forwarding`,
+  hostedZone: domain.hostedZone,
+  forwardedLocalParts: config.mail.forwardedLocalParts,
+  forwardToParameterName: config.mail.forwardToParameterName,
+  forwarderName: config.mail.forwarderName,
 });
 
 // The main address (and www) shows a coming-soon page until production launches. A stage can only

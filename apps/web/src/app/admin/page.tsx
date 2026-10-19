@@ -54,7 +54,7 @@ export default async function AdminPage() {
           <li key={card.href}>
             <Link
               href={card.href}
-              className="block bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
+              className="block rounded-card bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
             >
               <p className="text-4xl font-extrabold text-brand-ink">{card.count}</p>
               <p className="mt-2 font-semibold">{card.label}</p>

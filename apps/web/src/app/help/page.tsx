@@ -69,7 +69,7 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
                   : `We could not find an article about “${query}”`}
               </h2>
               {results.length > 0 ? (
-                <ul className="divide-y divide-gray-200 bg-white shadow-md">
+                <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
                   {results.map((article) => (
                     <li key={article.slug}>
                       <Link
@@ -101,7 +101,7 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
                   <li key={article.slug}>
                     <Link
                       href={`/help/${article.slug}`}
-                      className="flex h-full items-center justify-between gap-3 bg-white px-5 py-4 shadow-md hover:shadow-lg"
+                      className="flex h-full items-center justify-between gap-3 rounded-card bg-white px-5 py-4 shadow-md hover:shadow-lg"
                     >
                       <span className="font-semibold">{article.title}</span>
                       <ChevronRight className="size-5 shrink-0 text-gray-400" aria-hidden />
@@ -116,7 +116,11 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
             <h2 className="text-2xl font-extrabold">Browse by topic</h2>
             <div className="grid gap-6 md:grid-cols-2">
               {topics.map((topic) => (
-                <section key={topic.slug} id={topic.slug} className="bg-white p-6 shadow-md">
+                <section
+                  key={topic.slug}
+                  id={topic.slug}
+                  className="rounded-card bg-white p-6 shadow-md"
+                >
                   <h3 className="text-lg font-bold">{topic.title}</h3>
                   <p className="mt-1 text-sm text-gray-600">{topic.description}</p>
                   <ul className="mt-4 space-y-2">

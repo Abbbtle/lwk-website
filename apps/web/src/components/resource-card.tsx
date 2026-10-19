@@ -8,7 +8,7 @@ import type { ResourceSummary } from '@/server/resources';
 export function ResourceCard({ resource }: { resource: ResourceSummary }) {
   const { unit } = resourceTypes[resource.type];
   return (
-    <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+    <article className="group relative flex flex-col overflow-hidden rounded-card bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       <div className="relative">
         <CourseCover categorySlug={resource.categorySlug ?? ''} imageUrl={resource.coverUrl} />
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">

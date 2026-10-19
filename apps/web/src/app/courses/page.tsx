@@ -61,7 +61,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
         >
           <span
             aria-hidden
-            className={`flex size-5 items-center justify-center border-2 ${free ? 'border-brand bg-brand text-black' : 'border-black'}`}
+            className={`flex size-5 items-center justify-center rounded border-2 ${free ? 'border-brand bg-brand text-black' : 'border-black'}`}
           >
             {free && '✓'}
           </span>
@@ -80,7 +80,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
           <CourseGrid courses={courses} region={region} />
         </>
       ) : (
-        <div className="bg-white p-10 text-center shadow-md">
+        <div className="rounded-card bg-white p-10 text-center shadow-md">
           <p className="text-lg font-semibold">No courses match your search.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link href="/courses" className="btn-outline">

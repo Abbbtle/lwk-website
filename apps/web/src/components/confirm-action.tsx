@@ -49,7 +49,7 @@ export function ConfirmAction({
           {label}
         </button>
       ) : (
-        <div className="space-y-3 border border-gray-300 bg-surface p-4">
+        <div className="space-y-3 rounded-card border border-gray-300 bg-surface p-4">
           <p className="text-sm">{question}</p>
           <div className="flex flex-wrap gap-3">
             <button

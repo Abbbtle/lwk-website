@@ -21,7 +21,7 @@ export function CourseCard({
   sizes?: string;
 }) {
   return (
-    <article className="group relative flex flex-col bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+    <article className="group relative flex flex-col overflow-hidden rounded-card bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
       <div className="relative">
         <CourseCover
           categorySlug={course.categorySlug}

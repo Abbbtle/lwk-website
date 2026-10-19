@@ -9,7 +9,7 @@ export function StatusBadge({ status }: { status: string }) {
   const style = styles[status] ?? { label: status, className: 'border-gray-400' };
   return (
     <span
-      className={`inline-block border px-2 py-0.5 text-xs font-bold uppercase ${style.className}`}
+      className={`inline-block rounded-badge border px-2 py-0.5 text-xs font-bold uppercase ${style.className}`}
     >
       {style.label}
     </span>

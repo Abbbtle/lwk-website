@@ -63,7 +63,11 @@ export function ConfirmIdentity({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-5 border border-gray-300 bg-surface p-5">
+    <form
+      onSubmit={submit}
+      noValidate
+      className="space-y-5 rounded-card border border-gray-300 bg-surface p-5"
+    >
       <h3 ref={heading} tabIndex={-1} className="font-bold focus:outline-none">
         {mfa ? 'Enter your authentication code' : "Confirm it's you"}
       </h3>

@@ -26,7 +26,7 @@ export default async function NewRequestPage({ searchParams }: PageProps<'/suppo
         <p className="mt-2 text-gray-700">
           Tell us what you need and we will reply here. You get a notification when we do.
         </p>
-        <div className="mt-8 bg-white p-6 shadow-md sm:p-8">
+        <div className="mt-8 rounded-card bg-white p-6 shadow-md sm:p-8">
           <NewRequestForm
             categories={TICKET_CATEGORIES}
             initialCategory={category}

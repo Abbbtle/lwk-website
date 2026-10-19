@@ -4,7 +4,7 @@ import type { FormState } from '@/lib/forms/form-state';
 const inputClasses = {
   // Boxed inputs on the light page background (instructor application, editors).
   boxed:
-    'w-full border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600',
+    'w-full rounded-control border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600',
   // Underlined inputs with the label as placeholder (POC contact form).
   underline:
     'w-full border-0 border-b border-black bg-transparent px-2 py-3 text-lg placeholder:text-gray-500 focus:border-brand focus:outline-none aria-invalid:border-red-600',

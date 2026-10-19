@@ -58,7 +58,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
           name="q"
           defaultValue={query}
           placeholder="Search by name or email"
-          className="min-w-0 flex-1 border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
+          className="min-w-0 flex-1 rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none"
         />
         <button type="submit" className="btn-solid px-4" aria-label="Search">
           <Search className="size-4" aria-hidden />
@@ -84,9 +84,11 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
       </p>
 
       {users.length === 0 ? (
-        <p className="bg-white p-8 text-center text-gray-700 shadow-md">Nobody matches.</p>
+        <p className="rounded-card bg-white p-8 text-center text-gray-700 shadow-md">
+          Nobody matches.
+        </p>
       ) : (
-        <div className="overflow-x-auto bg-white shadow-md">
+        <div className="overflow-x-auto rounded-card bg-white shadow-md">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-gray-300 bg-gray-50 text-xs text-gray-600 uppercase">
               <tr>
@@ -122,7 +124,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
                       {user.roles.map((role) => (
                         <span
                           key={role}
-                          className="border border-gray-400 px-1.5 text-xs font-bold uppercase"
+                          className="rounded-badge border border-gray-400 px-1.5 text-xs font-bold uppercase"
                         >
                           {ROLE_LABELS[role as keyof typeof ROLE_LABELS] ?? role}
                         </span>
@@ -134,7 +136,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
                         />
                       )}
                       {user.disabledAt && (
-                        <span className="border border-red-700 px-1.5 text-xs font-bold text-red-700 uppercase">
+                        <span className="rounded-badge border border-red-700 px-1.5 text-xs font-bold text-red-700 uppercase">
                           Disabled
                         </span>
                       )}

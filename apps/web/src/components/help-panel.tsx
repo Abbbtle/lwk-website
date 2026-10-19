@@ -31,7 +31,7 @@ async function loadHelp(params: Record<string, string>): Promise<HelpData | null
 
 function ArticleList({ articles }: { articles: ArticleSummary[] }) {
   return (
-    <ul className="divide-y divide-gray-200 border border-gray-200">
+    <ul className="card-clip divide-y divide-gray-200 rounded-card border border-gray-200">
       {articles.map((article) => (
         <li key={article.slug}>
           <Link
@@ -220,7 +220,7 @@ export function HelpPanel({
                 placeholder="Search help, e.g. 'reset password'"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full border border-gray-300 bg-surface py-2.5 pr-10 pl-3 focus:border-black focus:outline-none"
+                className="w-full rounded-control border border-gray-300 bg-surface py-2.5 pr-10 pl-3 focus:border-black focus:outline-none"
               />
               <Search
                 className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-gray-500"

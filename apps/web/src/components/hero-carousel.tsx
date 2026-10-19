@@ -3,10 +3,16 @@
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** How long a slide shows before the next one. */
 const SLIDE_MS = 7000;
+
+/** How a change of slide moves: slides travel this long, easing to a stop. */
+const MOVE = { duration: 700, easing: 'ease-out' } as const;
+
+/** Forward (1) brings the next slide in from the right; back (-1) brings it in from the left. */
+type Direction = 1 | -1;
 
 type HeroAction = { href: string; label: string };
 
@@ -39,17 +45,32 @@ function scrimClass(align: HeroBannerSlide['align']) {
 }
 
 /**
+ * Moves the text clear of the side arrows (48px wide, 16-24px in from the screen edge), which
+ * would otherwise cover its first or last words. From 98rem (1568px) the page's own side
+ * margin leaves room for them, so the text lines up with the rest of the page again.
+ */
+function arrowClearance(align: HeroBannerSlide['align']) {
+  return align === 'right' ? 'md:mr-14 min-[98rem]:mr-0' : 'md:ml-14 min-[98rem]:ml-0';
+}
+
+/**
  * The home page banner: full-width slides, each a photo with white text over a dark fade, or a
  * saffron brand panel, with a label, a headline and two buttons. Slides move on by themselves;
  * rotation pauses while the pointer or keyboard focus is in the banner, stops with the pause
  * button, and is off for people who ask for reduced motion. Only the first photo loads with the
  * page; the next one loads once the page has finished loading, the rest as they are needed.
+ *
+ * The slides go round in a loop: moving on from the last slide brings the first in from the
+ * right, as for any other slide, rather than rewinding back past them all. Only the slide
+ * leaving and the slide arriving move; the others stay hidden.
  */
 export function HeroCarousel({ label, slides }: { label: string; slides: HeroBannerSlide[] }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [held, setHeld] = useState(false);
   const [ready, setReady] = useState<ReadonlySet<number>>(() => new Set([0]));
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const moving = useRef<Animation[]>([]);
   const count = slides.length;
 
   /** Lets these slides' photos load. */
@@ -65,12 +86,34 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
   );
 
   const go = useCallback(
-    (next: number) => {
+    (next: number, direction: Direction) => {
       const target = (next + count) % count;
+      if (target === index) return;
       allow([target - 1, target, target + 1]);
       setIndex(target);
+
+      // A click during a move starts the new move from where the slides come to rest.
+      for (const animation of moving.current) animation.cancel();
+      moving.current = [];
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      // Both slides stay visible while they move, though only the arrival is shown at rest.
+      const leaving = slideRefs.current[index]?.animate(
+        [
+          { transform: 'translateX(0)', visibility: 'visible' },
+          { transform: `translateX(${-direction * 100}%)`, visibility: 'visible' },
+        ],
+        MOVE,
+      );
+      const arriving = slideRefs.current[target]?.animate(
+        [
+          { transform: `translateX(${direction * 100}%)`, visibility: 'visible' },
+          { transform: 'translateX(0)', visibility: 'visible' },
+        ],
+        MOVE,
+      );
+      moving.current = [leaving, arriving].filter((animation) => animation !== undefined);
     },
-    [count, allow],
+    [count, index, allow],
   );
 
   // Fetch the next slide's photo only after the page itself has finished loading.
@@ -87,7 +130,7 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
   useEffect(() => {
     if (!playing || held || count < 2) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = setTimeout(() => go(index + 1), SLIDE_MS);
+    const timer = setTimeout(() => go(index + 1, 1), SLIDE_MS);
     return () => clearTimeout(timer);
   }, [index, playing, held, count, go]);
 
@@ -106,21 +149,24 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
         if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false);
       }}
     >
-      <div
-        className="flex transition-transform duration-700 ease-out motion-reduce:transition-none"
-        style={{ transform: `translateX(-${index * 100}%)` }}
-      >
+      {/* The slides are stacked in one place, so the banner is as tall as the tallest. */}
+      <div className="grid">
         {slides.map((slide, i) => {
           const Heading = i === 0 ? 'h1' : 'h2';
           const onPhoto = Boolean(slide.image);
           return (
             <div
               key={slide.id}
+              ref={(element) => {
+                slideRefs.current[i] = element;
+              }}
               role="group"
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${count}`}
               inert={i !== index}
-              className="relative flex w-full shrink-0 flex-col md:block md:h-[34rem] lg:h-[38rem]"
+              className={`relative col-start-1 row-start-1 flex w-full flex-col md:block md:h-[34rem] lg:h-[38rem] ${
+                i === index ? '' : 'invisible'
+              }`}
             >
               {/* The picture: above the text on phones, behind it on wider screens. */}
               <div className="relative aspect-[16/10] w-full overflow-hidden md:absolute md:inset-0 md:aspect-auto">
@@ -166,7 +212,9 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
               >
                 <div className="page-width flex h-full pt-6 pb-20 md:items-center md:pt-0 md:pb-8">
                   <div
-                    className={`max-w-xl lg:max-w-2xl ${slide.align === 'right' ? 'md:ml-auto' : ''}`}
+                    className={`max-w-xl lg:max-w-2xl ${slide.align === 'right' ? 'md:ml-auto' : ''} ${
+                      count > 1 ? arrowClearance(slide.align) : ''
+                    }`}
                   >
                     {slide.tag && (
                       <p
@@ -217,15 +265,17 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
 
       {count > 1 && (
         <>
-          {[
-            { label: 'Previous slide', step: -1, icon: ChevronLeft, side: 'left-4 lg:left-6' },
-            { label: 'Next slide', step: 1, icon: ChevronRight, side: 'right-4 lg:right-6' },
-          ].map(({ label: name, step, icon: Icon, side }) => (
+          {(
+            [
+              { label: 'Previous slide', step: -1, icon: ChevronLeft, side: 'left-4 lg:left-6' },
+              { label: 'Next slide', step: 1, icon: ChevronRight, side: 'right-4 lg:right-6' },
+            ] as const
+          ).map(({ label: name, step, icon: Icon, side }) => (
             <button
               key={name}
               type="button"
               aria-label={name}
-              onClick={() => go(index + step)}
+              onClick={() => go(index + step, step)}
               className={`absolute top-1/2 hidden size-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-gray-900 shadow-lg ring-1 ring-black/10 hover:bg-gray-100 md:flex ${side}`}
             >
               <Icon className="size-6" aria-hidden />
@@ -236,7 +286,8 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
               <button
                 key={slide.id}
                 type="button"
-                onClick={() => go(i)}
+                // A slide further on comes in from the right, an earlier one from the left.
+                onClick={() => go(i, i > index ? 1 : -1)}
                 aria-label={`Show slide ${i + 1}: ${slide.heading}`}
                 aria-current={i === index}
                 className="group flex size-6 cursor-pointer items-center justify-center"

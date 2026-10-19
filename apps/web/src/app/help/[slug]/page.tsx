@@ -45,7 +45,7 @@ export default async function HelpArticlePage({ params }: PageProps<'/help/[slug
         <h1 className="mt-4 text-3xl font-extrabold md:text-4xl">{article.title}</h1>
         <p className="mt-3 text-lg text-gray-700">{article.summary}</p>
 
-        <article className="mt-8 bg-white p-6 shadow-md sm:p-8">
+        <article className="mt-8 rounded-card bg-white p-6 shadow-md sm:p-8">
           <RichText text={article.body} size="lg" className="text-base md:text-lg" />
         </article>
 
@@ -56,7 +56,7 @@ export default async function HelpArticlePage({ params }: PageProps<'/help/[slug
         {related.length > 0 && (
           <section className="mt-10 space-y-3">
             <h2 className="text-xl font-bold">Related articles</h2>
-            <ul className="divide-y divide-gray-200 bg-white shadow-md">
+            <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
               {related.map((r) => (
                 <li key={r.slug}>
                   <Link

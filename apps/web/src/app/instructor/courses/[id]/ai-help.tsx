@@ -27,7 +27,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <details className="group border border-gray-300 bg-white">
+    <details className="group card-clip rounded-card border border-gray-300 bg-white">
       <summary className="cursor-pointer list-none px-5 py-4">
         <span className="font-semibold group-open:text-brand-ink">{title}</span>
         <span className="block text-sm text-gray-600">{description}</span>
@@ -86,7 +86,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
   }
 
   const input =
-    'w-full border border-gray-300 bg-surface px-3 py-2 text-sm focus:border-black focus:outline-none';
+    'w-full rounded-control border border-gray-300 bg-surface px-3 py-2 text-sm focus:border-black focus:outline-none';
 
   return (
     <section aria-labelledby="ai-help-title" className="space-y-3">

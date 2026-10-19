@@ -115,7 +115,7 @@ export function StaffReplyForm({ ticketNumber, ai }: { ticketNumber: number; ai:
             }
             e.target.value = '';
           }}
-          className="border border-gray-300 bg-white px-2 py-1"
+          className="rounded-control border border-gray-300 bg-white px-2 py-1"
         >
           <option value="">Choose...</option>
           {TEMPLATES.map((t) => (
@@ -133,7 +133,7 @@ export function StaffReplyForm({ ticketNumber, ai }: { ticketNumber: number; ai:
           name="body"
           rows={6}
           defaultValue={state.values?.body}
-          className={`w-full border px-3 py-2 focus:border-black focus:outline-none ${
+          className={`w-full rounded-control border px-3 py-2 focus:border-black focus:outline-none ${
             mode === 'note' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-300 bg-surface'
           }`}
         />

@@ -33,7 +33,7 @@ export function TicketThread({
               : `${message.authorName} · staff`
             : message.authorName;
         return (
-          <li key={message.id} className={`${style} p-4 shadow-sm`}>
+          <li key={message.id} className={`${style} rounded-card p-4 shadow-sm`}>
             <p className="text-sm">
               <span className="font-semibold">{who}</span>{' '}
               <time dateTime={message.createdAt.toISOString()} className="text-gray-500">

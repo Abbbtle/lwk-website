@@ -89,7 +89,7 @@ export function NotificationBell({ unread }: { unread: number }) {
         <div
           role="region"
           aria-label="Notifications"
-          className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] border border-gray-300 bg-white shadow-lg"
+          className="card-clip absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-card border border-gray-300 bg-white shadow-lg"
         >
           <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
             <p className="font-bold">Notifications</p>

@@ -58,7 +58,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
                 aria-hidden
               />
             </summary>
-            <div className="absolute right-0 z-40 mt-2 w-64 border border-gray-300 bg-white shadow-lg">
+            <div className="absolute right-0 z-40 mt-2 w-64 rounded-card border border-gray-300 bg-white shadow-lg">
               <p className="truncate border-b border-gray-300 px-4 py-3 text-sm text-gray-600">
                 {user.email}
               </p>

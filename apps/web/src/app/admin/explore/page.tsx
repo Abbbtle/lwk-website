@@ -27,7 +27,7 @@ export default async function AdminExplorePage() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Add a free resource</h2>
             <p className="mt-2 text-sm text-gray-600">
               A single video, audio recording, article or PDF that anyone can open in Explore. Free
@@ -38,7 +38,7 @@ export default async function AdminExplorePage() {
             </div>
           </section>
 
-          <section className="bg-white shadow-md">
+          <section className="card-clip rounded-card bg-white shadow-md">
             <h2 className="border-b border-gray-200 p-6 text-xl font-bold">
               Resources ({resources.length})
             </h2>
@@ -73,7 +73,7 @@ export default async function AdminExplorePage() {
         </div>
 
         <aside>
-          <section className="space-y-4 bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
             <h2 className="text-xl font-bold">Sample content</h2>
             <p className="text-sm text-gray-700">
               Short sample courses (two of them free) and free articles, so testers can try

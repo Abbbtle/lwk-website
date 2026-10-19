@@ -23,14 +23,14 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-8">
-      <section className="bg-white p-6 shadow-md sm:p-8">
+      <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
         <h2 className="text-xl font-bold">Profile</h2>
         <div className="mt-6">
           <ProfileForm name={session.name} />
         </div>
       </section>
 
-      <section className="bg-white p-6 shadow-md sm:p-8">
+      <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
         <h2 className="text-xl font-bold">Account details</h2>
         <dl className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2">
           <div>

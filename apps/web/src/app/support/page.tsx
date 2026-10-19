@@ -29,14 +29,14 @@ export default async function SupportPage() {
             </Link>
           </div>
           {tickets.length === 0 ? (
-            <div className="bg-white p-8 text-center shadow-md">
+            <div className="rounded-card bg-white p-8 text-center shadow-md">
               <p className="text-gray-700">
                 You have not sent a support request. Most questions are answered in the help centre,
                 and we are here when they are not.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200 bg-white shadow-md">
+            <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
               {tickets.map((ticket) => (
                 <li key={ticket.id}>
                   <Link
@@ -64,7 +64,7 @@ export default async function SupportPage() {
         </section>
 
         <aside className="space-y-6">
-          <section className="space-y-4 bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
             <h2 className="text-lg font-bold">Find an answer now</h2>
             <form action="/help" role="search" aria-label="Help centre" className="relative">
               <label htmlFor="support-help-search" className="sr-only">
@@ -75,7 +75,7 @@ export default async function SupportPage() {
                 name="q"
                 type="search"
                 placeholder="Search help"
-                className="w-full border border-gray-300 bg-surface py-2.5 pr-10 pl-3 focus:border-black focus:outline-none"
+                className="w-full rounded-control border border-gray-300 bg-surface py-2.5 pr-10 pl-3 focus:border-black focus:outline-none"
               />
               <button
                 type="submit"
@@ -85,7 +85,7 @@ export default async function SupportPage() {
                 <Search className="size-4" aria-hidden />
               </button>
             </form>
-            <ul className="divide-y divide-gray-200 border border-gray-200">
+            <ul className="card-clip divide-y divide-gray-200 rounded-card border border-gray-200">
               {topics.map((topic) => (
                 <li key={topic.slug}>
                   <Link

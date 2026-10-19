@@ -57,7 +57,7 @@ export function NewRequestForm({
           {categories.map((category) => (
             <label
               key={category.value}
-              className="flex cursor-pointer items-start gap-3 border border-gray-300 bg-white p-3 has-checked:border-black has-checked:shadow-[0_3px_0_0_black]"
+              className="flex cursor-pointer items-start gap-3 rounded-control border border-gray-300 bg-white p-3 has-checked:border-black has-checked:shadow-[0_3px_0_0_black]"
             >
               <input
                 type="radio"
@@ -94,7 +94,7 @@ export function NewRequestForm({
           maxLength={150}
           aria-invalid={state.errors?.subject ? true : undefined}
           aria-describedby={state.errors?.subject ? 'subject-error' : undefined}
-          className="w-full border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600"
+          className="w-full rounded-control border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600"
         />
         {state.errors?.subject && (
           <p id="subject-error" className="text-sm text-red-600">

@@ -133,7 +133,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
               our instructors.
             </p>
           )}
-          <section className="border border-gray-300 p-6">
+          <section className="rounded-card border border-gray-300 p-6">
             <h2 className="text-2xl font-bold">What you&apos;ll learn</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {course.outcomes.map((outcome) => (
@@ -154,7 +154,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 course.durationMinutes > 0 && `${formatDuration(course.durationMinutes)} total`,
               ])}
             </p>
-            <ol className="mt-4 divide-y divide-gray-300 border border-gray-300">
+            <ol className="mt-4 divide-y divide-gray-300 rounded-card border border-gray-300">
               {course.sections.map((section, index) => (
                 <li key={section.title} className="flex items-center justify-between gap-4 p-4">
                   <span className="font-semibold">
@@ -182,7 +182,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
         </div>
 
         <aside className="lg:-mt-48">
-          <div className="bg-white shadow-lg lg:sticky lg:top-6">
+          <div className="overflow-hidden rounded-card bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
               {enrollment ? (

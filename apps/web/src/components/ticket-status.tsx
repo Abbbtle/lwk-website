@@ -13,7 +13,7 @@ const styles: Record<string, string> = {
 export function TicketBadge({ value, label }: { value: string; label: string }) {
   return (
     <span
-      className={`inline-block border px-2 py-0.5 text-xs font-bold whitespace-nowrap uppercase ${styles[value] ?? 'border-gray-400'}`}
+      className={`inline-block rounded-badge border px-2 py-0.5 text-xs font-bold whitespace-nowrap uppercase ${styles[value] ?? 'border-gray-400'}`}
     >
       {label}
     </span>
