@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MembershipStatus } from '@/generated/prisma/client';
-import { type CoursePricing, coursePricingColumns } from '@/lib/pricing';
+import type { CourseStatus, MembershipStatus } from '@/generated/prisma/client';
+import {
+  chargedPriceColumns,
+  type CoursePricing,
+  coursePricingColumns,
+  familyPrice,
+} from '@/lib/pricing';
 import { testSession } from '../../test/sessions';
 import {
   type AccessDecision,
@@ -9,18 +14,20 @@ import {
   courseAccessFor,
   courseAccessForMany,
   decideCourseAccess,
-  earnsEarlyAccess,
   type Entitlements,
-  type MembershipStanding,
+  grantCourseAccess,
+  revokeCourseAccess,
 } from './access';
 import type { Role } from './auth/session';
 import { getDb } from './db';
+import type { MembershipStanding } from './memberships';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
 const NOW = new Date('2026-11-02T12:00:00Z');
-const daysFromNow = (days: number) => new Date(NOW.getTime() + days * 24 * 60 * 60 * 1000);
+const daysFromNow = (days: number) => new Date(NOW.getTime() + days * DAY_MS);
 
-const OFF = { enabled: false, pastDueGraceDays: 3 };
-const ON = { enabled: true, pastDueGraceDays: 3 };
+/** Early access ended ten days ago. */
+const ENDED = daysFromNow(-10);
 
 const free: CoursePricing = { kind: 'free' };
 const tier: CoursePricing = { kind: 'tier', tier: 3 };
@@ -28,19 +35,26 @@ const unpriced: CoursePricing = { kind: 'unpriced' };
 const everyPricing = [free, tier, unpriced].map((pricing) => [pricing.kind, pricing] as const);
 
 const learner = { isOwner: false, isAdmin: false };
-const nothing: Entitlements = { grant: null, memberships: [], seatMemberships: [] };
+const owner = { isOwner: true, isAdmin: false };
+const admin = { isOwner: false, isAdmin: true };
+const nothing: Entitlements = {
+  enrolledAt: null,
+  grant: null,
+  memberships: [],
+  seatMemberships: [],
+};
 
-const standing = (
-  status: MembershipStatus,
-  currentPeriodEnd: Date,
-  trialEndsAt: Date | null = null,
-): MembershipStanding => ({ status, currentPeriodEnd, trialEndsAt });
+const standing = (status: MembershipStatus, currentPeriodEnd: Date): MembershipStanding => ({
+  status,
+  currentPeriodEnd,
+});
 
-/** A learner opening a priced course with payments on, unless the case says otherwise. */
+/** A signed-in learner opening a published, priced course after early access, unless the case says otherwise. */
 function decide(facts: Partial<AccessFacts>): AccessDecision {
   return decideCourseAccess({
     pricing: tier,
-    payments: ON,
+    published: true,
+    earlyAccessEndsAt: ENDED,
     viewer: learner,
     entitlements: nothing,
     now: NOW,
@@ -49,62 +63,101 @@ function decide(facts: Partial<AccessFacts>): AccessDecision {
 }
 
 const PAYMENT_REQUIRED: AccessDecision = { kind: 'locked', reason: 'payment_required' };
+const JOINED_EARLY: AccessDecision = { kind: 'open', reason: 'joined_in_early_access' };
 
 describe('the access rule', () => {
   describe.each([
-    ['off', OFF],
-    ['on', ON],
-  ])('with payments %s', (_state, payments) => {
+    ['while early access has no end', null],
+    ['before early access ends', daysFromNow(10)],
+    ['after early access', ENDED],
+  ])('%s', (_phase, earlyAccessEndsAt) => {
     it.each(everyPricing)('gives signed-out visitors previews only (%s)', (_kind, pricing) => {
-      expect(decide({ payments, pricing, viewer: null })).toEqual({
+      expect(decide({ earlyAccessEndsAt, pricing, viewer: null })).toEqual({
         kind: 'locked',
         reason: 'signed_out',
       });
     });
 
-    it.each(everyPricing)('lets owners and admins manage (%s)', (_kind, pricing) => {
-      expect(decide({ payments, pricing, viewer: { isOwner: true, isAdmin: false } })).toEqual({
-        kind: 'manage',
-        role: 'owner',
-      });
-      expect(decide({ payments, pricing, viewer: { isOwner: false, isAdmin: true } })).toEqual({
-        kind: 'manage',
-        role: 'admin',
-      });
+    it.each(everyPricing)(
+      'lets owners and admins manage, published or not (%s)',
+      (_kind, pricing) => {
+        for (const published of [true, false]) {
+          expect(decide({ earlyAccessEndsAt, pricing, published, viewer: owner })).toEqual({
+            kind: 'manage',
+            role: 'owner',
+          });
+          expect(decide({ earlyAccessEndsAt, pricing, published, viewer: admin })).toEqual({
+            kind: 'manage',
+            role: 'admin',
+          });
+        }
+      },
+    );
+
+    it('treats an unpublished course as not there for everyone else', () => {
+      for (const viewer of [learner, null]) {
+        expect(decide({ earlyAccessEndsAt, published: false, viewer })).toEqual({
+          kind: 'locked',
+          reason: 'unpublished',
+        });
+      }
     });
 
     it('opens free courses to everyone signed in', () => {
-      expect(decide({ payments, pricing: free })).toEqual({ kind: 'open', reason: 'free' });
+      expect(decide({ earlyAccessEndsAt, pricing: free })).toEqual({
+        kind: 'open',
+        reason: 'free',
+      });
     });
   });
 
-  describe('with payments off', () => {
+  describe('during early access', () => {
     it.each([
       ['a priced course', tier],
       ['an unpriced course', unpriced],
-    ])('opens %s to everyone signed in, as early access', (_case, pricing) => {
-      expect(decide({ payments: OFF, pricing })).toEqual({ kind: 'open', reason: 'early_access' });
-    });
-
-    it('does not look at grants or memberships', () => {
+    ])('opens %s to everyone signed in, whatever they hold', (_case, pricing) => {
       const lapsed: Entitlements = {
+        enrolledAt: null,
         grant: { source: 'PURCHASE', revoked: true },
         memberships: [standing('EXPIRED', daysFromNow(-30))],
         seatMemberships: [],
       };
-      expect(decide({ payments: OFF, entitlements: lapsed })).toEqual({
-        kind: 'open',
-        reason: 'early_access',
-      });
+      for (const earlyAccessEndsAt of [null, daysFromNow(10)]) {
+        expect(decide({ earlyAccessEndsAt, pricing, entitlements: lapsed })).toEqual({
+          kind: 'open',
+          reason: 'early_access',
+        });
+      }
+    });
+
+    it('ends exactly at its end date', () => {
+      expect(decide({ earlyAccessEndsAt: NOW })).toEqual(PAYMENT_REQUIRED);
     });
   });
 
-  describe('with payments on', () => {
+  describe('after early access', () => {
     it('needs a grant or a membership for a priced course', () => {
       expect(decide({})).toEqual(PAYMENT_REQUIRED);
     });
 
-    it.each(['EARLY_ACCESS', 'PURCHASE', 'GIFT', 'ADMIN'] as const)(
+    it.each(everyPricing)(
+      'keeps a course joined before the end open, whatever its price now (%s)',
+      (_kind, pricing) => {
+        const joined = { ...nothing, enrolledAt: daysFromNow(-200) };
+        expect(decide({ pricing, entitlements: joined })).toEqual(
+          pricing.kind === 'free' ? { kind: 'open', reason: 'free' } : JOINED_EARLY,
+        );
+      },
+    );
+
+    it('does not count an enrolment made at or after the end', () => {
+      expect(decide({ entitlements: { ...nothing, enrolledAt: ENDED } })).toEqual(PAYMENT_REQUIRED);
+      expect(decide({ entitlements: { ...nothing, enrolledAt: daysFromNow(-1) } })).toEqual(
+        PAYMENT_REQUIRED,
+      );
+    });
+
+    it.each(['PURCHASE', 'GIFT', 'ADMIN'] as const)(
       'opens a priced course with an unrevoked %s grant',
       (source) => {
         expect(decide({ entitlements: { ...nothing, grant: { source, revoked: false } } })).toEqual(
@@ -116,7 +169,7 @@ describe('the access rule', () => {
     it('does not open it with a revoked grant, unless a membership counts', () => {
       const revoked = { source: 'PURCHASE', revoked: true } as const;
       expect(decide({ entitlements: { ...nothing, grant: revoked } })).toEqual(PAYMENT_REQUIRED);
-      const member = {
+      const member: Entitlements = {
         ...nothing,
         grant: revoked,
         memberships: [standing('ACTIVE', daysFromNow(9))],
@@ -126,19 +179,31 @@ describe('the access rule', () => {
 
     it('names the grant when there is a membership too, since the grant lasts', () => {
       const both: Entitlements = {
-        grant: { source: 'EARLY_ACCESS', revoked: false },
+        ...nothing,
+        grant: { source: 'GIFT', revoked: false },
         memberships: [standing('ACTIVE', daysFromNow(9))],
-        seatMemberships: [standing('ACTIVE', daysFromNow(9))],
       };
       expect(decide({ entitlements: both })).toEqual({
         kind: 'open',
         reason: 'grant',
-        source: 'EARLY_ACCESS',
+        source: 'GIFT',
       });
     });
 
-    it('keeps an unpriced course closed to everyone but staff, grants and memberships too', () => {
+    it('opens a priced course with a membership or a seat that counts, own first', () => {
+      const ended = standing('EXPIRED', daysFromNow(-30));
+      const running = standing('ACTIVE', daysFromNow(30));
+      const holding = (memberships: MembershipStanding[], seatMemberships: MembershipStanding[]) =>
+        decide({ entitlements: { ...nothing, memberships, seatMemberships } });
+      expect(holding([ended, running], [])).toEqual({ kind: 'open', reason: 'membership' });
+      expect(holding([ended], [running])).toEqual({ kind: 'open', reason: 'seat' });
+      expect(holding([running], [running])).toEqual({ kind: 'open', reason: 'membership' });
+      expect(holding([ended], [ended])).toEqual(PAYMENT_REQUIRED);
+    });
+
+    it('keeps an unpriced course closed to all but its owner and admins, and early learners', () => {
       const holdsEverything: Entitlements = {
+        enrolledAt: null,
         grant: { source: 'PURCHASE', revoked: false },
         memberships: [standing('ACTIVE', daysFromNow(9))],
         seatMemberships: [standing('ACTIVE', daysFromNow(9))],
@@ -147,61 +212,25 @@ describe('the access rule', () => {
         kind: 'locked',
         reason: 'unpriced',
       });
-    });
-
-    // Each case runs as the viewer's own membership and as a seat on someone else's.
-    it.each([
-      ['a trial', true, standing('TRIALING', daysFromNow(5), daysFromNow(5))],
-      ['a trial without an end date', true, standing('TRIALING', daysFromNow(5))],
-      ['a trial that has ended', false, standing('TRIALING', daysFromNow(20), daysFromNow(-1))],
-      ['a trial past its period', false, standing('TRIALING', daysFromNow(-1))],
-      ['an active membership', true, standing('ACTIVE', daysFromNow(30))],
-      ['an active membership whose period ends now', false, standing('ACTIVE', NOW)],
-      ['an active membership past its period', false, standing('ACTIVE', daysFromNow(-1))],
-      ['a cancelled membership within its period', true, standing('CANCELLED', daysFromNow(10))],
-      ['a cancelled membership after its period', false, standing('CANCELLED', daysFromNow(-1))],
-      ['a past-due membership within the grace days', true, standing('PAST_DUE', daysFromNow(-2))],
-      ['a past-due membership as the grace days end', false, standing('PAST_DUE', daysFromNow(-3))],
-      ['a past-due membership after the grace days', false, standing('PAST_DUE', daysFromNow(-4))],
-      ['an expired membership', false, standing('EXPIRED', daysFromNow(30))],
-    ])('%s counts: %s', (_case, counts, membership) => {
-      const own = decide({ entitlements: { ...nothing, memberships: [membership] } });
-      const seat = decide({ entitlements: { ...nothing, seatMemberships: [membership] } });
-      expect(own).toEqual(counts ? { kind: 'open', reason: 'membership' } : PAYMENT_REQUIRED);
-      expect(seat).toEqual(counts ? { kind: 'open', reason: 'seat' } : PAYMENT_REQUIRED);
-    });
-
-    it('uses whichever membership counts, an own membership before a seat', () => {
-      const ended = standing('EXPIRED', daysFromNow(-30));
-      const running = standing('ACTIVE', daysFromNow(30));
-      expect(decide({ entitlements: { ...nothing, memberships: [ended, running] } })).toEqual({
-        kind: 'open',
-        reason: 'membership',
-      });
-      expect(
-        decide({ entitlements: { ...nothing, memberships: [ended], seatMemberships: [running] } }),
-      ).toEqual({ kind: 'open', reason: 'seat' });
       expect(
         decide({
-          entitlements: { ...nothing, memberships: [running], seatMemberships: [running] },
+          pricing: unpriced,
+          entitlements: { ...holdsEverything, enrolledAt: daysFromNow(-50) },
         }),
-      ).toEqual({ kind: 'open', reason: 'membership' });
+      ).toEqual(JOINED_EARLY);
     });
   });
 });
 
-describe('earnsEarlyAccess', () => {
-  it('is earned by joining a course that is not free while payments are off', () => {
-    expect(earnsEarlyAccess(tier, OFF)).toBe(true);
-    expect(earnsEarlyAccess(unpriced, OFF)).toBe(true);
-    expect(earnsEarlyAccess(free, OFF)).toBe(false);
-    expect(earnsEarlyAccess(tier, ON)).toBe(false);
-  });
-});
-
-// ---- The loader, against the database ---------------------------------------------------------
+// ---- Loading the facts and granting access, against the database ----------------------------
 
 const SLUG_PREFIX = 'access-';
+const inDays = (days: number) => new Date(Date.now() + days * DAY_MS);
+
+afterAll(async () => {
+  await getDb().course.deleteMany({ where: { slug: { startsWith: SLUG_PREFIX } } });
+  await getDb().$disconnect();
+});
 
 async function person(roles: Role[] = []) {
   const user = await getDb().user.create({
@@ -216,7 +245,13 @@ async function person(roles: Role[] = []) {
   return testSession(user, roles);
 }
 
-async function course(pricing: CoursePricing, instructorId: string | null = null) {
+async function course(
+  pricing: CoursePricing,
+  {
+    instructorId = null,
+    status = 'PUBLISHED',
+  }: { instructorId?: string | null; status?: CourseStatus } = {},
+) {
   const category = await getDb().category.findFirstOrThrow();
   return getDb().course.create({
     data: {
@@ -225,7 +260,7 @@ async function course(pricing: CoursePricing, instructorId: string | null = null
       subtitle: '',
       description: '',
       level: 'BEGINNER',
-      status: 'PUBLISHED',
+      status,
       instructorName: 'T',
       instructorId,
       categoryId: category.id,
@@ -234,41 +269,43 @@ async function course(pricing: CoursePricing, instructorId: string | null = null
   });
 }
 
-function membershipFor(payerId: string, status: MembershipStatus, currentPeriodEnd: Date) {
+function membershipFor(
+  payerId: string,
+  status: MembershipStatus,
+  currentPeriodEnd: Date,
+  terms: { trialEndsAt?: Date; cancelAtPeriodEnd?: boolean } = {},
+) {
   return getDb().membership.create({
     data: {
       payerId,
       plan: 'FAMILY_YEARLY',
-      region: 'south-africa',
-      currency: 'ZAR',
-      amountMinorUnits: 129900,
+      ...chargedPriceColumns({
+        region: 'south-africa',
+        amount: familyPrice('south-africa').amount,
+      }),
       status,
       currentPeriodEnd,
+      ...terms,
     },
   });
 }
 
-const inDays = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-
 describe('courseAccessFor', () => {
   beforeEach(() => {
-    vi.stubEnv('PAYMENTS_ENABLED', 'true');
+    vi.stubEnv('EARLY_ACCESS_ENDS_AT', inDays(-10).toISOString());
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  afterAll(async () => {
-    await getDb().course.deleteMany({ where: { slug: { startsWith: SLUG_PREFIX } } });
-    await getDb().$disconnect();
-  });
-
   it('reads the grant for that course only, and sees when it is revoked', async () => {
     const viewer = await person();
     const [bought, other] = await Promise.all([course(tier), course(tier)]);
-    await getDb().courseAccess.create({
-      data: { userId: viewer.userId, courseId: bought.id, source: 'PURCHASE' },
+    await grantCourseAccess(getDb(), {
+      userId: viewer.userId,
+      courseId: bought.id,
+      source: 'PURCHASE',
     });
     expect(await courseAccessFor(viewer, bought)).toEqual({
       kind: 'open',
@@ -277,9 +314,10 @@ describe('courseAccessFor', () => {
     });
     expect(await courseAccessFor(viewer, other)).toEqual(PAYMENT_REQUIRED);
 
-    await getDb().courseAccess.updateMany({
-      where: { userId: viewer.userId },
-      data: { revokedAt: new Date() },
+    await revokeCourseAccess(getDb(), {
+      userId: viewer.userId,
+      courseId: bought.id,
+      source: 'PURCHASE',
     });
     expect(await courseAccessFor(viewer, bought)).toEqual(PAYMENT_REQUIRED);
   });
@@ -296,8 +334,8 @@ describe('courseAccessFor', () => {
           invitedEmail: member.email,
           acceptedAt: new Date(),
         },
-        // Not accepted yet: it opens nothing.
-        { membershipId: family.id, userId: invited.userId, invitedEmail: invited.email },
+        // Not accepted yet, so nobody holds it: it opens nothing.
+        { membershipId: family.id, invitedEmail: invited.email },
       ],
     });
     expect(await courseAccessFor(payer, paid)).toEqual({ kind: 'open', reason: 'membership' });
@@ -308,32 +346,116 @@ describe('courseAccessFor', () => {
     expect(await courseAccessFor(member, paid)).toEqual(PAYMENT_REQUIRED);
   });
 
-  it('decides for owners, admins, visitors and while payments are off', async () => {
-    const [teacher, admin, viewer] = await Promise.all([
+  it('keeps a trial set to cancel open until the trial ends', async () => {
+    const trialist = await person();
+    const paid = await course(tier);
+    const trial = await membershipFor(trialist.userId, 'TRIALING', inDays(3), {
+      trialEndsAt: inDays(3),
+      cancelAtPeriodEnd: true,
+    });
+    expect(await courseAccessFor(trialist, paid)).toEqual({ kind: 'open', reason: 'membership' });
+    await getDb().membership.update({
+      where: { id: trial.id },
+      data: { currentPeriodEnd: inDays(-1), trialEndsAt: inDays(-1) },
+    });
+    expect(await courseAccessFor(trialist, paid)).toEqual(PAYMENT_REQUIRED);
+  });
+
+  it('keeps courses joined during early access open, also one priced after it was joined', async () => {
+    const early = await person();
+    const late = await person();
+    const once = await course(free);
+    await getDb().enrollment.createMany({
+      data: [
+        { userId: early.userId, courseId: once.id, enrolledAt: inDays(-30) },
+        { userId: late.userId, courseId: once.id, enrolledAt: inDays(-1) },
+      ],
+    });
+    await getDb().course.update({ where: { id: once.id }, data: coursePricingColumns(tier) });
+    const priced = { ...once, ...coursePricingColumns(tier) };
+    expect(await courseAccessFor(early, priced)).toEqual(JOINED_EARLY);
+    expect(await courseAccessFor(late, priced)).toEqual(PAYMENT_REQUIRED);
+  });
+
+  it('keeps paid courses locked after early access, whatever the payments switch says', async () => {
+    const viewer = await person();
+    const paid = await course(tier);
+    for (const enabled of ['false', 'true']) {
+      vi.stubEnv('PAYMENTS_ENABLED', enabled);
+      expect(await courseAccessFor(viewer, paid), enabled).toEqual(PAYMENT_REQUIRED);
+    }
+  });
+
+  it('decides for owners, admins and visitors, and hides unpublished courses', async () => {
+    const [teacher, adminViewer, viewer] = await Promise.all([
       person(['instructor']),
       person(['admin']),
       person(),
     ]);
-    const own = await course(unpriced, teacher.userId);
+    const own = await course(unpriced, { instructorId: teacher.userId });
     expect(await courseAccessFor(teacher, own)).toEqual({ kind: 'manage', role: 'owner' });
-    expect(await courseAccessFor(admin, own)).toEqual({ kind: 'manage', role: 'admin' });
+    expect(await courseAccessFor(adminViewer, own)).toEqual({ kind: 'manage', role: 'admin' });
     expect(await courseAccessFor(viewer, own)).toEqual({ kind: 'locked', reason: 'unpriced' });
     expect(await courseAccessFor(null, own)).toEqual({ kind: 'locked', reason: 'signed_out' });
 
-    vi.stubEnv('PAYMENTS_ENABLED', 'false');
-    expect(await courseAccessFor(viewer, own)).toEqual({ kind: 'open', reason: 'early_access' });
+    const draft = await course(tier, { instructorId: teacher.userId, status: 'DRAFT' });
+    expect(await courseAccessFor(viewer, draft)).toEqual({ kind: 'locked', reason: 'unpublished' });
+    expect(await courseAccessFor(teacher, draft)).toEqual({ kind: 'manage', role: 'owner' });
   });
 
   it('decides several courses in their order', async () => {
     const viewer = await person();
     const [bought, paid, gratis] = await Promise.all([course(tier), course(tier), course(free)]);
-    await getDb().courseAccess.create({
-      data: { userId: viewer.userId, courseId: bought.id, source: 'GIFT' },
+    await grantCourseAccess(getDb(), {
+      userId: viewer.userId,
+      courseId: bought.id,
+      source: 'GIFT',
     });
     expect(await courseAccessForMany(viewer, [paid, gratis, bought])).toEqual([
       PAYMENT_REQUIRED,
       { kind: 'open', reason: 'free' },
       { kind: 'open', reason: 'grant', source: 'GIFT' },
     ]);
+  });
+});
+
+describe('granting access', () => {
+  async function grantRow(userId: string, courseId: string) {
+    return getDb().courseAccess.findUniqueOrThrow({
+      where: { userId_courseId: { userId, courseId } },
+      select: { source: true, grantedAt: true, revokedAt: true },
+    });
+  }
+
+  it('never replaces an unrevoked grant, and revokes only a grant from the same source', async () => {
+    const viewer = await person();
+    const paid = await course(tier);
+    const grant = { userId: viewer.userId, courseId: paid.id };
+    expect(await grantCourseAccess(getDb(), { ...grant, source: 'GIFT' })).toBe(true);
+    expect(await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' })).toBe(false);
+    expect(await grantRow(viewer.userId, paid.id)).toMatchObject({
+      source: 'GIFT',
+      revokedAt: null,
+    });
+
+    // A refund of a purchase does not take away a gift.
+    expect(await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' })).toBe(false);
+    expect(await revokeCourseAccess(getDb(), { ...grant, source: 'GIFT' })).toBe(true);
+    expect((await grantRow(viewer.userId, paid.id)).revokedAt).toBeInstanceOf(Date);
+  });
+
+  it('revives a revoked grant with the new source and date', async () => {
+    const viewer = await person();
+    const paid = await course(tier);
+    const grant = { userId: viewer.userId, courseId: paid.id };
+    await grantCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    await revokeCourseAccess(getDb(), { ...grant, source: 'PURCHASE' });
+    const revoked = await grantRow(viewer.userId, paid.id);
+
+    expect(await grantCourseAccess(getDb(), { ...grant, source: 'ADMIN' })).toBe(true);
+    const revived = await grantRow(viewer.userId, paid.id);
+    expect(revived).toMatchObject({ source: 'ADMIN', revokedAt: null });
+    expect(revived.grantedAt.getTime()).toBeGreaterThanOrEqual(revoked.grantedAt.getTime());
+    expect(await getDb().courseAccess.count({ where: grant })).toBe(1);
   });
 });

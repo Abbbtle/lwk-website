@@ -50,9 +50,9 @@ async function readableLesson(session: Session, lessonId: string) {
     where: { id: lessonId },
     include: { section: { include: { course: true } } },
   });
-  const course = lesson?.section.course;
-  if (!lesson || !course || course.status !== 'PUBLISHED') return null;
-  return (await canReadLesson(session, lesson, course)) ? lesson : null;
+  // The published filter stays as a safety net; the access rule also knows publication.
+  if (!lesson || lesson.section.course.status !== 'PUBLISHED') return null;
+  return (await canReadLesson(session, lesson)) ? lesson : null;
 }
 
 /**

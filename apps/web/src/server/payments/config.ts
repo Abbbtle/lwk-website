@@ -1,21 +1,17 @@
 import 'server-only';
 
-// Payment settings come from the environment (Parameter Store /lwk/<stage>/web/* in AWS), so paid
-// plans can open without a code release.
+// Payment settings come from the environment (Parameter Store /lwk/<stage>/web/* in AWS), so
+// checkout can be switched off without a code release.
 
 export type PaymentsConfig = {
   /**
-   * Master switch, off by default. While it is off, every course is open to everyone signed in
-   * (early access), and joining a course that is not free earns an early-access grant.
+   * Whether checkout is open, off by default: a switch for taking payments, not for access. Who
+   * may open a course follows early access and what people hold (src/server/access.ts), so turning
+   * this off never reopens a paid course.
    */
   readonly enabled: boolean;
-  /** Days a membership whose renewal failed (past due) still opens courses. */
-  readonly pastDueGraceDays: number;
 };
 
 export function paymentsConfig(): PaymentsConfig {
-  return {
-    enabled: process.env.PAYMENTS_ENABLED === 'true',
-    pastDueGraceDays: 3,
-  };
+  return { enabled: process.env.PAYMENTS_ENABLED === 'true' };
 }

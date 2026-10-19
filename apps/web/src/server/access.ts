@@ -1,29 +1,50 @@
 import 'server-only';
-import type { AccessSource, MembershipStatus, Prisma } from '@/generated/prisma/client';
+import type { AccessSource, Prisma } from '@/generated/prisma/client';
 import { type CoursePricing, coursePricing } from '@/lib/pricing';
 import { hasRole, type Session } from './auth/session';
 import { getDb } from './db';
-import { type PaymentsConfig, paymentsConfig } from './payments/config';
+import { earlyAccessEndsAt, salesPhase } from './early-access';
+import {
+  type MembershipStanding,
+  membershipOpensCourses,
+  membershipStandingSelect,
+} from './memberships';
 
 // Who may open a course: the one rule behind the player, progress, enrolment, My Learning and the
-// AI tools. Owners and admins manage every course, and signed-out visitors get free previews only.
-// While payments are off, every course is open to everyone signed in (early access). Once they are
-// on, free courses stay open to everyone signed in, priced courses open with a grant or a
-// membership that counts, and courses without a price open to staff only.
+// AI tools, and the only writer of course_access. A course's owner and admins manage it in any
+// state; everyone else sees only published courses, and signed-out visitors only their free
+// previews. During early access every course is open to everyone signed in. Once it has ended
+// (src/server/early-access.ts), free courses stay open to everyone signed in, courses joined
+// during early access stay open to those learners, priced courses open with a grant or a
+// membership that counts, and courses without a price open to their owner and admins only.
+//
+// This module never imports from src/server/payments: checkout depends on access, not the other
+// way round. Payments code may import this module and learning.ts.
+
+/** Why a course is open to someone; a grant also says where it came from. */
+export type OpenReason = 'free' | 'early_access' | 'joined_in_early_access' | 'membership' | 'seat';
 
 /** Whether someone may open a course's lessons, and why, so callers can word it. */
 export type AccessDecision =
   /** Owners and admins: every lesson, without enrolling or paying. */
   | { readonly kind: 'manage'; readonly role: 'owner' | 'admin' }
-  /**
-   * Every lesson: the course is free, payments are not on yet (early access), or the viewer's own
-   * membership or a seat on someone else's counts.
-   */
-  | { readonly kind: 'open'; readonly reason: 'free' | 'early_access' | 'membership' | 'seat' }
-  /** Every lesson, for life: a grant from early access, a purchase, a gift or an admin. */
+  /** Every lesson, once enrolled. */
+  | { readonly kind: 'open'; readonly reason: OpenReason }
+  /** Every lesson, once enrolled, for life: bought, a gift or given by an admin. */
   | { readonly kind: 'open'; readonly reason: 'grant'; readonly source: AccessSource }
   /** Free previews only. */
-  | { readonly kind: 'locked'; readonly reason: 'signed_out' | 'payment_required' | 'unpriced' };
+  | { readonly kind: 'locked'; readonly reason: 'signed_out' | 'payment_required' | 'unpriced' }
+  /** Not published: callers treat it as not found. */
+  | { readonly kind: 'locked'; readonly reason: 'unpublished' };
+
+export type OpenAccess = Extract<AccessDecision, { readonly kind: 'open' }>;
+
+/** A decision about a course the viewer may see: anything but unpublished. */
+export type VisibleAccess = Exclude<AccessDecision, { readonly reason: 'unpublished' }>;
+
+export function isVisible(access: AccessDecision): access is VisibleAccess {
+  return !(access.kind === 'locked' && access.reason === 'unpublished');
+}
 
 /** The viewer as the rule sees them. */
 export type AccessViewer = { readonly isOwner: boolean; readonly isAdmin: boolean };
@@ -31,15 +52,10 @@ export type AccessViewer = { readonly isOwner: boolean; readonly isAdmin: boolea
 /** The viewer's grant for the course. */
 export type AccessGrant = { readonly source: AccessSource; readonly revoked: boolean };
 
-/** What decides whether a membership counts. */
-export type MembershipStanding = {
-  readonly status: MembershipStatus;
-  readonly currentPeriodEnd: Date;
-  readonly trialEndsAt: Date | null;
-};
-
-/** What the viewer holds that can open a priced course. */
+/** What the viewer holds that can open a course once early access has ended. */
 export type Entitlements = {
+  /** When they enrolled in the course, if they have. */
+  readonly enrolledAt: Date | null;
   readonly grant: AccessGrant | null;
   /** Memberships the viewer pays for. */
   readonly memberships: readonly MembershipStanding[];
@@ -47,17 +63,17 @@ export type Entitlements = {
   readonly seatMemberships: readonly MembershipStanding[];
 };
 
-/** Everything the rule decides from, for one published course and one viewer. */
+/** Everything the rule decides from, for one course and one viewer. */
 export type AccessFacts = {
   readonly pricing: CoursePricing;
-  readonly payments: PaymentsConfig;
+  readonly published: boolean;
+  /** When early access ends; null while no end is set. */
+  readonly earlyAccessEndsAt: Date | null;
   /** Null when signed out. */
   readonly viewer: AccessViewer | null;
   readonly entitlements: Entitlements;
   readonly now: Date;
 };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The access rule. Pure: the loader below gathers the facts. */
 export function decideCourseAccess(facts: AccessFacts): AccessDecision {
@@ -65,112 +81,94 @@ export function decideCourseAccess(facts: AccessFacts): AccessDecision {
 }
 
 /**
- * Joining a course that is not free while payments are off earns an early-access grant, so the
- * course stays open to the learner once payments are on. Free courses stay free for everyone.
- */
-export function earnsEarlyAccess(
-  pricing: CoursePricing,
-  payments: Pick<PaymentsConfig, 'enabled'>,
-): boolean {
-  return !payments.enabled && pricing.kind !== 'free';
-}
-
-/**
- * Whether a membership opens priced courses at `now`: while its trial or paid period runs, after
- * cancelling until the period ends, and for the grace days after a renewal failed. A trial ends
- * with its trial end date even if the period was set later.
- */
-function membershipCounts(
-  standing: MembershipStanding,
-  now: Date,
-  pastDueGraceDays: number,
-): boolean {
-  const { status, currentPeriodEnd, trialEndsAt } = standing;
-  const after = (end: Date) => end.getTime() > now.getTime();
-  switch (status) {
-    case 'TRIALING':
-      return after(currentPeriodEnd) && (trialEndsAt === null || after(trialEndsAt));
-    case 'ACTIVE':
-    case 'CANCELLED':
-      return after(currentPeriodEnd);
-    case 'PAST_DUE':
-      return after(new Date(currentPeriodEnd.getTime() + pastDueGraceDays * DAY_MS));
-    case 'EXPIRED':
-      return false;
-  }
-}
-
-/**
- * The decision when the viewer's grant and memberships cannot change it, else null: a priced
- * course, once payments are on, for someone who does not manage it. The loader reads entitlements
- * only in that case.
+ * The decision when the viewer's enrolment, grant and memberships cannot change it, else null: a
+ * course that is not free, after early access, for a signed-in learner. The loader reads
+ * entitlements only in that case.
  */
 function decisionBeforeEntitlements({
   pricing,
-  payments,
+  published,
+  earlyAccessEndsAt,
   viewer,
-}: Pick<AccessFacts, 'pricing' | 'payments' | 'viewer'>): AccessDecision | null {
+  now,
+}: Omit<AccessFacts, 'entitlements'>): AccessDecision | null {
   if (viewer?.isOwner) return { kind: 'manage', role: 'owner' };
   if (viewer?.isAdmin) return { kind: 'manage', role: 'admin' };
+  if (!published) return { kind: 'locked', reason: 'unpublished' };
   if (!viewer) return { kind: 'locked', reason: 'signed_out' };
   if (pricing.kind === 'free') return { kind: 'open', reason: 'free' };
-  if (earnsEarlyAccess(pricing, payments)) return { kind: 'open', reason: 'early_access' };
-  if (pricing.kind === 'unpriced') return { kind: 'locked', reason: 'unpriced' };
+  if (salesPhase(earlyAccessEndsAt, now) === 'early_access') {
+    return { kind: 'open', reason: 'early_access' };
+  }
   return null;
 }
 
-/** A priced course with payments on: a grant first (it lasts), then a membership, then a seat. */
-function decisionFromEntitlements({ entitlements, payments, now }: AccessFacts): AccessDecision {
-  const { grant, memberships, seatMemberships } = entitlements;
+/**
+ * After early access: a course joined before the end stays open whatever its price; a course
+ * without a price opens to no one else; a priced course opens with a grant (it lasts), then a
+ * membership, then a seat.
+ */
+function decisionFromEntitlements({
+  pricing,
+  earlyAccessEndsAt,
+  entitlements,
+  now,
+}: AccessFacts): AccessDecision {
+  const { enrolledAt, grant, memberships, seatMemberships } = entitlements;
+  if (enrolledAt && earlyAccessEndsAt && enrolledAt.getTime() < earlyAccessEndsAt.getTime()) {
+    return { kind: 'open', reason: 'joined_in_early_access' };
+  }
+  if (pricing.kind === 'unpriced') return { kind: 'locked', reason: 'unpriced' };
   if (grant && !grant.revoked) return { kind: 'open', reason: 'grant', source: grant.source };
-  const counts = (standing: MembershipStanding) =>
-    membershipCounts(standing, now, payments.pastDueGraceDays);
-  if (memberships.some(counts)) return { kind: 'open', reason: 'membership' };
-  if (seatMemberships.some(counts)) return { kind: 'open', reason: 'seat' };
+  const opens = (standing: MembershipStanding) => membershipOpensCourses(standing, now);
+  if (memberships.some(opens)) return { kind: 'open', reason: 'membership' };
+  if (seatMemberships.some(opens)) return { kind: 'open', reason: 'seat' };
   return { kind: 'locked', reason: 'payment_required' };
 }
 
 // ---- Loading the facts ----------------------------------------------------------------------
 
 /** The course columns the rule reads; select them wherever a course's access is decided. */
-export const courseAccessColumns = {
+export const courseAccessSelect = {
   id: true,
   instructorId: true,
   isFree: true,
   priceTier: true,
+  status: true,
 } satisfies Prisma.CourseSelect;
 
-export type CourseForAccess = Prisma.CourseGetPayload<{ select: typeof courseAccessColumns }>;
+export type CourseForAccess = Prisma.CourseGetPayload<{ select: typeof courseAccessSelect }>;
 
-const NO_ENTITLEMENTS: Entitlements = { grant: null, memberships: [], seatMemberships: [] };
-
-const membershipStanding = {
-  status: true,
-  currentPeriodEnd: true,
-  trialEndsAt: true,
-} satisfies Prisma.MembershipSelect;
+const NO_ENTITLEMENTS: Entitlements = {
+  enrolledAt: null,
+  grant: null,
+  memberships: [],
+  seatMemberships: [],
+};
 
 /**
- * The viewer's grants for these courses, and the memberships they pay for or hold an accepted
- * seat on, as each course's entitlements. Two queries, run together.
+ * The viewer's enrolments and grants for these courses, and the memberships they pay for or hold
+ * a seat on (a seat has a user once its invitation is accepted), as each course's entitlements.
+ * Three queries, run together.
  */
 async function readEntitlements(
   userId: string,
   courseIds: string[],
 ): Promise<(courseId: string) => Entitlements> {
   const db = getDb();
-  const [grantRows, membershipRows] = await Promise.all([
+  const forCourses = { userId, courseId: { in: courseIds } };
+  const [enrollmentRows, grantRows, membershipRows] = await Promise.all([
+    db.enrollment.findMany({ where: forCourses, select: { courseId: true, enrolledAt: true } }),
     db.courseAccess.findMany({
-      where: { userId, courseId: { in: courseIds } },
+      where: forCourses,
       select: { courseId: true, source: true, revokedAt: true },
     }),
     db.membership.findMany({
-      where: {
-        OR: [{ payerId: userId }, { seats: { some: { userId, acceptedAt: { not: null } } } }],
-      },
-      select: { payerId: true, ...membershipStanding },
+      where: { OR: [{ payerId: userId }, { seats: { some: { userId } } }] },
+      select: { payerId: true, ...membershipStandingSelect },
     }),
   ]);
+  const enrolledAt = new Map(enrollmentRows.map((row) => [row.courseId, row.enrolledAt]));
   const grants = new Map(
     grantRows.map((grant) => [
       grant.courseId,
@@ -182,7 +180,12 @@ async function readEntitlements(
   for (const { payerId, ...standing } of membershipRows) {
     (payerId === userId ? memberships : seatMemberships).push(standing);
   }
-  return (courseId) => ({ grant: grants.get(courseId) ?? null, memberships, seatMemberships });
+  return (courseId) => ({
+    enrolledAt: enrolledAt.get(courseId) ?? null,
+    grant: grants.get(courseId) ?? null,
+    memberships,
+    seatMemberships,
+  });
 }
 
 function viewerOf(session: Session | null, course: CourseForAccess): AccessViewer | null {
@@ -190,7 +193,7 @@ function viewerOf(session: Session | null, course: CourseForAccess): AccessViewe
   return { isOwner: course.instructorId === session.userId, isAdmin: hasRole(session, 'admin') };
 }
 
-/** Whether the viewer may open a published course, and why. */
+/** Whether the viewer may open a course, and why. */
 export async function courseAccessFor(
   session: Session | null,
   course: CourseForAccess,
@@ -200,17 +203,24 @@ export async function courseAccessFor(
 }
 
 /**
- * courseAccessFor for several published courses, in their order. The viewer's grants and
- * memberships are read once, and only when some decision depends on them.
+ * courseAccessFor for several courses, in their order. The viewer's entitlements are read once,
+ * and only when some decision depends on them.
  */
 export async function courseAccessForMany(
   session: Session | null,
   courses: readonly CourseForAccess[],
 ): Promise<AccessDecision[]> {
-  const payments = paymentsConfig();
+  const endsAt = earlyAccessEndsAt();
+  const now = new Date();
   const questions = courses.map((course) => ({
     courseId: course.id,
-    known: { pricing: coursePricing(course), payments, viewer: viewerOf(session, course) },
+    known: {
+      pricing: coursePricing(course),
+      published: course.status === 'PUBLISHED',
+      earlyAccessEndsAt: endsAt,
+      viewer: viewerOf(session, course),
+      now,
+    },
   }));
   const undecided = questions.filter(({ known }) => decisionBeforeEntitlements(known) === null);
   const entitlementsFor =
@@ -220,25 +230,53 @@ export async function courseAccessForMany(
           undecided.map(({ courseId }) => courseId),
         )
       : () => NO_ENTITLEMENTS;
-  const now = new Date();
   return questions.map(({ courseId, known }) =>
-    decideCourseAccess({ ...known, entitlements: entitlementsFor(courseId), now }),
+    decideCourseAccess({ ...known, entitlements: entitlementsFor(courseId) }),
   );
 }
 
+// ---- Granting access ------------------------------------------------------------------------
+
+/** Lifetime access to one course for one person, and where it came from. */
+export type CourseGrant = {
+  readonly userId: string;
+  readonly courseId: string;
+  readonly source: AccessSource;
+};
+
 /**
- * Records the early-access grant that joining the course earns (see earnsEarlyAccess), with the
- * caller's transaction. A grant that is already there is kept as it is.
+ * Gives the person lifetime access to the course, inside the caller's transaction. A revoked grant
+ * is revived with the new source and date; an unrevoked one is never replaced, so a purchase does
+ * not overwrite a gift. Returns whether access was granted (false when it already was).
  */
-export async function recordEarlyAccess(
+export async function grantCourseAccess(
   db: Prisma.TransactionClient,
-  userId: string,
-  course: CourseForAccess,
-): Promise<void> {
-  if (!earnsEarlyAccess(coursePricing(course), paymentsConfig())) return;
-  await db.courseAccess.upsert({
-    where: { userId_courseId: { userId, courseId: course.id } },
-    create: { userId, courseId: course.id, source: 'EARLY_ACCESS' },
-    update: {},
+  { userId, courseId, source }: CourseGrant,
+): Promise<boolean> {
+  const revived = await db.courseAccess.updateMany({
+    where: { userId, courseId, revokedAt: { not: null } },
+    data: { source, grantedAt: new Date(), revokedAt: null },
   });
+  if (revived.count > 0) return true;
+  const created = await db.courseAccess.createMany({
+    data: [{ userId, courseId, source }],
+    skipDuplicates: true,
+  });
+  return created.count > 0;
+}
+
+/**
+ * Revokes the person's grant for the course if it came from `source` (a refunded purchase, a
+ * withdrawn gift), inside the caller's transaction; a grant from another source stays. The row is
+ * kept, revoked. Returns whether a grant was revoked. Phase 14b also matches the refunded order.
+ */
+export async function revokeCourseAccess(
+  db: Prisma.TransactionClient,
+  { userId, courseId, source }: CourseGrant,
+): Promise<boolean> {
+  const { count } = await db.courseAccess.updateMany({
+    where: { userId, courseId, source, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  return count > 0;
 }

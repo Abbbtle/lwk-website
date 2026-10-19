@@ -1,4 +1,5 @@
 import 'server-only';
+import { chargedPrice, formatMoney } from '@/lib/pricing';
 import { recordAudit } from './audit';
 import type { Session } from './auth/session';
 import { deleteOwnAccount, getOwnMfaEnabled, updateOwnName } from './cognito';
@@ -158,10 +159,20 @@ export async function exportAccountData(userId: string) {
       revokedAt: a.revokedAt,
     })),
     // Memberships the person pays for, with the seats they offered to others.
-    memberships: user.memberships.map(({ createdAt, ...membership }) => ({
-      ...membership,
-      startedAt: createdAt,
-    })),
+    memberships: user.memberships.map((m) => {
+      const { region, amount } = chargedPrice(m);
+      return {
+        plan: m.plan,
+        region,
+        price: formatMoney(amount),
+        status: m.status,
+        trialEndsAt: m.trialEndsAt,
+        currentPeriodEnd: m.currentPeriodEnd,
+        cancelAtPeriodEnd: m.cancelAtPeriodEnd,
+        startedAt: m.createdAt,
+        seats: m.seats,
+      };
+    }),
     // Seats the person holds on other people's memberships.
     membershipSeats: user.membershipSeats.map((s) => ({
       plan: s.membership.plan,

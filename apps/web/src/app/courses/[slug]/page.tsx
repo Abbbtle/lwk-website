@@ -194,7 +194,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
               {lock === 'access_ended' ? (
-                <AccessLockNote lock={lock} variant="course" />
+                <AccessLockNote lock={lock} enrolled={Boolean(enrollment)} variant="course" />
               ) : enrollment ? (
                 <>
                   <p className="font-semibold">
@@ -208,7 +208,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 <>
                   <CoursePrice pricing={course.pricing} region={region} variant="page" />
                   {isAccessLock(lock) ? (
-                    <AccessLockNote lock={lock} variant="course" />
+                    <AccessLockNote lock={lock} enrolled={Boolean(enrollment)} variant="course" />
                   ) : session ? (
                     <form action={enrollInCourse.bind(null, course.slug)}>
                       <button type="submit" className="btn-brand w-full">

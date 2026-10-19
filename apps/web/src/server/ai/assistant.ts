@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Message, Tool } from '@aws-sdk/client-bedrock-runtime';
 import { searchHelp, visibleArticles } from '@/lib/help';
-import { courseAccessColumns } from '../access';
+import { courseAccessSelect } from '../access';
 import { hasRole, type Session } from '../auth/session';
 import { listOwnCourses, reviewChecklist, getCourseForEditing } from '../authoring';
 import { getCourse, searchCourses } from '../catalog';
@@ -66,7 +66,7 @@ export async function describePage(path: string, session: Session | null): Promi
             where: { id: parts[2], section: { course: { slug: parts[1], status: 'PUBLISHED' } } },
             include: {
               section: {
-                include: { course: { select: { title: true, ...courseAccessColumns } } },
+                include: { course: { select: { title: true, ...courseAccessSelect } } },
               },
             },
           })
@@ -74,7 +74,7 @@ export async function describePage(path: string, session: Session | null): Promi
       if (lesson) {
         const course = lesson.section.course;
         const text =
-          (await canReadLesson(session, lesson, course)) && lesson.body
+          (await canReadLesson(session, lesson)) && lesson.body
             ? `\nThe lesson ${lesson.type === 'TEXT' ? 'text' : 'notes'} (for questions about it):\n<lesson>\n${clip(lesson.body, 4000)}\n</lesson>`
             : '';
         return `The lesson player: lesson "${lesson.title}" (${lesson.type.toLowerCase()}) in the course "${course.title}".${text}`;

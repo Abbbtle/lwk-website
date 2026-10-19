@@ -1,13 +1,14 @@
 -- Course access grants and memberships (Phase 14a). Orders and payment events arrive with checkout
 -- (Phase 14b).
--- CreateEnum
-CREATE TYPE "AccessSource" AS ENUM ('EARLY_ACCESS', 'PURCHASE', 'GIFT', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "MembershipPlan" AS ENUM ('MONTHLY', 'YEARLY', 'FOUNDING_YEARLY', 'FAMILY_YEARLY', 'COMMUNITY');
+CREATE TYPE "AccessSource" AS ENUM ('PURCHASE', 'GIFT', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "MembershipStatus" AS ENUM ('TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELLED', 'EXPIRED');
+CREATE TYPE "MembershipPlan" AS ENUM ('MONTHLY', 'YEARLY', 'FOUNDING_YEARLY', 'FAMILY_YEARLY', 'COMMUNITY_YEARLY');
+
+-- CreateEnum
+CREATE TYPE "MembershipStatus" AS ENUM ('TRIALING', 'ACTIVE', 'PAST_DUE', 'EXPIRED');
 
 -- CreateTable
 CREATE TABLE "course_access" (
@@ -90,15 +91,14 @@ ALTER TABLE "membership_seats" ADD CONSTRAINT "membership_seats_membership_id_fk
 -- AddForeignKey
 ALTER TABLE "membership_seats" ADD CONSTRAINT "membership_seats_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Amounts are whole minor units, never negative (as Money in src/lib/pricing).
+-- A membership's price is whole minor units, never negative, in one of the price list's regions
+-- and currencies (src/lib/pricing, read and written through chargedPrice).
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_amount_minor_units_check" CHECK ("amount_minor_units" >= 0);
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_region_check" CHECK ("region" IN ('south-africa', 'high-income', 'india', 'rest-of-world'));
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_currency_check" CHECK ("currency" IN ('ZAR', 'USD', 'INR'));
 
--- The promise to early learners: courses joined during early access stay theirs once payments
--- start. Every enrolment in a course that is not free gets an early-access grant, dated when the
--- learner enrolled. From now on, enrolling while payments are off records the same grant.
-INSERT INTO "course_access" ("id", "user_id", "course_id", "source", "granted_at", "updated_at")
-SELECT uuidv7(), e."user_id", e."course_id", 'EARLY_ACCESS'::"AccessSource", e."enrolled_at", CURRENT_TIMESTAMP
-FROM "enrollments" e
-JOIN "courses" c ON c."id" = e."course_id"
-WHERE NOT c."is_free"
-ON CONFLICT ("user_id", "course_id") DO NOTHING;
+-- A trial has an end date.
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_trial_ends_at_check" CHECK ("status" <> 'TRIALING' OR "trial_ends_at" IS NOT NULL);
+
+-- A seat has a user exactly when its invitation has been accepted.
+ALTER TABLE "membership_seats" ADD CONSTRAINT "membership_seats_accepted_check" CHECK (("user_id" IS NULL) = ("accepted_at" IS NULL));

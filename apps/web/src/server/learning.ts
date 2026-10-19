@@ -1,12 +1,13 @@
 import 'server-only';
-import type { Prisma } from '@/generated/prisma/client';
+import type { Enrollment, Prisma } from '@/generated/prisma/client';
 import {
-  type AccessDecision,
-  courseAccessColumns,
   courseAccessFor,
   courseAccessForMany,
   type CourseForAccess,
-  recordEarlyAccess,
+  courseAccessSelect,
+  isVisible,
+  type OpenAccess,
+  type VisibleAccess,
 } from './access';
 import type { Session } from './auth/session';
 import { getDb } from './db';
@@ -15,37 +16,43 @@ import { signedMediaUrl } from './media';
 // Enrollment, the lesson player and progress. Whether a course is open to someone is decided in
 // access.ts; learners open its lessons once enrolled, owners and admins without enrolling.
 
+export const LESSON_LOCKS = [
+  'signed_out',
+  'not_enrolled',
+  'payment_required',
+  'unpriced',
+  'access_ended',
+] as const;
+
+/**
+ * What keeps a viewer from a course's lessons (free previews always open): they are signed out,
+ * the course is open to them once they enroll, it needs a purchase or a membership, it has no price
+ * yet, or they are enrolled but their purchase or membership no longer counts.
+ */
+export type LessonLock = (typeof LESSON_LOCKS)[number];
+
+const ACCESS_LOCKS = [
+  'payment_required',
+  'unpriced',
+  'access_ended',
+] as const satisfies readonly LessonLock[];
+
+/** Locks that signing in or enrolling cannot lift. */
+export type AccessLock = (typeof ACCESS_LOCKS)[number];
+
+export function isAccessLock(lock: LessonLock | null): lock is AccessLock {
+  return ACCESS_LOCKS.some((accessLock) => accessLock === lock);
+}
+
 export class LearningError extends Error {
   constructor(
-    /**
-     * `payment_required`: the course is not open to the learner (see AccessLock): it needs a
-     * purchase or a membership, has no price yet, or their access has ended. The message says which.
-     */
-    readonly code: 'not_found' | 'not_enrolled' | 'payment_required',
+    readonly code: 'not_found' | 'not_enrolled' | 'access_locked',
     message: string,
+    /** With `access_locked`: what keeps the course closed, for callers to branch on. */
+    readonly lock?: AccessLock,
   ) {
     super(message);
   }
-}
-
-/** What keeps a viewer from a course's lessons (free previews always open). */
-export type LessonLock =
-  /** Signed out. */
-  | 'sign_in'
-  /** The course is open to them once they enroll. */
-  | 'enroll'
-  /** A priced course they have no grant or membership for. */
-  | 'payment_required'
-  /** A course without a price yet, once payments are on. */
-  | 'unpriced'
-  /** Enrolled, but their grant or membership no longer opens it. Their progress is kept. */
-  | 'access_ended';
-
-/** Locks that signing in or enrolling cannot lift: the course needs paying for or a price. */
-export type AccessLock = Extract<LessonLock, 'payment_required' | 'unpriced' | 'access_ended'>;
-
-export function isAccessLock(lock: LessonLock | null): lock is AccessLock {
-  return lock === 'payment_required' || lock === 'unpriced' || lock === 'access_ended';
 }
 
 /** What to tell someone a course is closed to, as enrolling refuses it and its pages say it. */
@@ -60,16 +67,49 @@ export function accessLockMessage(lock: AccessLock): string {
   }
 }
 
-function lessonLock(access: AccessDecision, enrolled: boolean): LessonLock | null {
+/** Why a course is open to someone who has not enrolled yet, as its enroll panels say it. */
+export function openAccessMessage(access: OpenAccess): string {
+  switch (access.reason) {
+    case 'early_access':
+      return 'Free during early access.';
+    case 'free':
+      return 'This course is free for everyone.';
+    case 'joined_in_early_access':
+      return 'Yours from early access.';
+    case 'grant':
+      return 'This course is yours.';
+    case 'membership':
+    case 'seat':
+      return 'Included in your membership.';
+  }
+}
+
+function accessLocked(lock: AccessLock): LearningError {
+  return new LearningError('access_locked', accessLockMessage(lock), lock);
+}
+
+/** What keeps the viewer from the course's lessons, or null when nothing does. */
+function courseLock(access: VisibleAccess, enrolled: boolean): LessonLock | null {
   switch (access.kind) {
     case 'manage':
       return null;
     case 'open':
-      return enrolled ? null : 'enroll';
+      return enrolled ? null : 'not_enrolled';
     case 'locked':
-      if (access.reason === 'signed_out') return 'sign_in';
-      return enrolled ? 'access_ended' : access.reason;
+      switch (access.reason) {
+        case 'signed_out':
+          return 'signed_out';
+        case 'unpriced':
+          return 'unpriced';
+        case 'payment_required':
+          return enrolled ? 'access_ended' : 'payment_required';
+      }
   }
+}
+
+/** The lock on one lesson: none for a free preview, otherwise the course's. */
+function lessonLock(lock: LessonLock | null, lesson: { isPreview: boolean }): LessonLock | null {
+  return lesson.isPreview ? null : lock;
 }
 
 // Media links for the player stay valid long enough to watch a long video.
@@ -84,6 +124,7 @@ const playerInclude = {
 } satisfies Prisma.CourseInclude;
 
 type PlayerCourse = Prisma.CourseGetPayload<{ include: typeof playerInclude }>;
+type LessonRow = PlayerCourse['sections'][number]['lessons'][number];
 
 async function publishedCourse(slug: string): Promise<PlayerCourse> {
   const course = await getDb().course.findFirst({
@@ -98,42 +139,70 @@ export async function getEnrollment(userId: string, courseId: string) {
   return getDb().enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
 }
 
-/** The viewer's enrollment in a published course, and what keeps its lessons from them. */
-async function learnerState(session: Session | null, course: CourseForAccess) {
+/** The viewer's place in a course they may see. */
+export type LearnerState = {
+  readonly enrollment: Enrollment | null;
+  /** Whether and why the course is open to them. */
+  readonly access: VisibleAccess;
+  /** What keeps its lessons from them, or null when every lesson is open. */
+  readonly lock: LessonLock | null;
+};
+
+/** The viewer's place in the course, or null when the rule says it is not published. */
+async function learnerState(
+  session: Session | null,
+  course: CourseForAccess,
+): Promise<LearnerState | null> {
   const [enrollment, access] = await Promise.all([
     session ? getEnrollment(session.userId, course.id) : null,
     courseAccessFor(session, course),
   ]);
-  return { enrollment, lock: lessonLock(access, Boolean(enrollment)) };
+  if (!isVisible(access)) return null;
+  return { enrollment, access, lock: courseLock(access, Boolean(enrollment)) };
 }
 
-/** The learner's enrollment and what keeps the lessons locked, for a course page, by slug. */
-export async function getLearnerState(session: Session, slug: string) {
+async function visibleLearnerState(
+  session: Session | null,
+  course: CourseForAccess,
+): Promise<LearnerState> {
+  const state = await learnerState(session, course);
+  if (!state) throw new LearningError('not_found', 'Course not found.');
+  return state;
+}
+
+/** The learner's place in a published course, for its page, by slug. */
+export async function getLearnerState(session: Session, slug: string): Promise<LearnerState> {
   const course = await getDb().course.findFirst({
     where: { slug, status: 'PUBLISHED' },
-    select: courseAccessColumns,
+    select: courseAccessSelect,
   });
   if (!course) throw new LearningError('not_found', 'Course not found.');
-  return learnerState(session, course);
+  return visibleLearnerState(session, course);
 }
 
 /**
- * Enroll in a published course that is open to the learner. While payments are off, joining a
- * course that is not free also records an early-access grant, so it stays theirs once they are on.
+ * Puts the learner in the course, or marks them active again if they are in it. It checks
+ * nothing: callers settle access first (enroll below, and checkout in Phase 14b inside its
+ * transaction). The enrolment date is kept, since it records who joined during early access.
  */
-export async function enroll(session: Session, slug: string) {
-  const course = await publishedCourse(slug);
-  const { lock } = await learnerState(session, course);
-  if (isAccessLock(lock)) throw new LearningError('payment_required', accessLockMessage(lock));
-  await getDb().$transaction(async (tx) => {
-    await tx.enrollment.upsert({
-      where: { userId_courseId: { userId: session.userId, courseId: course.id } },
-      create: { userId: session.userId, courseId: course.id },
-      update: { lastActiveAt: new Date() },
-    });
-    await recordEarlyAccess(tx, session.userId, course);
+export async function enrollLearner(
+  db: Prisma.TransactionClient,
+  userId: string,
+  courseId: string,
+) {
+  return db.enrollment.upsert({
+    where: { userId_courseId: { userId, courseId } },
+    create: { userId, courseId },
+    update: { lastActiveAt: new Date() },
   });
-  return course;
+}
+
+/** Enroll the signed-in learner in a published course that is open to them. */
+export async function enroll(session: Session, slug: string): Promise<void> {
+  const course = await publishedCourse(slug);
+  const { lock } = await visibleLearnerState(session, course);
+  if (isAccessLock(lock)) throw accessLocked(lock);
+  await enrollLearner(getDb(), session.userId, course.id);
 }
 
 async function completedLessonIds(userId: string, lessonIds: string[]) {
@@ -145,45 +214,67 @@ async function completedLessonIds(userId: string, lessonIds: string[]) {
 }
 
 /**
- * Whether the viewer may read a lesson of a published course (its text, notes and media), as the
- * player decides: free previews, and every lesson once nothing keeps the course from them.
+ * Whether the viewer may read the lesson (its text, notes and media), as the player decides. The
+ * lesson comes with its own course, so it cannot be judged by another.
  */
 export async function canReadLesson(
   session: Session | null,
-  lesson: { isPreview: boolean },
-  course: CourseForAccess,
+  lesson: { isPreview: boolean; section: { course: CourseForAccess } },
 ): Promise<boolean> {
-  if (lesson.isPreview) return true;
-  return (await learnerState(session, course)).lock === null;
+  const state = await learnerState(session, lesson.section.course);
+  return state !== null && lessonLock(state.lock, lesson) === null;
 }
 
-export type PlayerLesson = PlayerCourse['sections'][number]['lessons'][number] & {
-  completed: boolean;
-  /** Whether this viewer may open the lesson. */
-  unlocked: boolean;
+type LessonOutline = Pick<LessonRow, 'id' | 'title' | 'type' | 'durationSeconds' | 'isPreview'> & {
+  readonly completed: boolean;
 };
+
+/** A lesson the viewer may open, with its text (a text lesson, or notes on a video or PDF). */
+export type OpenLesson = LessonOutline & { readonly unlocked: true; readonly body: string | null };
+
+/** A lesson kept from the viewer: only what the course outline shows, and why it is locked. */
+export type LockedLesson = LessonOutline & { readonly unlocked: false; readonly lock: LessonLock };
+
+export type PlayerLesson = OpenLesson | LockedLesson;
+
+function playerLesson(row: LessonRow, lock: LessonLock | null, completed: boolean): PlayerLesson {
+  const outline = {
+    id: row.id,
+    title: row.title,
+    type: row.type,
+    durationSeconds: row.durationSeconds,
+    isPreview: row.isPreview,
+    completed,
+  };
+  const onLesson = lessonLock(lock, row);
+  return onLesson === null
+    ? { ...outline, unlocked: true, body: row.body }
+    : { ...outline, unlocked: false, lock: onLesson };
+}
 
 /**
  * Everything the player needs for one lesson. Without `lessonId`, picks the first lesson the
- * learner has not completed (resume). Media links are only issued for unlocked lessons.
+ * learner has not completed (resume). Locked lessons come without their text, and media links
+ * are only issued for the current lesson when it is open.
  */
 export async function getPlayer(session: Session | null, slug: string, lessonId?: string) {
   const course = await publishedCourse(slug);
-  const flat = course.sections.flatMap((s) => s.lessons);
-  const [{ enrollment, lock }, completed] = await Promise.all([
-    learnerState(session, course),
+  const rows = course.sections.flatMap((s) => s.lessons);
+  const [{ enrollment, access, lock }, completed] = await Promise.all([
+    visibleLearnerState(session, course),
     session
       ? completedLessonIds(
           session.userId,
-          flat.map((l) => l.id),
+          rows.map((l) => l.id),
         )
       : new Set<string>(),
   ]);
-  const lessons: PlayerLesson[] = flat.map((l) => ({
-    ...l,
-    completed: completed.has(l.id),
-    unlocked: lock === null || l.isPreview,
+  const sections = course.sections.map((section) => ({
+    id: section.id,
+    title: section.title,
+    lessons: section.lessons.map((row) => playerLesson(row, lock, completed.has(row.id))),
   }));
+  const lessons = sections.flatMap((s) => s.lessons);
 
   const current = lessonId
     ? lessons.find((l) => l.id === lessonId)
@@ -191,6 +282,7 @@ export async function getPlayer(session: Session | null, slug: string, lessonId?
   if (!current) throw new LearningError('not_found', 'Lesson not found.');
 
   const index = lessons.indexOf(current);
+  const mediaKey = current.unlocked ? rows[index].mediaKey : null;
   const progress =
     session && current.unlocked
       ? await getDb().lessonProgress.findUnique({
@@ -206,21 +298,16 @@ export async function getPlayer(session: Session | null, slug: string, lessonId?
   }
 
   return {
-    course,
-    sections: course.sections.map((s) => ({
-      id: s.id,
-      title: s.title,
-      lessons: lessons.filter((l) => l.sectionId === s.id),
-    })),
+    course: { id: course.id, slug: course.slug, title: course.title, category: course.category },
+    sections,
     lesson: current,
-    mediaUrl:
-      current.unlocked && current.mediaKey
-        ? await signedMediaUrl(current.mediaKey, PLAYER_LINK_SECONDS)
-        : null,
+    mediaUrl: mediaKey ? await signedMediaUrl(mediaKey, PLAYER_LINK_SECONDS) : null,
     resumeAt: progress?.completedAt ? 0 : (progress?.lastPositionSeconds ?? 0),
     previous: lessons[index - 1] ?? null,
     next: lessons[index + 1] ?? null,
     enrolled: Boolean(enrollment),
+    /** Whether and why the course is open to the viewer, for wording the enroll panel. */
+    access,
     /** What keeps the locked lessons locked, or null when every lesson is open. */
     lock,
     canTrackProgress: Boolean(enrollment) && lock === null,
@@ -241,17 +328,15 @@ export async function saveProgress(
 ) {
   const lesson = await getDb().lesson.findUnique({
     where: { id: lessonId },
-    include: {
-      section: { include: { course: { select: { ...courseAccessColumns, status: true } } } },
-    },
+    include: { section: { include: { course: { select: courseAccessSelect } } } },
   });
   if (!lesson || lesson.section.course.status !== 'PUBLISHED') {
     throw new LearningError('not_found', 'Lesson not found.');
   }
   const courseId = lesson.section.course.id;
-  const { enrollment, lock } = await learnerState(session, lesson.section.course);
+  const { enrollment, lock } = await visibleLearnerState(session, lesson.section.course);
   if (!enrollment) throw new LearningError('not_enrolled', 'Enroll to track your progress.');
-  if (isAccessLock(lock)) throw new LearningError('payment_required', accessLockMessage(lock));
+  if (isAccessLock(lock)) throw accessLocked(lock);
 
   const position =
     update.positionSeconds === undefined
@@ -302,7 +387,7 @@ export async function saveProgress(
 
 /**
  * The learner's courses, most recently active first, with progress and whether their access has
- * ended (their grant or membership no longer opens the course).
+ * ended (their purchase or membership no longer opens the course).
  */
 export async function listMyLearning(session: Session) {
   const enrollments = await getDb().enrollment.findMany({
@@ -317,12 +402,13 @@ export async function listMyLearning(session: Session) {
       },
     },
   });
-  const access = await courseAccessForMany(
+  const decisions = await courseAccessForMany(
     session,
     enrollments.map((e) => e.course),
   );
   return Promise.all(
     enrollments.map(async (e, index) => {
+      const access = decisions[index];
       const lessonIds = e.course.sections.flatMap((s) => s.lessons.map((l) => l.id));
       const done = (await completedLessonIds(session.userId, lessonIds)).size;
       return {
@@ -338,7 +424,7 @@ export async function listMyLearning(session: Session) {
         completedCount: done,
         totalLessons: lessonIds.length,
         percent: lessonIds.length === 0 ? 0 : Math.round((done / lessonIds.length) * 100),
-        accessEnded: lessonLock(access[index], true) === 'access_ended',
+        accessEnded: isVisible(access) && courseLock(access, true) === 'access_ended',
       };
     }),
   );

@@ -101,7 +101,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
             <div className="space-y-4 rounded-card bg-surface p-8 text-center">
               <Lock className="mx-auto size-8 text-gray-500" aria-hidden />
               {isAccessLock(player.lock) ? (
-                <AccessLockNote lock={player.lock} variant="lesson" />
+                <AccessLockNote lock={player.lock} enrolled={player.enrolled} variant="lesson" />
               ) : (
                 <>
                   <p className="text-lg font-semibold">Enroll to open this lesson.</p>

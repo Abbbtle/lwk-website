@@ -14,11 +14,11 @@ export async function enrollInCourse(courseSlug: string) {
   const enrolled = await enroll(session, parsed).then(
     () => true,
     (error) => {
-      if (error instanceof LearningError && error.code === 'payment_required') return false;
+      if (error instanceof LearningError && error.code === 'access_locked') return false;
       throw error;
     },
   );
-  // Not open to them: the course page says why, with a link to Plans & Pricing.
+  // Closed to them (whatever the lock): the course page says why, and how to open it if it can.
   if (!enrolled) redirect(`/courses/${parsed}`);
   // Go straight to the lesson to resume (one redirect instead of two).
   const { lesson } = await getPlayer(session, parsed);

@@ -13,3 +13,5 @@ export const MEMBERSHIP_TRIAL_DAYS = 7;
 export const REFUND_WINDOW_DAYS = 30;
 /** Days of notice given before paid plans open. */
 export const PAID_PLANS_NOTICE_DAYS = 30;
+/** Days a membership whose renewal failed still opens courses, while the payment is tried again. */
+export const PAST_DUE_GRACE_DAYS = 3;
