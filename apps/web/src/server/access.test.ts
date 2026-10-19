@@ -7,12 +7,11 @@ import {
   type AccessDecision,
   type AccessFacts,
   courseAccessFor,
-  courseAccessForEach,
+  courseAccessForMany,
   decideCourseAccess,
   earnsEarlyAccess,
   type Entitlements,
-  type MembershipTerms,
-  opensCourse,
+  type MembershipStanding,
 } from './access';
 import type { Role } from './auth/session';
 import { getDb } from './db';
@@ -31,11 +30,11 @@ const everyPricing = [free, tier, unpriced].map((pricing) => [pricing.kind, pric
 const learner = { isOwner: false, isAdmin: false };
 const nothing: Entitlements = { grant: null, memberships: [], seatMemberships: [] };
 
-const terms = (
+const standing = (
   status: MembershipStatus,
   currentPeriodEnd: Date,
   trialEndsAt: Date | null = null,
-): MembershipTerms => ({ status, currentPeriodEnd, trialEndsAt });
+): MembershipStanding => ({ status, currentPeriodEnd, trialEndsAt });
 
 /** A learner opening a priced course with payments on, unless the case says otherwise. */
 function decide(facts: Partial<AccessFacts>): AccessDecision {
@@ -90,7 +89,7 @@ describe('the access rule', () => {
     it('does not look at grants or memberships', () => {
       const lapsed: Entitlements = {
         grant: { source: 'PURCHASE', revoked: true },
-        memberships: [terms('EXPIRED', daysFromNow(-30))],
+        memberships: [standing('EXPIRED', daysFromNow(-30))],
         seatMemberships: [],
       };
       expect(decide({ payments: OFF, entitlements: lapsed })).toEqual({
@@ -117,15 +116,19 @@ describe('the access rule', () => {
     it('does not open it with a revoked grant, unless a membership counts', () => {
       const revoked = { source: 'PURCHASE', revoked: true } as const;
       expect(decide({ entitlements: { ...nothing, grant: revoked } })).toEqual(PAYMENT_REQUIRED);
-      const member = { ...nothing, grant: revoked, memberships: [terms('ACTIVE', daysFromNow(9))] };
+      const member = {
+        ...nothing,
+        grant: revoked,
+        memberships: [standing('ACTIVE', daysFromNow(9))],
+      };
       expect(decide({ entitlements: member })).toEqual({ kind: 'open', reason: 'membership' });
     });
 
     it('names the grant when there is a membership too, since the grant lasts', () => {
       const both: Entitlements = {
         grant: { source: 'EARLY_ACCESS', revoked: false },
-        memberships: [terms('ACTIVE', daysFromNow(9))],
-        seatMemberships: [terms('ACTIVE', daysFromNow(9))],
+        memberships: [standing('ACTIVE', daysFromNow(9))],
+        seatMemberships: [standing('ACTIVE', daysFromNow(9))],
       };
       expect(decide({ entitlements: both })).toEqual({
         kind: 'open',
@@ -137,8 +140,8 @@ describe('the access rule', () => {
     it('keeps an unpriced course closed to everyone but staff, grants and memberships too', () => {
       const holdsEverything: Entitlements = {
         grant: { source: 'PURCHASE', revoked: false },
-        memberships: [terms('ACTIVE', daysFromNow(9))],
-        seatMemberships: [terms('ACTIVE', daysFromNow(9))],
+        memberships: [standing('ACTIVE', daysFromNow(9))],
+        seatMemberships: [standing('ACTIVE', daysFromNow(9))],
       };
       expect(decide({ pricing: unpriced, entitlements: holdsEverything })).toEqual({
         kind: 'locked',
@@ -148,19 +151,19 @@ describe('the access rule', () => {
 
     // Each case runs as the viewer's own membership and as a seat on someone else's.
     it.each([
-      ['a trial', true, terms('TRIALING', daysFromNow(5), daysFromNow(5))],
-      ['a trial without an end date', true, terms('TRIALING', daysFromNow(5))],
-      ['a trial that has ended', false, terms('TRIALING', daysFromNow(20), daysFromNow(-1))],
-      ['a trial past its period', false, terms('TRIALING', daysFromNow(-1))],
-      ['an active membership', true, terms('ACTIVE', daysFromNow(30))],
-      ['an active membership whose period ends now', false, terms('ACTIVE', NOW)],
-      ['an active membership past its period', false, terms('ACTIVE', daysFromNow(-1))],
-      ['a cancelled membership within its period', true, terms('CANCELLED', daysFromNow(10))],
-      ['a cancelled membership after its period', false, terms('CANCELLED', daysFromNow(-1))],
-      ['a past-due membership within the grace days', true, terms('PAST_DUE', daysFromNow(-2))],
-      ['a past-due membership as the grace days end', false, terms('PAST_DUE', daysFromNow(-3))],
-      ['a past-due membership after the grace days', false, terms('PAST_DUE', daysFromNow(-4))],
-      ['an expired membership', false, terms('EXPIRED', daysFromNow(30))],
+      ['a trial', true, standing('TRIALING', daysFromNow(5), daysFromNow(5))],
+      ['a trial without an end date', true, standing('TRIALING', daysFromNow(5))],
+      ['a trial that has ended', false, standing('TRIALING', daysFromNow(20), daysFromNow(-1))],
+      ['a trial past its period', false, standing('TRIALING', daysFromNow(-1))],
+      ['an active membership', true, standing('ACTIVE', daysFromNow(30))],
+      ['an active membership whose period ends now', false, standing('ACTIVE', NOW)],
+      ['an active membership past its period', false, standing('ACTIVE', daysFromNow(-1))],
+      ['a cancelled membership within its period', true, standing('CANCELLED', daysFromNow(10))],
+      ['a cancelled membership after its period', false, standing('CANCELLED', daysFromNow(-1))],
+      ['a past-due membership within the grace days', true, standing('PAST_DUE', daysFromNow(-2))],
+      ['a past-due membership as the grace days end', false, standing('PAST_DUE', daysFromNow(-3))],
+      ['a past-due membership after the grace days', false, standing('PAST_DUE', daysFromNow(-4))],
+      ['an expired membership', false, standing('EXPIRED', daysFromNow(30))],
     ])('%s counts: %s', (_case, counts, membership) => {
       const own = decide({ entitlements: { ...nothing, memberships: [membership] } });
       const seat = decide({ entitlements: { ...nothing, seatMemberships: [membership] } });
@@ -169,8 +172,8 @@ describe('the access rule', () => {
     });
 
     it('uses whichever membership counts, an own membership before a seat', () => {
-      const ended = terms('EXPIRED', daysFromNow(-30));
-      const running = terms('ACTIVE', daysFromNow(30));
+      const ended = standing('EXPIRED', daysFromNow(-30));
+      const running = standing('ACTIVE', daysFromNow(30));
       expect(decide({ entitlements: { ...nothing, memberships: [ended, running] } })).toEqual({
         kind: 'open',
         reason: 'membership',
@@ -184,12 +187,6 @@ describe('the access rule', () => {
         }),
       ).toEqual({ kind: 'open', reason: 'membership' });
     });
-  });
-
-  it('opens a course to manage or to study, never when locked', () => {
-    expect(opensCourse({ kind: 'manage', role: 'admin' })).toBe(true);
-    expect(opensCourse({ kind: 'open', reason: 'seat' })).toBe(true);
-    expect(opensCourse(PAYMENT_REQUIRED)).toBe(false);
   });
 });
 
@@ -333,7 +330,7 @@ describe('courseAccessFor', () => {
     await getDb().courseAccess.create({
       data: { userId: viewer.userId, courseId: bought.id, source: 'GIFT' },
     });
-    expect(await courseAccessForEach(viewer, [paid, gratis, bought])).toEqual([
+    expect(await courseAccessForMany(viewer, [paid, gratis, bought])).toEqual([
       PAYMENT_REQUIRED,
       { kind: 'open', reason: 'free' },
       { kind: 'open', reason: 'grant', source: 'GIFT' },

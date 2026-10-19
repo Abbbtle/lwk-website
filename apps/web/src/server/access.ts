@@ -32,7 +32,7 @@ export type AccessViewer = { readonly isOwner: boolean; readonly isAdmin: boolea
 export type AccessGrant = { readonly source: AccessSource; readonly revoked: boolean };
 
 /** What decides whether a membership counts. */
-export type MembershipTerms = {
+export type MembershipStanding = {
   readonly status: MembershipStatus;
   readonly currentPeriodEnd: Date;
   readonly trialEndsAt: Date | null;
@@ -42,9 +42,9 @@ export type MembershipTerms = {
 export type Entitlements = {
   readonly grant: AccessGrant | null;
   /** Memberships the viewer pays for. */
-  readonly memberships: readonly MembershipTerms[];
+  readonly memberships: readonly MembershipStanding[];
   /** Memberships the viewer holds a seat on (Family and Community). */
-  readonly seatMemberships: readonly MembershipTerms[];
+  readonly seatMemberships: readonly MembershipStanding[];
 };
 
 /** Everything the rule decides from, for one published course and one viewer. */
@@ -64,11 +64,6 @@ export function decideCourseAccess(facts: AccessFacts): AccessDecision {
   return decisionBeforeEntitlements(facts) ?? decisionFromEntitlements(facts);
 }
 
-/** Whether the decision opens every lesson, to manage the course or to study it. */
-export function opensCourse(access: AccessDecision): boolean {
-  return access.kind !== 'locked';
-}
-
 /**
  * Joining a course that is not free while payments are off earns an early-access grant, so the
  * course stays open to the learner once payments are on. Free courses stay free for everyone.
@@ -85,22 +80,21 @@ export function earnsEarlyAccess(
  * cancelling until the period ends, and for the grace days after a renewal failed. A trial ends
  * with its trial end date even if the period was set later.
  */
-export function membershipCounts(
-  terms: MembershipTerms,
+function membershipCounts(
+  standing: MembershipStanding,
   now: Date,
   pastDueGraceDays: number,
 ): boolean {
+  const { status, currentPeriodEnd, trialEndsAt } = standing;
   const after = (end: Date) => end.getTime() > now.getTime();
-  switch (terms.status) {
+  switch (status) {
     case 'TRIALING':
-      return (
-        after(terms.currentPeriodEnd) && (terms.trialEndsAt === null || after(terms.trialEndsAt))
-      );
+      return after(currentPeriodEnd) && (trialEndsAt === null || after(trialEndsAt));
     case 'ACTIVE':
     case 'CANCELLED':
-      return after(terms.currentPeriodEnd);
+      return after(currentPeriodEnd);
     case 'PAST_DUE':
-      return after(new Date(terms.currentPeriodEnd.getTime() + pastDueGraceDays * DAY_MS));
+      return after(new Date(currentPeriodEnd.getTime() + pastDueGraceDays * DAY_MS));
     case 'EXPIRED':
       return false;
   }
@@ -129,8 +123,8 @@ function decisionBeforeEntitlements({
 function decisionFromEntitlements({ entitlements, payments, now }: AccessFacts): AccessDecision {
   const { grant, memberships, seatMemberships } = entitlements;
   if (grant && !grant.revoked) return { kind: 'open', reason: 'grant', source: grant.source };
-  const counts = (terms: MembershipTerms) =>
-    membershipCounts(terms, now, payments.pastDueGraceDays);
+  const counts = (standing: MembershipStanding) =>
+    membershipCounts(standing, now, payments.pastDueGraceDays);
   if (memberships.some(counts)) return { kind: 'open', reason: 'membership' };
   if (seatMemberships.some(counts)) return { kind: 'open', reason: 'seat' };
   return { kind: 'locked', reason: 'payment_required' };
@@ -150,7 +144,7 @@ export type CourseForAccess = Prisma.CourseGetPayload<{ select: typeof courseAcc
 
 const NO_ENTITLEMENTS: Entitlements = { grant: null, memberships: [], seatMemberships: [] };
 
-const membershipTerms = {
+const membershipStanding = {
   status: true,
   currentPeriodEnd: true,
   trialEndsAt: true,
@@ -174,7 +168,7 @@ async function readEntitlements(
       where: {
         OR: [{ payerId: userId }, { seats: { some: { userId, acceptedAt: { not: null } } } }],
       },
-      select: { payerId: true, ...membershipTerms },
+      select: { payerId: true, ...membershipStanding },
     }),
   ]);
   const grants = new Map(
@@ -183,10 +177,10 @@ async function readEntitlements(
       { source: grant.source, revoked: grant.revokedAt !== null },
     ]),
   );
-  const memberships: MembershipTerms[] = [];
-  const seatMemberships: MembershipTerms[] = [];
-  for (const { payerId, ...terms } of membershipRows) {
-    (payerId === userId ? memberships : seatMemberships).push(terms);
+  const memberships: MembershipStanding[] = [];
+  const seatMemberships: MembershipStanding[] = [];
+  for (const { payerId, ...standing } of membershipRows) {
+    (payerId === userId ? memberships : seatMemberships).push(standing);
   }
   return (courseId) => ({ grant: grants.get(courseId) ?? null, memberships, seatMemberships });
 }
@@ -201,7 +195,7 @@ export async function courseAccessFor(
   session: Session | null,
   course: CourseForAccess,
 ): Promise<AccessDecision> {
-  const [access] = await courseAccessForEach(session, [course]);
+  const [access] = await courseAccessForMany(session, [course]);
   return access;
 }
 
@@ -209,28 +203,26 @@ export async function courseAccessFor(
  * courseAccessFor for several published courses, in their order. The viewer's grants and
  * memberships are read once, and only when some decision depends on them.
  */
-export async function courseAccessForEach(
+export async function courseAccessForMany(
   session: Session | null,
   courses: readonly CourseForAccess[],
 ): Promise<AccessDecision[]> {
   const payments = paymentsConfig();
   const questions = courses.map((course) => ({
-    course,
-    pricing: coursePricing(course),
-    payments,
-    viewer: viewerOf(session, course),
+    courseId: course.id,
+    known: { pricing: coursePricing(course), payments, viewer: viewerOf(session, course) },
   }));
-  const undecided = questions.filter((question) => decisionBeforeEntitlements(question) === null);
+  const undecided = questions.filter(({ known }) => decisionBeforeEntitlements(known) === null);
   const entitlementsFor =
     session && undecided.length > 0
       ? await readEntitlements(
           session.userId,
-          undecided.map(({ course }) => course.id),
+          undecided.map(({ courseId }) => courseId),
         )
       : () => NO_ENTITLEMENTS;
   const now = new Date();
-  return questions.map((question) =>
-    decideCourseAccess({ ...question, entitlements: entitlementsFor(question.course.id), now }),
+  return questions.map(({ courseId, known }) =>
+    decideCourseAccess({ ...known, entitlements: entitlementsFor(courseId), now }),
   );
 }
 

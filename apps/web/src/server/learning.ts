@@ -4,7 +4,7 @@ import {
   type AccessDecision,
   courseAccessColumns,
   courseAccessFor,
-  courseAccessForEach,
+  courseAccessForMany,
   type CourseForAccess,
   recordEarlyAccess,
 } from './access';
@@ -17,6 +17,10 @@ import { signedMediaUrl } from './media';
 
 export class LearningError extends Error {
   constructor(
+    /**
+     * `payment_required`: the course is not open to the learner (see AccessLock): it needs a
+     * purchase or a membership, has no price yet, or their access has ended. The message says which.
+     */
     readonly code: 'not_found' | 'not_enrolled' | 'payment_required',
     message: string,
   ) {
@@ -313,7 +317,7 @@ export async function listMyLearning(session: Session) {
       },
     },
   });
-  const access = await courseAccessForEach(
+  const access = await courseAccessForMany(
     session,
     enrollments.map((e) => e.course),
   );
