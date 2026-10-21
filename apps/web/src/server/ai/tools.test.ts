@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { coursePricingColumns } from '@/lib/pricing';
 import { testSession } from '../../../test/sessions';
+import { grantCourseAccess } from '../access';
 import type { Role } from '../auth/session';
 import * as authoring from '../authoring';
 import { getDb } from '../db';
@@ -108,6 +110,10 @@ beforeEach(async () => {
   await getDb().rateLimit.deleteMany({});
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 afterAll(async () => {
   await getDb().course.deleteMany({ where: { slug: { startsWith: 'ai-tools-' } } });
   await getDb().course.deleteMany({ where: { instructorId: { not: null } } });
@@ -123,6 +129,31 @@ describe('practice quizzes', () => {
       'Lesson not found',
     );
     expect(bedrock.inputs).toHaveLength(0);
+  });
+
+  it('follow the access rule: enrollment during early access, then access too', async () => {
+    const course = await publishedCourse(lessonText);
+    await getDb().course.update({
+      where: { id: course.id },
+      data: coursePricingColumns({ kind: 'tier', tier: 2 }),
+    });
+    const lessonId = course.sections[0].lessons[0].id;
+    const student = await person();
+    await getDb().enrollment.create({ data: { userId: student.userId, courseId: course.id } });
+    bedrock.results.push(quiz);
+    expect((await lessonQuiz(student, lessonId)).questions).toHaveLength(3);
+
+    // Early access ended before they enrolled, so enrolling alone no longer opens the course.
+    vi.stubEnv('EARLY_ACCESS_ENDS_AT', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    await expect(lessonQuiz(student, lessonId)).rejects.toThrow('Lesson not found');
+    await grantCourseAccess(getDb(), {
+      userId: student.userId,
+      courseId: course.id,
+      source: 'PURCHASE',
+    });
+    // The stored quiz: no second model call.
+    expect((await lessonQuiz(student, lessonId)).questions).toHaveLength(3);
+    expect(bedrock.inputs).toHaveLength(1);
   });
 
   it('are made once, shared, and made again when the lesson changes', async () => {

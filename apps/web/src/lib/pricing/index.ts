@@ -2,6 +2,12 @@
 // code, safe in client components. The visitor's region comes from src/server/price-region.ts.
 
 export {
+  type ChargedPrice,
+  type ChargedPriceColumns,
+  chargedPrice,
+  chargedPriceColumns,
+} from './charged-price';
+export {
   type CoursePricing,
   type CoursePricingColumns,
   courseListPrice,
@@ -15,13 +21,21 @@ export {
   courseTierTitle,
   isCourseTier,
 } from './course-tiers';
-export { type Currency, formatMoney, type Money, money, toDecimalString } from './money';
+export {
+  type Currency,
+  formatMoney,
+  isCurrency,
+  type Money,
+  money,
+  toDecimalString,
+} from './money';
 export {
   COMMUNITY_MIN_SEATS,
   FAMILY_MAX_PEOPLE,
   FOUNDING_MEMBER_PLACES,
   MEMBERSHIP_TRIAL_DAYS,
   PAID_PLANS_NOTICE_DAYS,
+  PAST_DUE_GRACE_DAYS,
   REFUND_WINDOW_DAYS,
 } from './plan-terms';
 export {
@@ -46,6 +60,7 @@ export {
 } from './recurring';
 export {
   HOME_PRICE_REGION,
+  isPriceRegion,
   PRICE_REGIONS,
   type PriceRegion,
   regionCurrency,

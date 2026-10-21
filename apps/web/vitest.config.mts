@@ -21,6 +21,13 @@ export default defineConfig({
     globalSetup: ['test/global-setup.ts'],
     // All test files share one database, so run them one at a time.
     fileParallelism: false,
-    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? '' },
+    // Tests run during early access (its end stood in far ahead), whatever .env.local and the
+    // date in src/lib/early-access.ts say, with checkout off. Tests that need otherwise stub
+    // EARLY_ACCESS_ENDS_AT or PAYMENTS_ENABLED.
+    env: {
+      DATABASE_URL: process.env.TEST_DATABASE_URL ?? '',
+      EARLY_ACCESS_ENDS_AT: '2999-01-01T00:00:00Z',
+      PAYMENTS_ENABLED: 'false',
+    },
   },
 });

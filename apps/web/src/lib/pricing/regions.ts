@@ -43,6 +43,10 @@ const HIGH_INCOME_COUNTRIES = new Set(
   ),
 );
 
+export function isPriceRegion(value: unknown): value is PriceRegion {
+  return PRICE_REGIONS.some((region) => region === value);
+}
+
 /** The price region a country belongs to. Every country belongs to one. */
 export function regionForCountry(country: CountryCode): PriceRegion {
   if (country === 'ZA') return 'south-africa';

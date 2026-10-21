@@ -5,6 +5,8 @@ import { getArticle, searchHelp } from '@/lib/help';
 import { hasRole, type Session } from '../auth/session';
 import * as authoring from '../authoring';
 import { getDb } from '../db';
+import { helpViewer } from '../help-viewer';
+import { canReadLesson } from '../learning';
 import { rateLimit } from '../rate-limit';
 import { getTicketForStaff } from '../support';
 import { AiToolError, generateStructured, WRITING_RULES } from './structured';
@@ -43,20 +45,15 @@ export const quizSchema = z.object({
 });
 export type Quiz = z.infer<typeof quizSchema>;
 
-/** The lesson, if this person may read it (enrolled, free preview, its instructor or an admin). */
+/** The lesson, if this person may read it, as the player decides (see canReadLesson). */
 async function readableLesson(session: Session, lessonId: string) {
   const lesson = await getDb().lesson.findUnique({
     where: { id: lessonId },
     include: { section: { include: { course: true } } },
   });
-  const course = lesson?.section.course;
-  if (!lesson || !course || course.status !== 'PUBLISHED') return null;
-  if (lesson.isPreview || hasRole(session, 'admin') || course.instructorId === session.userId)
-    return lesson;
-  const enrolled = await getDb().enrollment.findUnique({
-    where: { userId_courseId: { userId: session.userId, courseId: course.id } },
-  });
-  return enrolled ? lesson : null;
+  // The published filter stays as a safety net; the access rule also knows publication.
+  if (!lesson || lesson.section.course.status !== 'PUBLISHED') return null;
+  return (await canReadLesson(session, lesson)) ? lesson : null;
 }
 
 /**
@@ -336,8 +333,10 @@ export async function draftSupportReply(session: Session, ticketNumber: number) 
     )
     .join('\n\n');
   const question = `${ticket.subject} ${ticket.messages.find((m) => !m.fromStaff)?.body ?? ''}`;
-  const articles = searchHelp(question, { staff: false }, 3)
-    .map((a) => getArticle(a.slug, { staff: false })!)
+  // The articles the person who asked can read.
+  const reader = helpViewer(null);
+  const articles = searchHelp(question, reader, 3)
+    .map((a) => getArticle(a.slug, reader)!)
     .map((a) => `### ${a.title} (/help/${a.slug})\n${a.body}`)
     .join('\n\n');
   return generateStructured({

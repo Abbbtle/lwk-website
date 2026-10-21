@@ -1,6 +1,7 @@
 // Catalogue (Phase 2), users (Phase 3), authoring and inboxes (Phase 4),
 // enrollments and progress (Phase 5), account security and audit log (Phase 7),
-// free resources for Explore (Phase 8), help and support (Phase 9), AI (Phases 10 and 11).
+// free resources for Explore (Phase 8), help and support (Phase 9), AI (Phases 10 and 11),
+// course access and memberships (Phase 14).
 
 generator client {
   provider = "prisma-client"
@@ -46,42 +47,43 @@ model Category {
 }
 
 model Course {
-  id             String       @id @default(uuid(7)) @db.Uuid
-  slug           String       @unique
+  id             String         @id @default(uuid(7)) @db.Uuid
+  slug           String         @unique
   title          String
   subtitle       String
   description    String
   outcomes       String[]
   level          CourseLevel
-  status         CourseStatus @default(DRAFT)
+  status         CourseStatus   @default(DRAFT)
   // Owner; null for the seeded sample catalogue.
-  instructorId   String?      @map("instructor_id") @db.Uuid
-  instructor     User?        @relation("taught", fields: [instructorId], references: [id])
+  instructorId   String?        @map("instructor_id") @db.Uuid
+  instructor     User?          @relation("taught", fields: [instructorId], references: [id])
   // Name shown to learners ("Taught by"); defaults to the owner's name.
-  instructorName String       @map("instructor_name")
+  instructorName String         @map("instructor_name")
   // Price tier 1-5 for single-course sales; each tier has a price per region in src/lib/pricing.
   // Null for free courses and until the instructor chooses a price.
-  priceTier      Int?         @map("price_tier") @db.SmallInt
+  priceTier      Int?           @map("price_tier") @db.SmallInt
   // Deprecated: replaced by priceTier and no longer read or written. A later release drops both;
   // until then they stay because the previous release, which a deploy can roll back to, reads them.
-  priceCents     Int?         @map("price_cents")
-  currency       String       @default("USD") @db.Char(3)
+  priceCents     Int?           @map("price_cents")
+  currency       String         @default("USD") @db.Char(3)
   // S3 key of the cover image, if uploaded.
-  coverKey       String?      @map("cover_key")
+  coverKey       String?        @map("cover_key")
   // Free for everyone, also once paid plans exist; listed in Explore.
-  isFree         Boolean      @default(false) @map("is_free")
+  isFree         Boolean        @default(false) @map("is_free")
   // Sample content for testing, removed in one step before launch.
-  isSample       Boolean      @default(false) @map("is_sample")
-  categoryId     String       @map("category_id") @db.Uuid
-  category       Category     @relation(fields: [categoryId], references: [id])
+  isSample       Boolean        @default(false) @map("is_sample")
+  categoryId     String         @map("category_id") @db.Uuid
+  category       Category       @relation(fields: [categoryId], references: [id])
   sections       Section[]
   enrollments    Enrollment[]
-  submittedAt    DateTime?    @map("submitted_at")
+  access         CourseAccess[]
+  submittedAt    DateTime?      @map("submitted_at")
   // Feedback from the last review, shown to the instructor.
-  reviewNote     String?      @map("review_note")
-  publishedAt    DateTime?    @map("published_at")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  reviewNote     String?        @map("review_note")
+  publishedAt    DateTime?      @map("published_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   @@index([categoryId])
   @@index([status])
@@ -161,6 +163,10 @@ model User {
   helpFeedback           HelpFeedback[]
   aiUsage                AiUsage[]
   aiFeedback             AiFeedback[]
+  courseAccess           CourseAccess[]
+  // Memberships the user pays for, and seats they hold on other people's memberships.
+  memberships            Membership[]
+  membershipSeats        MembershipSeat[]
 
   @@index([email])
   @@map("users")
@@ -231,7 +237,9 @@ model InstructorApplication {
   @@map("instructor_applications")
 }
 
-// A learner's place in a course. Free during early access; payments come later.
+// A learner's place in a course. enrolled_at records who joined during early access (src/server/
+// access.ts), so it is never rewritten. Enrolments are deleted only with the account or the course:
+// a future "unenrol" must hide the place, not delete it.
 model Enrollment {
   id           String    @id @default(uuid(7)) @db.Uuid
   userId       String    @map("user_id") @db.Uuid
@@ -497,4 +505,101 @@ model LessonQuiz {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("lesson_quizzes")
+}
+
+enum AccessSource {
+  PURCHASE
+  GIFT
+  ADMIN
+}
+
+// Lifetime access to one course for one person (Phase 14), one row per source (bought, a gift, or
+// given by an admin), so each can be revoked on its own: a refunded purchase leaves a gift or an
+// admin grant in place. Any unrevoked row opens the course (src/server/access.ts, the only writer
+// of this table). grantedAt is when that source first granted it; the history lives in orders and
+// the audit log.
+model CourseAccess {
+  id        String       @id @default(uuid(7)) @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String       @map("course_id") @db.Uuid
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  source    AccessSource
+  grantedAt DateTime     @default(now()) @map("granted_at")
+  revokedAt DateTime?    @map("revoked_at")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@unique([userId, courseId, source])
+  @@index([courseId])
+  @@map("course_access")
+}
+
+enum MembershipPlan {
+  MONTHLY
+  YEARLY
+  FOUNDING_YEARLY
+  FAMILY_YEARLY
+  COMMUNITY_YEARLY
+}
+
+// Where a membership is in its life. Cancelling is not a status: it sets cancelAtPeriodEnd, and
+// the membership expires when the period ends.
+enum MembershipStatus {
+  TRIALING
+  ACTIVE
+  // A renewal failed; courses stay open for the grace days (PAST_DUE_GRACE_DAYS, src/lib/pricing).
+  PAST_DUE
+  EXPIRED
+}
+
+// A paid plan that opens every priced course (Phase 14). Family and Community plans also open them
+// for the people on their seats. Paystack fills in its codes from Phase 14c.
+model Membership {
+  id                       String           @id @default(uuid(7)) @db.Uuid
+  // Deleted with the payer's account for now; Phase 14d decides what billing records keep.
+  payerId                  String           @map("payer_id") @db.Uuid
+  payer                    User             @relation(fields: [payerId], references: [id], onDelete: Cascade)
+  plan                     MembershipPlan
+  // The price charged each period, read and written through chargedPrice (src/lib/pricing): the
+  // price region, its currency and the amount in minor units. CHECKs keep them to the price list's.
+  region                   String
+  currency                 String           @db.Char(3)
+  amountMinorUnits         Int              @map("amount_minor_units")
+  status                   MembershipStatus
+  // When the trial ends, for reminders; set while trialing.
+  trialEndsAt              DateTime?        @map("trial_ends_at")
+  // The end of what is paid for, or of the trial while trialing.
+  currentPeriodEnd         DateTime         @map("current_period_end")
+  // The payer cancelled: nothing more is charged, and the membership expires at the period end.
+  cancelAtPeriodEnd        Boolean          @default(false) @map("cancel_at_period_end")
+  providerCustomerCode     String?          @map("provider_customer_code")
+  providerSubscriptionCode String?          @unique @map("provider_subscription_code")
+  providerEmailToken       String?          @map("provider_email_token")
+  seats                    MembershipSeat[]
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  @@index([payerId])
+  @@map("memberships")
+}
+
+// A place on a Family or Community membership, offered by email. It opens courses for the person
+// who accepted it while the membership does; it goes with their account if they delete it.
+model MembershipSeat {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  membershipId String     @map("membership_id") @db.Uuid
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  // The person using the seat: set when they accept the invitation, together with acceptedAt
+  // (a CHECK keeps the two together).
+  userId       String?    @map("user_id") @db.Uuid
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedEmail String     @map("invited_email")
+  acceptedAt   DateTime?  @map("accepted_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@unique([membershipId, userId])
+  @@index([userId])
+  @@map("membership_seats")
 }

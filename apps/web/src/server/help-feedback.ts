@@ -1,6 +1,7 @@
 import 'server-only';
 import { helpArticles } from '@/content/help';
 import { getDb } from './db';
+import { currentSalesMoment } from './early-access';
 
 // "Was this helpful?" answers on help articles, so staff can see which articles need work.
 
@@ -10,7 +11,7 @@ export async function recordHelpFeedback(input: {
   comment?: string;
   userId?: string;
 }) {
-  if (!helpArticles.some((a) => a.slug === input.slug)) return;
+  if (!helpArticles(currentSalesMoment()).some((a) => a.slug === input.slug)) return;
   await getDb().helpFeedback.create({
     data: {
       articleSlug: input.slug,
@@ -42,7 +43,8 @@ export async function helpFeedbackSummary() {
     take: 10,
     select: { articleSlug: true, comment: true, createdAt: true },
   });
-  const title = (slug: string) => helpArticles.find((a) => a.slug === slug)?.title ?? slug;
+  const articles = helpArticles(currentSalesMoment());
+  const title = (slug: string) => articles.find((a) => a.slug === slug)?.title ?? slug;
   return {
     articles: [...bySlug.entries()]
       .map(([slug, counts]) => ({ slug, title: title(slug), ...counts }))

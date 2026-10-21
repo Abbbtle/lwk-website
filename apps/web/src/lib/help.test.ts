@@ -1,18 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { helpArticles, helpTopics } from '@/content/help';
 import { parseBlocks, safeHref } from '@/components/rich-text';
+import type { SalesMoment } from '@/lib/early-access';
 import { articlesForPath, getArticle, searchHelp, topicsFor } from './help';
 
-const learner = { staff: false };
-const staff = { staff: true };
+const EARLY: SalesMoment = { phase: 'early_access', earlyAccessEndsAt: null };
+const ENDING: SalesMoment = {
+  phase: 'early_access',
+  earlyAccessEndsAt: new Date('2027-03-01T00:00:00+02:00'),
+};
+const AFTER: SalesMoment = { phase: 'paid', earlyAccessEndsAt: ENDING.earlyAccessEndsAt };
+
+const learner = { staff: false, moment: EARLY };
+const staff = { staff: true, moment: EARLY };
 const slugs = (articles: { slug: string }[]) => articles.map((a) => a.slug);
 
 describe('help content', () => {
-  it('has unique slugs, known topics and working internal links', () => {
-    const all = new Set(helpArticles.map((a) => a.slug));
-    expect(all.size).toBe(helpArticles.length);
+  it.each([
+    ['during early access', EARLY],
+    ['once its end is set', ENDING],
+    ['after early access', AFTER],
+  ])('has unique slugs, known topics and working internal links %s', (_when, moment) => {
+    const articles = helpArticles(moment);
+    const all = new Set(articles.map((a) => a.slug));
+    expect(all.size).toBe(articles.length);
     const topics = new Set(helpTopics.map((t) => t.slug));
-    for (const article of helpArticles) {
+    for (const article of articles) {
       expect(topics.has(article.topic), article.slug).toBe(true);
       expect(article.summary.length, article.slug).toBeLessThanOrEqual(160);
       for (const [, href] of article.body.matchAll(/\]\(([^)]+)\)/g)) {
@@ -22,6 +35,43 @@ describe('help content', () => {
       // Renders without tables or other unsupported blocks.
       expect(parseBlocks(article.body).length).toBeGreaterThan(0);
       expect(article.body).not.toMatch(/^\|/m);
+    }
+  });
+});
+
+describe('articles about prices and early access', () => {
+  const text = (slug: string, moment: SalesMoment) => {
+    const article = getArticle(slug, { staff: true, moment })!;
+    return `${article.summary}\n${article.body}`;
+  };
+  const priced = ['enrolling-in-a-course', 'prices-and-plans', 'offering-a-free-course'];
+
+  it('say every course is free while early access lasts, with its end once set', () => {
+    expect(text('prices-and-plans', EARLY)).toContain('Paid plans open soon');
+    expect(text('prices-and-plans', ENDING)).toContain('Paid plans open on 1 March 2027.');
+    expect(text('enrolling-in-a-course', ENDING)).toContain('Early access ends on 1 March 2027.');
+    for (const slug of priced) {
+      expect(text(slug, EARLY), slug).toMatch(/every course is free/i);
+    }
+  });
+
+  it('say how paid plans work once early access has ended', () => {
+    for (const slug of priced) {
+      const after = text(slug, AFTER);
+      expect(after, slug).not.toMatch(/every course is free|paid plans open|open soon/i);
+    }
+    expect(text('prices-and-plans', AFTER)).toContain(
+      'the courses you joined during early access stay yours',
+    );
+    expect(text('enrolling-in-a-course', AFTER)).toContain('[Membership](/plans-and-pricing)');
+  });
+
+  it('never say every course is free in an article that does not follow the phase', () => {
+    const fixed = helpArticles(AFTER).filter((a) => !priced.includes(a.slug));
+    for (const article of fixed) {
+      expect(`${article.summary} ${article.body}`, article.slug).not.toMatch(
+        /every course is free|during early access/i,
+      );
     }
   });
 });

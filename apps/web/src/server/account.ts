@@ -1,4 +1,5 @@
 import 'server-only';
+import { chargedPrice, formatMoney } from '@/lib/pricing';
 import { recordAudit } from './audit';
 import type { Session } from './auth/session';
 import { deleteOwnAccount, getOwnMfaEnabled, updateOwnName } from './cognito';
@@ -76,6 +77,28 @@ export async function exportAccountData(userId: string) {
       lessonProgress: { include: { lesson: { select: { title: true } } } },
       instructorApplications: true,
       coursesTaught: { select: { title: true, slug: true, status: true, createdAt: true } },
+      courseAccess: { include: { course: { select: { title: true } } } },
+      memberships: {
+        select: {
+          plan: true,
+          region: true,
+          currency: true,
+          amountMinorUnits: true,
+          status: true,
+          trialEndsAt: true,
+          currentPeriodEnd: true,
+          cancelAtPeriodEnd: true,
+          createdAt: true,
+          seats: { select: { invitedEmail: true, acceptedAt: true } },
+        },
+      },
+      membershipSeats: {
+        select: {
+          invitedEmail: true,
+          acceptedAt: true,
+          membership: { select: { plan: true, status: true, currentPeriodEnd: true } },
+        },
+      },
     },
   });
   const [contactMessages, activity, supportRequests, notifications] = await Promise.all([
@@ -129,6 +152,35 @@ export async function exportAccountData(userId: string) {
       lastPositionSeconds: p.lastPositionSeconds,
       completedAt: p.completedAt,
     })),
+    courseAccess: user.courseAccess.map((a) => ({
+      course: a.course.title,
+      source: a.source,
+      grantedAt: a.grantedAt,
+      revokedAt: a.revokedAt,
+    })),
+    // Memberships the person pays for, with the seats they offered to others.
+    memberships: user.memberships.map((m) => {
+      const { region, amount } = chargedPrice(m);
+      return {
+        plan: m.plan,
+        region,
+        price: formatMoney(amount),
+        status: m.status,
+        trialEndsAt: m.trialEndsAt,
+        currentPeriodEnd: m.currentPeriodEnd,
+        cancelAtPeriodEnd: m.cancelAtPeriodEnd,
+        startedAt: m.createdAt,
+        seats: m.seats,
+      };
+    }),
+    // Seats the person holds on other people's memberships.
+    membershipSeats: user.membershipSeats.map((s) => ({
+      plan: s.membership.plan,
+      status: s.membership.status,
+      currentPeriodEnd: s.membership.currentPeriodEnd,
+      invitedEmail: s.invitedEmail,
+      acceptedAt: s.acceptedAt,
+    })),
     instructorApplications: user.instructorApplications.map((a) =>
       omit(a, 'userId', 'reviewedById'),
     ),
@@ -161,8 +213,8 @@ export async function deletionBlocker(session: Session): Promise<string | null> 
 
 /**
  * Delete the account for good: the Cognito user (with the fresh token proving the password was
- * just entered) and everything stored about them. Enrollments, progress and applications go
- * with the user row; audit entries keep the name but lose the link.
+ * just entered) and everything stored about them. Enrollments, progress, applications, course
+ * access and memberships go with the user row; audit entries keep the name but lose the link.
  */
 export async function deleteAccount(session: Session, freshAccessToken: string) {
   const blocker = await deletionBlocker(session);

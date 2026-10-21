@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/status-badge';
+import { coursePricing } from '@/lib/pricing';
 import { requireRole } from '@/server/auth/session';
 import { listCoursesByStatus } from '@/server/course-review';
 import { AdminHeading, AdminNav } from '../admin-nav';
@@ -55,7 +56,15 @@ export default async function AdminCoursesPage({ searchParams }: PageProps<'/adm
                       ` · submitted ${course.submittedAt.toLocaleDateString('en-GB', { dateStyle: 'medium' })}`}
                   </span>
                 </span>
-                <StatusBadge status={course.status} />
+                <span className="flex items-center gap-2">
+                  {/* Once payments are on, only staff can open a live course without a price. */}
+                  {course.status === 'PUBLISHED' && coursePricing(course).kind === 'unpriced' && (
+                    <span className="rounded-badge border border-red-700 px-2 py-0.5 text-xs font-bold text-red-700 uppercase">
+                      No price
+                    </span>
+                  )}
+                  <StatusBadge status={course.status} />
+                </span>
               </Link>
             </li>
           ))}

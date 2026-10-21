@@ -295,6 +295,9 @@ export class AppStack extends cdk.Stack {
       AI_ASSISTANT_MODEL: ai.assistantModel,
       AI_WRITER_MODEL: ai.writerModel,
       AI_MONTHLY_BUDGET_USD: String(ai.monthlyBudgetUsd),
+      // Checkout stays off until it is ready. It never decides access: early access ends at the
+      // reviewed date in apps/web/src/lib/early-access.ts (see docs/PLAN.md, Phase 14).
+      PAYMENTS_ENABLED: 'false',
       // Sample courses and articles for UAT; set to "off" for production stages.
       SAMPLE_CONTENT: 'on',
     };

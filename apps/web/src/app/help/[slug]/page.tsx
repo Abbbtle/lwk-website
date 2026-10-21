@@ -5,12 +5,13 @@ import { notFound } from 'next/navigation';
 import { RichText } from '@/components/rich-text';
 import { helpTopics } from '@/content/help';
 import { getArticle, relatedArticles } from '@/lib/help';
-import { getSession, hasRole } from '@/server/auth/session';
+import { getSession } from '@/server/auth/session';
+import { helpViewer } from '@/server/help-viewer';
 import { HelpFeedback } from '../help-feedback';
 
 async function viewer() {
   const session = await getSession();
-  return { session, viewer: { staff: Boolean(session && hasRole(session, 'support')) } };
+  return { session, viewer: helpViewer(session) };
 }
 
 export async function generateMetadata({ params }: PageProps<'/help/[slug]'>): Promise<Metadata> {

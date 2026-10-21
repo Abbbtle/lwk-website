@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { coursePricingColumns } from '@/lib/pricing';
 import { testSession } from '../../../test/sessions';
+import { grantCourseAccess } from '../access';
 import type { Role } from '../auth/session';
 import { getDb } from '../db';
 import { type AssistantEvent, describePage, runAssistant, systemPrompt } from './assistant';
@@ -89,6 +91,10 @@ beforeEach(async () => {
   bedrock.inputs = [];
   resetAiCircuit();
   await getDb().aiUsage.deleteMany({});
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 afterAll(async () => {
@@ -241,7 +247,22 @@ describe('assistant context', () => {
     const path = `/learn/${course.slug}/${course.sections[0].lessons[0].id}`;
     expect(await describePage(path, null)).not.toContain('hidden lesson text');
     const learner = await person();
+    expect(await describePage(path, learner)).not.toContain('hidden lesson text');
     await getDb().enrollment.create({ data: { userId: learner.userId, courseId: course.id } });
+    expect(await describePage(path, learner)).toContain('hidden lesson text');
+
+    // After early access, a priced course joined after the end needs access as well.
+    await getDb().course.update({
+      where: { id: course.id },
+      data: coursePricingColumns({ kind: 'tier', tier: 2 }),
+    });
+    vi.stubEnv('EARLY_ACCESS_ENDS_AT', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    expect(await describePage(path, learner)).not.toContain('hidden lesson text');
+    await grantCourseAccess(getDb(), {
+      userId: learner.userId,
+      courseId: course.id,
+      source: 'GIFT',
+    });
     expect(await describePage(path, learner)).toContain('hidden lesson text');
     await getDb().course.delete({ where: { id: course.id } });
   });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COUNTRY_CODES, type CountryCode, toCountryCode } from '@/lib/country-code';
 import {
   HOME_PRICE_REGION,
+  isPriceRegion,
   PRICE_REGIONS,
   regionCurrency,
   regionForCountry,
@@ -48,6 +49,15 @@ describe('regionForCountry', () => {
 
   it('leaves unknown countries to the caller, who uses the home region', () => {
     expect(HOME_PRICE_REGION).toBe('south-africa');
+  });
+});
+
+describe('isPriceRegion', () => {
+  it('recognises the price regions and nothing else', () => {
+    expect(PRICE_REGIONS.every((region) => isPriceRegion(region))).toBe(true);
+    for (const value of ['South Africa', 'ZA', '', null, undefined, 3]) {
+      expect(isPriceRegion(value), String(value)).toBe(false);
+    }
   });
 });
 

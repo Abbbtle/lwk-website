@@ -1,13 +1,15 @@
 import 'server-only';
 import type { Message, Tool } from '@aws-sdk/client-bedrock-runtime';
 import { searchHelp, visibleArticles } from '@/lib/help';
+import { courseAccessSelect } from '../access';
 import { hasRole, type Session } from '../auth/session';
 import { listOwnCourses, reviewChecklist, getCourseForEditing } from '../authoring';
 import { getCourse, searchCourses } from '../catalog';
 import { countCoursesInReview } from '../course-review';
 import { getDb } from '../db';
+import { helpViewer } from '../help-viewer';
 import { countPendingApplications } from '../instructor-applications';
-import { listMyLearning } from '../learning';
+import { canReadLesson, listMyLearning } from '../learning';
 import { listPublishedResources } from '../resources';
 import { listMyTickets, listTickets, STATUS_LABELS, ticketRef } from '../support';
 import { AiUnavailableError, converseStream, type StreamEvent } from './bedrock';
@@ -65,26 +67,15 @@ export async function describePage(path: string, session: Session | null): Promi
             where: { id: parts[2], section: { course: { slug: parts[1], status: 'PUBLISHED' } } },
             include: {
               section: {
-                include: { course: { select: { title: true, id: true, instructorId: true } } },
+                include: { course: { select: { title: true, ...courseAccessSelect } } },
               },
             },
           })
         : null;
       if (lesson) {
         const course = lesson.section.course;
-        const enrolled = session
-          ? Boolean(
-              await getDb().enrollment.findUnique({
-                where: { userId_courseId: { userId: session.userId, courseId: course.id } },
-              }),
-            )
-          : false;
-        const canRead =
-          lesson.isPreview ||
-          enrolled ||
-          (session && (hasRole(session, 'admin') || course.instructorId === session.userId));
         const text =
-          canRead && lesson.body
+          (await canReadLesson(session, lesson)) && lesson.body
             ? `\nThe lesson ${lesson.type === 'TEXT' ? 'text' : 'notes'} (for questions about it):\n<lesson>\n${clip(lesson.body, 4000)}\n</lesson>`
             : '';
         return `The lesson player: lesson "${lesson.title}" (${lesson.type.toLowerCase()}) in the course "${course.title}".${text}`;
@@ -117,8 +108,7 @@ export async function describePage(path: string, session: Session | null): Promi
 }
 
 function knowledge(session: Session | null) {
-  const staff = Boolean(session && hasRole(session, 'support'));
-  return visibleArticles({ staff })
+  return visibleArticles(helpViewer(session))
     .map((a) => `### ${a.title}\nArticle: /help/${a.slug}\n${a.body}`)
     .join('\n\n');
 }
@@ -239,16 +229,18 @@ const tools: ToolDef[] = [
     spec: {
       toolSpec: {
         name: 'my_learning',
-        description: "The logged-in person's enrolled courses with their progress.",
+        description:
+          "The logged-in person's enrolled courses with their progress, and whether their access to each has ended.",
         inputSchema: { json: { type: 'object', properties: {} } },
       },
     },
     async run(_input, { session }) {
-      const courses = await listMyLearning(session!.userId);
+      const courses = await listMyLearning(session!);
       return courses.map((c) => ({
         title: c.title,
         progress: `${c.percent}% (${c.completedCount} of ${c.totalLessons} lessons)`,
         completed: c.completed,
+        accessEnded: c.accessEnded,
         continue: `/learn/${c.slug}`,
       }));
     },
@@ -362,8 +354,7 @@ const tools: ToolDef[] = [
 
 /** Help articles for the question, when the AI cannot answer it. */
 function fallbackArticles(session: Session | null, question: string) {
-  const staff = Boolean(session && hasRole(session, 'support'));
-  return searchHelp(question, { staff }, 3).map(({ slug, title, summary }) => ({
+  return searchHelp(question, helpViewer(session), 3).map(({ slug, title, summary }) => ({
     slug,
     title,
     summary,

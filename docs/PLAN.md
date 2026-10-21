@@ -145,6 +145,13 @@ packages/*         later: code shared between web and mobile
   durationSec, isPreview, position
 - `Enrollment` - userId, courseId, enrolledAt (unique pair)
 - `LessonProgress` - userId, lessonId, lastPositionSec, completedAt (unique pair)
+- `CourseAccess` - userId, courseId, source (`PURCHASE` | `GIFT` | `ADMIN`) (unique together),
+  grantedAt, revokedAt: lifetime access to a course, one row per source (Phase 14a)
+- `Membership` - payerId, plan, the price charged (region, currency, amount in minor units),
+  status (`TRIALING` | `ACTIVE` | `PAST_DUE` | `EXPIRED`), trialEndsAt, currentPeriodEnd,
+  cancelAtPeriodEnd, provider codes (Phase 14a)
+- `MembershipSeat` - membershipId, userId and acceptedAt (set together on acceptance),
+  invitedEmail: Family and Community seats (Phase 14a)
 
 Roles come from Cognito groups in the token, not the database.
 
@@ -615,15 +622,122 @@ Status: DONE.
   region and each kind of pricing (CloudFront's country header sent to a local production build)
   at desktop and 390 px phone width, with no horizontal scrolling.
 
-**Phase 14 - Payments** (next)
+**Phase 14 - Payments** (in progress)
 Paystack checkout for South Africa first; a merchant of record (Paddle, else Lemon Squeezy) for
 other countries. Memberships (monthly and yearly, founding members, Family, Community seats) and
 single-course purchases; access rules (members open every paid course; bought courses and courses
-joined during early access stay); instructor earnings. Everything stays behind a
-`PAYMENTS_ENABLED` setting until paid plans open, and the start date is announced 30 days ahead.
+joined during early access stay); instructor earnings. Paid plans start when early access ends
+(`EARLY_ACCESS_ENDS_AT`), announced 30 days ahead, and checkout stays behind a `PAYMENTS_ENABLED`
+switch until it is ready.
+Six milestones, each its own pull request: 14a records and access rules, 14b Paystack checkout for
+single courses, 14c memberships, 14d billing screens and admin, 14e instructor earnings and
+payouts, 14f learners outside South Africa.
 
-Status: NOT STARTED.
+Status: 14a DONE (records and access rules); 14b next.
 
+- **Early access ends on a date, once.** The date is a reviewed constant, `EARLY_ACCESS_ENDS_AT`
+  in `src/lib/early-access.ts`: null until the pull request that announces the end sets it, and
+  never removed or moved once that moment has passed. Until the end every course is open to
+  everyone signed in; from the end on, paid plans apply, and switching checkout off never brings
+  early access back. Outside production an `EARLY_ACCESS_ENDS_AT` environment value may stand in
+  for the constant, for tests and local checks (as `PRICE_COUNTRY` does for the country);
+  production ignores it.
+- **The copy follows the phase.** Pages read it once per request, as they read the price region,
+  and pass it down: course prices (struck through and Free during early access, as they are
+  afterwards, "Not on sale yet" without a price), the home banner, hero, early-access panel and
+  cost answer, Plans & Pricing (banner, buttons, founding offer, FAQ), the enroll panels, My
+  Learning, and the help articles about prices, enrolling and choosing a price, which the help
+  centre, its search and the assistant read at the current moment (`src/server/help-viewer.ts`).
+  With an end date set, the home panel, Plans & Pricing and the articles about prices and
+  enrolling say when early access ends.
+- **Checkout has its own switch.** `PAYMENTS_ENABLED` (Parameter Store, `false` in every stage,
+  read by `src/server/payments/config.ts`) only opens or closes checkout (Phase 14b). It never
+  decides who may open a course, so switching it off after launch keeps paid courses closed.
+- **Dependencies point inwards.** The access rule and what it builds on (`src/server/access.ts`,
+  `learning.ts`, `memberships.ts`, `early-access.ts` and everything in `src/lib`) never import from
+  `src/server/payments`; a `no-restricted-imports` rule in `apps/web/eslint.config.mjs` fails lint
+  if one does. Payments code may import them. access.ts is the only writer of `course_access`, and
+  learning.ts has a session-free `enrollLearner(db, { userId, courseId })` for checkout to call.
+- **Records** (migration `payments_access`):
+  - `course_access`: lifetime access to one course, one row per person, course and source
+    (purchase, gift or admin), written only through `grantCourseAccess` (an upsert of its own
+    source's row, reviving it if revoked) and `revokeCourseAccess` (its own source's row only; 14b
+    also matches the refunded order). Any unrevoked row opens the course, so a gift or an admin
+    grant outlives a refunded purchase. The history lives in orders and the audit log.
+  - `memberships`: the payer, the plan (monthly, yearly, founding yearly, family yearly, community
+    yearly), the price charged, the status (trialing, active, past due, expired), the trial end
+    (for reminders, required while trialing), the current period end (the end of what is paid for,
+    or of the trial), cancel at period end (cancelling is not a status) and Paystack's codes (from
+    14c). The price charged is a price region, a currency and an amount in minor units, written
+    through `chargedPriceColumns` in the region's currency of the day and read through
+    `chargedPrice` (`src/lib/pricing`), which accepts any currency the site knows, so a price
+    charged before a region's currency changes still reads. CHECKs keep the region and the currency
+    to known values, each on its own rather than as a pair, for the same reason.
+  - `membership_seats`: Family and Community places: the invited email, and the person and the
+    acceptance time, which are set together.
+  - Orders and payment events arrive with checkout in 14b, where they are first used.
+- **One access rule** (`src/server/access.ts`): a pure decision, tested case by case, and a loader
+  that reads the viewer's enrolment, grant and memberships (three queries, run together) only when
+  the decision depends on them. It answers manage (owner or admin), open (free, early access,
+  joined during early access, a grant, a membership or a seat), locked (signed out, payment
+  required, unpriced) or unpublished, which callers treat as not found:
+
+  | Course                         | During early access | After early access                                                                  |
+  | ------------------------------ | ------------------- | ----------------------------------------------------------------------------------- |
+  | Any, for its owner and admins  | Manage              | Manage                                                                              |
+  | Not published, for anyone else | Not found           | Not found                                                                           |
+  | Any, for signed-out visitors   | Free previews       | Free previews                                                                       |
+  | Free                           | Everyone signed in  | Everyone signed in                                                                  |
+  | Priced (a tier)                | Everyone signed in  | Joined during early access, an unrevoked grant, or a membership or seat that counts |
+  | Unpriced                       | Everyone signed in  | Joined during early access; otherwise only its owner and admins                     |
+
+  "Staff" here means a course's owner and admins: support staff are learners for course access.
+  A membership counts (`src/server/memberships.ts`) while trialing or active until its current
+  period ends, also when set to cancel then, and when past due until the grace days after that
+  (`PAST_DUE_GRACE_DAYS`, 3, in the plan terms); an expired one never does. A seat counts when its
+  membership does.
+
+- **Early learners keep their courses.** A course the learner enrolled in before the end stays
+  open to them for good, whatever its price then or later (also one that was free when joined or
+  has no price), from the enrolment date alone: no grants or backfill. So `enrolled_at` is never
+  rewritten, and enrolments are deleted only with the account or the course: a future "unenrol"
+  must hide the place, not delete it.
+- **Callers.** Enrolling, the lesson player, saving progress, My Learning and the AI lesson readers
+  (practice quizzes, lesson text for the assistant) ask the rule. Learners open a course's lessons
+  once enrolled in a course that is open to them, owners and admins without enrolling, so nothing
+  changed during early access. What keeps lessons locked is named by condition: signed out, not
+  enrolled, payment required, unpriced or access ended (enrolled, but a purchase or membership no
+  longer counts). Enrolling in a closed course is refused with an `AccessLockedError` (code
+  `access_locked`), which always carries the lock; the course page and the player say why, with a
+  link to Plans & Pricing where paying can open it
+  (checkout comes in 14b). Saving progress is refused once access has ended, the progress made is
+  kept, and My Learning says the access has ended. The player never returns the text or media of a
+  locked lesson, and the AI tools read lesson text exactly when the player would show it.
+- **Admin > Courses** marks live courses without a price ("No price"): after early access only
+  their owner, admins and early learners can open them, so each needs a tier or Free first. The
+  data export includes course access, memberships (with the price charged) and seats.
+- **At launch** (a release after 14b and 14c):
+  1. Price every live course (Admin > Courses shows the ones without a price).
+  2. Announce the date at least 30 days ahead (`PAID_PLANS_NOTICE_DAYS`) in a pull request that
+     sets `EARLY_ACCESS_ENDS_AT` in `src/lib/early-access.ts`, for example to
+     `isoDateTime('2027-03-01T00:00:00+02:00')`, and deploy it before that date. Never remove or
+     move it once the end has passed.
+  3. Set `PAYMENTS_ENABLED` to `true` in `infra/lib/app-stack.ts` for the stage once checkout is
+     ready.
+- Verified: table tests of the rule (every pricing kind, published or not, during and after early
+  access and exactly at its end, signed out, owners, admins, early learners including a course
+  priced after it was joined, each grant source and a revoked grant, memberships and seats), of
+  when a membership counts (trial, active, past due inside, at and after the grace days, expired),
+  of the phase and its setting, and of charged prices; loader tests against the database
+  (grants, memberships, accepted and pending seats, a trial set to cancel, the payments switch,
+  unpublished courses); tests of the grant and revoke rules and of the CHECKs; service tests of
+  enrolling, the player (no locked text or media), progress, My Learning, the AI tools and the
+  export; and the course price in each phase.
+- Follow-ups for 14b-14d: why access ended (a refunded purchase, an ended membership or seat), for
+  the player and My Learning; a lock object in place of `accessEnded` in `/api/v1/me/enrollments`;
+  the membership rule as a database query for the hourly jobs, and the transitions (start a trial,
+  renew, fail, cancel, expire) in 14c; `planPrice(plan, region)` in 14c; revoking by the refunded
+  order in 14b.
 - Follow-ups from Phase 13: a region-neutral, cacheable price-list endpoint and an uncached
   endpoint for the visitor's price region, for the mobile apps; orders and subscriptions store the
   amount, currency and region actually charged; checkout decides whether CloudFront's country

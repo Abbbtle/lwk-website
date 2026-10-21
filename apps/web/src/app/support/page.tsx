@@ -5,7 +5,8 @@ import { TicketBadge } from '@/components/ticket-status';
 import { topicsFor } from '@/lib/help';
 import { timeAgo } from '@/lib/format';
 import { site } from '@/lib/site';
-import { hasRole, requireSession } from '@/server/auth/session';
+import { requireSession } from '@/server/auth/session';
+import { helpViewer } from '@/server/help-viewer';
 import { listMyTickets, STATUS_LABELS, ticketRef } from '@/server/support';
 
 export const metadata: Metadata = { title: 'Help and support', robots: { index: false } };
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: 'Help and support', robots: { index: 
 export default async function SupportPage() {
   const session = await requireSession('/support');
   const tickets = await listMyTickets(session.userId);
-  const topics = topicsFor({ staff: hasRole(session, 'support') });
+  const topics = topicsFor(helpViewer(session));
 
   return (
     <div className="page-width py-12">

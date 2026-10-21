@@ -1,7 +1,11 @@
 import Link from 'next/link';
+import { formatEarlyAccessEnd } from '@/lib/early-access';
 
-/** The early access offer, as a large saffron panel. Signed-in people are sent to the courses. */
-export function EarlyAccess({ signedIn }: { signedIn: boolean }) {
+/**
+ * The early access offer, as a large saffron panel, with its end date once one is set. Shown only
+ * during early access. Signed-in people are sent to the courses.
+ */
+export function EarlyAccess({ signedIn, endsAt }: { signedIn: boolean; endsAt: Date | null }) {
   return (
     <section aria-labelledby="early-access" className="page-width">
       <div className="rounded-3xl bg-brand px-6 py-14 text-center sm:px-12 lg:py-20">
@@ -15,6 +19,11 @@ export function EarlyAccess({ signedIn }: { signedIn: boolean }) {
           Join any course today at no cost, and the courses you join stay yours when paid plans
           open. Courses marked Free stay free for everyone.
         </p>
+        {endsAt && (
+          <p className="mt-4 text-lg font-semibold text-black">
+            Early access ends on {formatEarlyAccessEnd(endsAt)}.
+          </p>
+        )}
         <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
           {signedIn ? (
             <Link href="/courses" className="btn-solid">

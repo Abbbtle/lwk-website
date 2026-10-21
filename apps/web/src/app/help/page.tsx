@@ -2,7 +2,8 @@ import { ChevronRight, LifeBuoy, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { popularArticles, searchHelp, topicsFor } from '@/lib/help';
-import { getSession, hasRole } from '@/server/auth/session';
+import { getSession } from '@/server/auth/session';
+import { helpViewer } from '@/server/help-viewer';
 
 export const metadata: Metadata = {
   title: 'Help centre',
@@ -17,7 +18,7 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
       ?.trim()
       .slice(0, 200) || undefined;
   const session = await getSession();
-  const viewer = { staff: Boolean(session && hasRole(session, 'support')) };
+  const viewer = helpViewer(session);
   const results = query ? searchHelp(query, viewer, 12) : [];
   const topics = topicsFor(viewer);
   const popular = popularArticles(viewer);

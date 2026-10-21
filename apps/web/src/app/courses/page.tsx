@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { CategoryPills } from '@/components/category-pills';
 import { CourseGrid } from '@/components/course-card';
 import { getCategories, searchCourses } from '@/server/catalog';
+import { currentSalesPhase } from '@/server/early-access';
 import { viewerPriceRegion } from '@/server/price-region';
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
   const free = single(params.free) === '1';
 
   const [categories, region] = await Promise.all([getCategories(), viewerPriceRegion()]);
+  const phase = currentSalesPhase();
   const category = categories.find((c) => c.slug === categorySlug);
   const courses = await searchCourses({ query, category: category?.slug, free });
 
@@ -77,7 +79,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
       {courses.length > 0 ? (
         <>
           <h2 className="sr-only">Courses</h2>
-          <CourseGrid courses={courses} region={region} />
+          <CourseGrid courses={courses} region={region} phase={phase} />
         </>
       ) : (
         <div className="rounded-card bg-white p-10 text-center shadow-md">

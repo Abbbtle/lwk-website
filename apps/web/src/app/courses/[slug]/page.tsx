@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import { AccessLockNote } from '@/components/access-lock-note';
 import { FreeBadge, SampleBadge } from '@/components/badges';
 import { CourseCover } from '@/components/course-cover';
 import { CoursePrice } from '@/components/course-price';
@@ -17,14 +18,24 @@ import {
   type PriceRegion,
   toDecimalString,
 } from '@/lib/pricing';
+import type { VisibleAccess } from '@/server/access';
 import { getSession } from '@/server/auth/session';
 import { getCourse } from '@/server/catalog';
-import { getEnrollmentBySlug } from '@/server/learning';
+import { currentSalesPhase } from '@/server/early-access';
+import { getLearnerState, isAccessLock, LearningError, openAccessMessage } from '@/server/learning';
 import { viewerPriceRegion } from '@/server/price-region';
 import { enrollInCourse } from './actions';
 
 // Metadata and page share one query per request.
 const loadCourse = cache(getCourse);
+
+/** A line for access the viewer holds (a grant or a membership); the price box says the rest. */
+function heldAccessNote(access: VisibleAccess | undefined): string | null {
+  if (access?.kind !== 'open') return null;
+  const held =
+    access.reason === 'grant' || access.reason === 'membership' || access.reason === 'seat';
+  return held ? openAccessMessage(access) : null;
+}
 
 export async function generateMetadata({
   params,
@@ -62,7 +73,16 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
     viewerPriceRegion(),
   ]);
   if (!course) notFound();
-  const enrollment = session ? await getEnrollmentBySlug(session.userId, slug) : null;
+  const learner = session
+    ? await getLearnerState(session, slug).catch((error) => {
+        if (error instanceof LearningError) notFound();
+        throw error;
+      })
+    : null;
+  const enrollment = learner?.enrollment ?? null;
+  const lock = learner?.lock ?? null;
+  const heldNote = heldAccessNote(learner?.access);
+  const phase = currentSalesPhase();
 
   const facts = [
     { icon: ChartNoAxesColumn, label: course.level },
@@ -185,7 +205,9 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
           <div className="overflow-hidden rounded-card bg-white shadow-lg lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
-              {enrollment ? (
+              {enrollment && isAccessLock(lock) ? (
+                <AccessLockNote lock={lock} enrolled variant="course" />
+              ) : enrollment ? (
                 <>
                   <p className="font-semibold">
                     {enrollment.completedAt ? 'You completed this course.' : 'You are enrolled.'}
@@ -196,13 +218,23 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 </>
               ) : (
                 <>
-                  <CoursePrice pricing={course.pricing} region={region} variant="page" />
-                  {session ? (
-                    <form action={enrollInCourse.bind(null, course.slug)}>
-                      <button type="submit" className="btn-brand w-full">
-                        Enroll now
-                      </button>
-                    </form>
+                  <CoursePrice
+                    pricing={course.pricing}
+                    region={region}
+                    phase={phase}
+                    variant="page"
+                  />
+                  {isAccessLock(lock) ? (
+                    <AccessLockNote lock={lock} enrolled={false} variant="course" />
+                  ) : session ? (
+                    <>
+                      {heldNote && <p className="font-semibold">{heldNote}</p>}
+                      <form action={enrollInCourse.bind(null, course.slug)}>
+                        <button type="submit" className="btn-brand w-full">
+                          Enroll now
+                        </button>
+                      </form>
+                    </>
                   ) : (
                     <a
                       href={`/sign-up?returnTo=${encodeURIComponent(`/courses/${course.slug}`)}`}
@@ -226,7 +258,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 <Link href="/plans-and-pricing" className="font-semibold underline">
                   Membership
                 </Link>
-                , {formatRecurring(membershipLeadPrice(region))}, when paid plans open.
+                , {formatRecurring(membershipLeadPrice(region))}
+                {phase === 'early_access' && ', when paid plans open'}.
               </p>
             </div>
           </div>

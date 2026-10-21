@@ -11,8 +11,10 @@ import { MissionTile } from '@/components/home/mission-tile';
 import { sectionHeading, textLink } from '@/components/home/styles';
 import { ResourceGrid } from '@/components/resource-card';
 import { beginnerCourses } from '@/lib/catalog/beginner-courses';
+import type { SalesPhase } from '@/lib/early-access';
 import { getSession } from '@/server/auth/session';
 import { getCategories, searchCourses } from '@/server/catalog';
+import { currentSalesMoment } from '@/server/early-access';
 import { viewerPriceRegion } from '@/server/price-region';
 import { listPublishedResources } from '@/server/resources';
 
@@ -28,15 +30,17 @@ function heroSlides({
   hasBeginnerCourses,
   hasFreeContent,
   signedIn,
+  phase,
 }: {
   hasBeginnerCourses: boolean;
   hasFreeContent: boolean;
   signedIn: boolean;
+  phase: SalesPhase;
 }): HeroBannerSlide[] {
   const slides: (HeroBannerSlide | false)[] = [
     {
       id: 'learn',
-      tag: 'Free during early access',
+      tag: phase === 'early_access' ? 'Free during early access' : 'Courses for every devotee',
       heading: 'Grow in devotion, one lesson at a time',
       text: 'Learn devotional skills at home from experienced devotees, at your own pace.',
       action: { href: '/courses', label: 'Start learning' },
@@ -85,12 +89,14 @@ function heroSlides({
   return slides.filter((slide) => slide !== false);
 }
 
-const faqs = [
-  {
-    question: 'How much does it cost?',
-    answer:
-      'During early access every course is free to join, and the courses you join stay yours when paid plans open. Courses marked Free stay free for everyone.',
-  },
+const costAnswers: Record<SalesPhase, string> = {
+  early_access:
+    'During early access every course is free to join, and the courses you join stay yours when paid plans open. Courses marked Free stay free for everyone.',
+  paid: 'Courses marked Free are free for everyone. Membership opens every paid course, or you can buy single courses, and the courses you joined during early access stay yours.',
+};
+
+const faqsFor = (phase: SalesPhase) => [
+  { question: 'How much does it cost?', answer: costAnswers[phase] },
   {
     question: 'Do I need any experience?',
     answer:
@@ -127,17 +133,21 @@ export default async function HomePage() {
     getSession(),
     viewerPriceRegion(),
   ]);
+  const { phase, earlyAccessEndsAt: endsAt } = currentSalesMoment();
+  const earlyAccess = phase === 'early_access';
   const beginners = beginnerCourses(categories, courses, BEGINNER_LIMIT);
   const hasFreeContent = resources.length > 0 || courses.some((course) => course.isFree);
 
   return (
     <div className="bg-white">
-      <p className="border-b border-black/15 bg-brand px-4 py-3 text-center text-sm font-semibold text-black sm:text-base">
-        Early access: every course is free to join.{' '}
-        <Link href="/courses" className="underline underline-offset-4 hover:no-underline">
-          Browse courses
-        </Link>
-      </p>
+      {earlyAccess && (
+        <p className="border-b border-black/15 bg-brand px-4 py-3 text-center text-sm font-semibold text-black sm:text-base">
+          Early access: every course is free to join.{' '}
+          <Link href="/courses" className="underline underline-offset-4 hover:no-underline">
+            Browse courses
+          </Link>
+        </p>
+      )}
 
       <HeroCarousel
         label="Featured"
@@ -145,6 +155,7 @@ export default async function HomePage() {
           hasBeginnerCourses: beginners.length > 0,
           hasFreeContent,
           signedIn: Boolean(session),
+          phase,
         })}
       />
 
@@ -161,14 +172,14 @@ export default async function HomePage() {
                 View all courses
               </Link>
             </div>
-            <CourseRow courses={beginners} region={region} />
+            <CourseRow courses={beginners} region={region} phase={phase} />
           </div>
         </section>
       )}
 
       <FeatureTiles course={beginners[0]} />
 
-      <EarlyAccess signedIn={Boolean(session)} />
+      {earlyAccess && <EarlyAccess signedIn={Boolean(session)} endsAt={endsAt} />}
 
       {resources.length > 0 && (
         <section aria-labelledby="free-content" className="page-width pt-16 lg:pt-24">
@@ -188,7 +199,7 @@ export default async function HomePage() {
 
       <MissionTile />
 
-      <Faq heading="Questions people ask" items={faqs} />
+      <Faq heading="Questions people ask" items={faqsFor(phase)} />
     </div>
   );
 }
