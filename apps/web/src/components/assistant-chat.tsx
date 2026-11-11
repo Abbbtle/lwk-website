@@ -231,7 +231,7 @@ export function AssistantChat({
                     key={s}
                     type="button"
                     onClick={() => void ask(s)}
-                    className="cursor-pointer rounded-full border border-gray-300 px-3 py-1.5 text-left text-sm hover:border-black"
+                    className="min-h-11 cursor-pointer rounded-full border border-gray-300 px-3 py-2 text-left text-sm transition-colors duration-150 hover:border-black"
                   >
                     {s}
                   </button>
@@ -260,9 +260,10 @@ export function AssistantChat({
                     className="flex items-center gap-1 text-sm text-gray-500"
                     aria-label="Thinking"
                   >
-                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
+                    {/* Three dots that glow in turn (an opacity pulse); still with reduced motion. */}
+                    <span className="size-1.5 rounded-full bg-gray-400 motion-safe:animate-pulse" />
+                    <span className="size-1.5 rounded-full bg-gray-400 motion-safe:animate-pulse motion-safe:[animation-delay:150ms]" />
+                    <span className="size-1.5 rounded-full bg-gray-400 motion-safe:animate-pulse motion-safe:[animation-delay:300ms]" />
                   </p>
                 )}
                 {entry.error && <p className="text-sm text-red-700">{entry.error}</p>}
@@ -416,7 +417,7 @@ function Handoff({
 
   if (!signedIn) {
     return (
-      <p className="border-l-4 border-brand bg-orange-50 p-3 text-sm">
+      <p className="rounded-card border border-brand/40 bg-orange-50 p-3 text-sm">
         Our team can help with this.{' '}
         <Link href="/contact" className="font-semibold underline">
           Contact us
@@ -434,7 +435,7 @@ function Handoff({
   }
   if (state.number) {
     return (
-      <p className="border-l-4 border-green-700 bg-green-50 p-3 text-sm text-green-900">
+      <p className="rounded-card border border-green-700/30 bg-green-50 p-3 text-sm text-green-900">
         Sent as request{' '}
         <Link href={`/support/${state.number}`} className="font-semibold underline">
           #{state.number}
@@ -463,7 +464,7 @@ function Handoff({
   }
 
   return (
-    <div className="space-y-2 border-l-4 border-brand bg-orange-50 p-3 text-sm">
+    <div className="space-y-2 rounded-card border border-brand/40 bg-orange-50 p-3 text-sm">
       {!open ? (
         <button
           type="button"
@@ -482,7 +483,7 @@ function Handoff({
             value={subject}
             maxLength={150}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full rounded-control border border-gray-300 bg-white px-2 py-1.5"
+            className="min-h-11 w-full rounded-control border border-gray-300 bg-white px-3 py-2"
           />
           <label htmlFor="handoff-note" className="block font-semibold">
             Anything to add? (optional)
@@ -493,7 +494,7 @@ function Handoff({
             value={note}
             maxLength={2000}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full rounded-control border border-gray-300 bg-white px-2 py-1.5"
+            className="min-h-11 w-full rounded-control border border-gray-300 bg-white px-3 py-2"
           />
           <p className="text-xs text-gray-600">
             This conversation is included, so you do not need to repeat it.
@@ -504,14 +505,14 @@ function Handoff({
               type="button"
               disabled={state.sending || subject.trim().length < 4}
               onClick={() => void send()}
-              className="btn-solid px-3 py-1.5 text-sm disabled:opacity-50"
+              className="btn-solid min-h-11 px-3 py-2 text-sm disabled:opacity-50"
             >
               {state.sending ? 'Sending...' : 'Send to support'}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="btn-outline px-3 py-1.5 text-sm"
+              className="btn-outline min-h-11 px-3 py-2 text-sm"
             >
               Cancel
             </button>

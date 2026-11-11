@@ -207,7 +207,7 @@ export function RichText({
             return (
               <Tag
                 key={index}
-                className={`space-y-1.5 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}
+                className={`space-y-2 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}
               >
                 {block.items.map((item, itemIndex) => (
                   <li key={itemIndex}>{inline(item)}</li>

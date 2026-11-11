@@ -76,7 +76,7 @@ export function NotificationBell({ unread }: { unread: number }) {
         onClick={toggle}
         aria-label={label}
         aria-expanded={open}
-        className="relative cursor-pointer p-2.5 text-gray-800 hover:text-brand-ink"
+        className="relative flex size-11 cursor-pointer items-center justify-center text-gray-800 hover:text-brand-ink"
       >
         <Bell className="size-6" aria-hidden />
         {unread > 0 && (

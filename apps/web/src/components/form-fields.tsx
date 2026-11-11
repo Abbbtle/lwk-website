@@ -32,7 +32,7 @@ function Field({
   const error = state.errors?.[name]?.[0];
   const describedBy = [hint && `${name}-hint`, error && `${name}-error`].filter(Boolean).join(' ');
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <label
         htmlFor={name}
         className={
@@ -162,10 +162,10 @@ export function FormStatus({ state }: { state: FormState }) {
   if (state.status === 'idle') return <div aria-live="polite" />;
   const tone =
     state.status === 'received'
-      ? 'border-green-700 bg-green-50 text-green-900'
-      : 'border-red-600 bg-red-50 text-red-900';
+      ? 'border-green-700/30 bg-green-50 text-green-900'
+      : 'border-red-600/30 bg-red-50 text-red-900';
   return (
-    <div aria-live="polite" className={`border-l-4 p-4 ${tone}`}>
+    <div aria-live="polite" className={`rounded-card border p-4 ${tone}`}>
       {state.message}
     </div>
   );

@@ -14,12 +14,15 @@ export function DecisionForm({ id }: { id: string }) {
       <input type="hidden" name="id" value={id} />
       <h2 className="text-xl font-bold">Decision</h2>
       {state.error && (
-        <p aria-live="polite" className="border-l-4 border-red-600 bg-red-50 p-3 text-red-900">
+        <p
+          aria-live="polite"
+          className="rounded-card border border-red-600/30 bg-red-50 p-3 text-red-900"
+        >
           {state.error}
         </p>
       )}
-      <div className="space-y-1.5">
-        <label htmlFor="note" className="block font-medium">
+      <div className="space-y-2">
+        <label htmlFor="note" className="block font-semibold">
           Note to the applicant <span className="font-normal text-gray-500">(optional)</span>
         </label>
         <textarea

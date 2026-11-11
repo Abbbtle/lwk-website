@@ -117,11 +117,12 @@ export function MediaUploader({
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-2 w-full bg-gray-200"
+          className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
         >
+          {/* Grows sideways (a transform), so the bar moves without relaying out the page. */}
           <div
-            className="h-2 bg-brand transition-all"
-            style={{ width: `${Math.round(progress * 100)}%` }}
+            className="h-2 w-full origin-left bg-brand transition-transform duration-150 ease-enter motion-reduce:transition-none"
+            style={{ transform: `scaleX(${progress})` }}
           />
         </div>
       )}

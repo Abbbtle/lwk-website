@@ -22,7 +22,7 @@ export default async function InstructorPage() {
   return (
     <div className="page-width py-12">
       <p className="text-sm font-semibold text-brand-ink uppercase">{session.name}</p>
-      <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">Instructor dashboard</h1>
+      <h1 className="mt-1 text-3xl font-semibold md:text-4xl">Instructor dashboard</h1>
 
       {checklist && (
         <div className="mt-8">
@@ -61,7 +61,7 @@ export default async function InstructorPage() {
         </section>
         <aside className="space-y-6">
           <NewCourseForm categories={categories.map((c) => ({ value: c.slug, label: c.name }))} />
-          <div className="space-y-2 rounded-card bg-white p-6 shadow-md">
+          <div className="space-y-2 rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <h2 className="font-bold">Guides for instructors</h2>
             <ul className="space-y-2">
               <li>

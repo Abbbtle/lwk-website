@@ -161,7 +161,7 @@ export function HelpPanel({
               type="button"
               onClick={() => dialog.current?.close()}
               aria-label="Close help"
-              className="-mr-2 cursor-pointer p-2.5 text-gray-600 hover:text-black"
+              className="-mr-2 flex size-11 cursor-pointer items-center justify-center text-gray-600 hover:text-black"
             >
               <X className="size-6" aria-hidden />
             </button>

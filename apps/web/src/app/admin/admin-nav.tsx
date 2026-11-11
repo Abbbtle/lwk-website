@@ -41,7 +41,7 @@ export function AdminHeading({ title, greeting }: { title: string; greeting: str
   return (
     <>
       <p className="text-sm font-semibold text-brand-ink uppercase">{greeting}</p>
-      <h1 className="mt-1 mb-6 text-3xl font-extrabold md:text-4xl">{title}</h1>
+      <h1 className="mt-1 mb-6 text-3xl font-semibold md:text-4xl">{title}</h1>
     </>
   );
 }

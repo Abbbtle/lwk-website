@@ -84,11 +84,11 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
       </p>
 
       {users.length === 0 ? (
-        <p className="rounded-card bg-white p-8 text-center text-gray-700 shadow-md">
+        <p className="rounded-card bg-white p-8 text-center text-gray-700 border border-gray-200 shadow-soft">
           Nobody matches.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-card bg-white shadow-md">
+        <div className="overflow-x-auto rounded-card bg-white border border-gray-200 shadow-soft">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-gray-300 bg-gray-50 text-xs text-gray-600 uppercase">
               <tr>
@@ -119,12 +119,12 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
                     <span className="block text-gray-600">{user.email}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="flex flex-wrap items-center gap-2">
                       {user.roles.length === 0 && <span className="text-gray-600">Learner</span>}
                       {user.roles.map((role) => (
                         <span
                           key={role}
-                          className="rounded-badge border border-gray-400 px-1.5 text-xs font-bold uppercase"
+                          className="rounded-badge border border-gray-400 px-2 text-xs font-bold uppercase"
                         >
                           {ROLE_LABELS[role as keyof typeof ROLE_LABELS] ?? role}
                         </span>
@@ -136,7 +136,7 @@ export default async function UsersPage({ searchParams }: PageProps<'/admin/user
                         />
                       )}
                       {user.disabledAt && (
-                        <span className="rounded-badge border border-red-700 px-1.5 text-xs font-bold text-red-700 uppercase">
+                        <span className="rounded-badge border border-red-700 px-2 text-xs font-bold text-red-700 uppercase">
                           Disabled
                         </span>
                       )}

@@ -25,7 +25,7 @@ export function ReviewPanel({
       <h2 className="text-xl font-bold">Review</h2>
 
       {reviewNote && status === 'DRAFT' && (
-        <div className="border-l-4 border-brand bg-surface p-3 text-sm">
+        <div className="rounded-card border border-brand/40 bg-surface p-3 text-sm">
           <p className="font-semibold">Feedback from the last review</p>
           <p className="mt-1 whitespace-pre-line">{reviewNote}</p>
         </div>

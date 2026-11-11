@@ -56,7 +56,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="rounded-card bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <TypeBadge type={resource.type} />
               <StatusBadge status={resource.status} />
@@ -78,7 +78,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
           </section>
 
           {kind && (
-            <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
+            <section className="space-y-4 rounded-card bg-white p-6 border border-gray-200 shadow-soft">
               <h2 className="text-xl font-bold">The {fileLabel[kind]}</h2>
               {resource.mediaUrl ? (
                 kind === 'video' ? (
@@ -116,7 +116,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
             </section>
           )}
 
-          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <h2 className="text-xl font-bold">Cover image</h2>
             <p className="text-sm text-gray-600">
               Optional. Without one, the category photo is used.
@@ -139,7 +139,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
         </div>
 
         <aside className="space-y-8">
-          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <h2 className="text-xl font-bold">Publishing</h2>
             {published ? (
               <>
@@ -176,7 +176,7 @@ export default async function EditResourcePage({ params }: PageProps<'/admin/exp
             )}
           </section>
 
-          <section className="space-y-4 rounded-card bg-white p-6 shadow-md">
+          <section className="space-y-4 rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <h2 className="text-xl font-bold">Delete</h2>
             <ConfirmAction
               label="Delete this resource"

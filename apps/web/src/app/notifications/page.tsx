@@ -19,7 +19,7 @@ export default async function NotificationsPage() {
       <div className="max-w-3xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold md:text-4xl">Notifications</h1>
+            <h1 className="text-3xl font-semibold md:text-4xl">Notifications</h1>
             <p className="mt-1 text-gray-700">
               {unread > 0 ? `${unread} unread` : 'You are all caught up.'}
             </p>
@@ -34,14 +34,14 @@ export default async function NotificationsPage() {
         </div>
 
         {notifications.length === 0 ? (
-          <div className="mt-8 flex flex-col items-center gap-3 rounded-card bg-white p-10 text-center shadow-md">
+          <div className="mt-8 flex flex-col items-center gap-3 rounded-card bg-white p-10 text-center border border-gray-200 shadow-soft">
             <Bell className="size-10 text-gray-400" aria-hidden />
             <p className="text-gray-700">
               Replies from support and news about your applications and courses will appear here.
             </p>
           </div>
         ) : (
-          <ul className="card-clip mt-8 divide-y divide-gray-200 rounded-card bg-white shadow-md">
+          <ul className="card-clip mt-8 divide-y divide-gray-200 rounded-card bg-white border border-gray-200 shadow-soft">
             {notifications.map((n) => (
               <li key={n.id}>
                 <a

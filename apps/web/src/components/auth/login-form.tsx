@@ -162,7 +162,7 @@ export function LoginForm({
     >
       <form onSubmit={submitCredentials} noValidate className="space-y-5">
         {initialNotice && !error && (
-          <p className="border-l-4 border-green-700 bg-green-50 p-3 text-sm text-green-900">
+          <p className="rounded-card border border-green-700/30 bg-green-50 p-3 text-sm text-green-900">
             {initialNotice}
           </p>
         )}

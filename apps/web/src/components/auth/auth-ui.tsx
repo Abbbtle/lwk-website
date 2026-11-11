@@ -17,7 +17,7 @@ export function AuthCard({
 }) {
   return (
     <div className="flex justify-center px-4 py-16 md:py-24">
-      <div className="w-full max-w-md rounded-card bg-white p-8 shadow-lg">
+      <div className="w-full max-w-md rounded-card bg-white p-8 border border-gray-200 shadow-soft">
         <h1 className="text-center text-3xl font-bold">{title}</h1>
         {subtitle && <p className="mt-3 text-center text-gray-600">{subtitle}</p>}
         <div className="mt-8">{children}</div>
@@ -41,8 +41,8 @@ export function AuthField({
   const [visible, setVisible] = useState(false);
   const isPassword = props.type === 'password';
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium">
+    <div className="space-y-2">
+      <label htmlFor={id} className="block text-sm font-semibold">
         {label}
       </label>
       <div className="relative">
@@ -58,7 +58,7 @@ export function AuthField({
             type="button"
             onClick={() => setVisible(!visible)}
             aria-label={visible ? 'Hide password' : 'Show password'}
-            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-black"
+            className="absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center text-gray-500 transition-colors duration-150 hover:text-black"
           >
             {visible ? (
               <EyeOff className="size-5" aria-hidden />
@@ -81,7 +81,7 @@ export function AuthError({ message }: { message: string | null }) {
   return (
     <div aria-live="assertive">
       {message && (
-        <p className="mb-5 border-l-4 border-red-600 bg-red-50 p-3 text-sm text-red-900">
+        <p className="mb-5 rounded-card border border-red-600/30 bg-red-50 p-3 text-sm text-red-900">
           {message}
         </p>
       )}
@@ -91,7 +91,10 @@ export function AuthError({ message }: { message: string | null }) {
 
 export function AuthNotice({ children }: { children: ReactNode }) {
   return (
-    <p aria-live="polite" className="mb-5 border-l-4 border-brand bg-orange-50 p-3 text-sm">
+    <p
+      aria-live="polite"
+      className="mb-5 rounded-card border border-brand/40 bg-orange-50 p-3 text-sm"
+    >
       {children}
     </p>
   );

@@ -18,7 +18,7 @@ import {
 const input =
   'w-full rounded-control border border-gray-300 bg-white px-3 py-2 focus:border-black focus:outline-none';
 const iconButton =
-  'cursor-pointer rounded-control border border-gray-300 p-1.5 hover:border-black disabled:cursor-not-allowed disabled:opacity-40';
+  'inline-flex size-11 cursor-pointer items-center justify-center rounded-control border border-gray-300 transition-colors duration-150 hover:border-black disabled:cursor-not-allowed disabled:opacity-40';
 
 function MoveButtons({
   onUp,
@@ -139,7 +139,7 @@ export function Curriculum({
                     maxLength={150}
                     className={`${input} font-semibold`}
                   />
-                  <button type="submit" className="btn-outline px-3 py-1.5 text-sm">
+                  <button type="submit" className="btn-outline min-h-11 px-3 py-2 text-sm">
                     Rename
                   </button>
                 </form>
@@ -170,7 +170,7 @@ export function Curriculum({
                   <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
                     <span>
                       <span className="text-gray-500">{lIndex + 1}.</span>{' '}
-                      <span className="font-medium">{lesson.title}</span>{' '}
+                      <span className="font-semibold">{lesson.title}</span>{' '}
                       <span className="text-sm text-gray-600">
                         · {lessonTypeOptions.find((t) => t.value === lesson.type)?.label}
                         {lesson.isPreview && ' · free preview'}
@@ -194,7 +194,7 @@ export function Curriculum({
                       <fieldset disabled={locked} className="space-y-3">
                         <div className="grid gap-3 sm:grid-cols-3">
                           <label className="sm:col-span-2">
-                            <span className="text-sm font-medium">Title</span>
+                            <span className="text-sm font-semibold">Title</span>
                             <input
                               name="title"
                               defaultValue={lesson.title}
@@ -204,7 +204,7 @@ export function Curriculum({
                             />
                           </label>
                           <label>
-                            <span className="text-sm font-medium">Type</span>
+                            <span className="text-sm font-semibold">Type</span>
                             <select name="type" defaultValue={lesson.type} className={input}>
                               {lessonTypeOptions.map((t) => (
                                 <option key={t.value} value={t.value}>
@@ -215,7 +215,7 @@ export function Curriculum({
                           </label>
                         </div>
                         <label className="block">
-                          <span className="text-sm font-medium">
+                          <span className="text-sm font-semibold">
                             {lesson.type === 'TEXT'
                               ? 'Lesson text'
                               : 'Notes or transcript (optional)'}
@@ -234,7 +234,7 @@ export function Curriculum({
                         </label>
                         <div className="flex flex-wrap items-end gap-6">
                           <label>
-                            <span className="text-sm font-medium">Length (minutes)</span>
+                            <span className="text-sm font-semibold">Length (minutes)</span>
                             <input
                               name="durationMinutes"
                               type="number"

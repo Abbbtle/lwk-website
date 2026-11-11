@@ -20,7 +20,9 @@ export function DeleteAccount({
   const [error, setError] = useState<string | null>(null);
 
   if (blocker) {
-    return <p className="border-l-4 border-brand bg-orange-50 p-4 text-sm">{blocker}</p>;
+    return (
+      <p className="rounded-card border border-brand/40 bg-orange-50 p-4 text-sm">{blocker}</p>
+    );
   }
 
   if (step === 'idle') {
@@ -43,7 +45,7 @@ export function DeleteAccount({
           Your account, enrollments, progress and applications will be deleted for good. Type DELETE
           to continue.
         </p>
-        <label className="block text-sm font-medium" htmlFor="confirm-delete">
+        <label className="block text-sm font-semibold" htmlFor="confirm-delete">
           Type DELETE
         </label>
         <input
@@ -73,7 +75,10 @@ export function DeleteAccount({
   return (
     <div className="space-y-3">
       {error && (
-        <p role="alert" className="border-l-4 border-red-600 bg-red-50 p-3 text-sm text-red-900">
+        <p
+          role="alert"
+          className="rounded-card border border-red-600/30 bg-red-50 p-3 text-sm text-red-900"
+        >
           {error}
         </p>
       )}

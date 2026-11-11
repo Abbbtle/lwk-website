@@ -54,7 +54,7 @@ function ProgressPicture({ course }: { course?: CourseSummary }) {
         <span className="text-gray-600">
           {done} of {plural(total, 'lesson')} complete
         </span>
-        <span className="flex items-center gap-1.5 font-semibold text-gray-900">
+        <span className="flex items-center gap-2 font-semibold text-gray-900">
           <PlayCircle className="size-4" />
           Resume
         </span>

@@ -17,7 +17,7 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
           {resource.isSample && <SampleBadge />}
         </div>
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 p-5">
+      <div className="flex flex-1 flex-col gap-2 p-5">
         <h3 className="text-lg leading-snug font-semibold">
           <Link
             href={`/explore/${resource.slug}`}

@@ -11,7 +11,7 @@ export function GettingStarted({ checklist }: { checklist: Checklist }) {
   return (
     <section
       aria-labelledby={`${checklist.key}-title`}
-      className="rounded-card bg-white p-6 shadow-md"
+      className="rounded-card bg-white p-6 border border-gray-200 shadow-soft"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

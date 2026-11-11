@@ -98,7 +98,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
       )}
       <button
         type="button"
-        className="shrink-0 p-2.5 xl:hidden"
+        className="flex size-11 shrink-0 items-center justify-center xl:hidden"
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}

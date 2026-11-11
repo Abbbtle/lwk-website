@@ -44,7 +44,7 @@ export default async function EditCoursePage({ params }: PageProps<'/instructor/
         ← Instructor dashboard
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-extrabold md:text-4xl">{course.title}</h1>
+        <h1 className="text-3xl font-semibold md:text-4xl">{course.title}</h1>
         <StatusBadge status={course.status} />
         {course.status === 'PUBLISHED' && (
           <Link href={`/courses/${course.slug}`} className="text-sm underline">

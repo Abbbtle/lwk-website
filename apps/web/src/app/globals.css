@@ -124,6 +124,14 @@ body {
 }
 
 /*
+ * Spacing follows a 4px grid (8px between larger blocks), with these deliberate exceptions:
+ * - Buttons and text boxes have 10px of padding above and below: with the 24px line and 1px
+ *   borders they are 46px tall, as in the POC, and clear the 44px touch target.
+ * - Badges have 2px of padding above and below, to stay compact beside text.
+ * - Icons, check marks, checkboxes and dots move 2-6px to line up with the text beside them.
+ */
+
+/*
  * Bold buttons as in the POC, with softly rounded corners. Colours change in 150ms, and a press
  * dips the button to 98% for a moment.
  */

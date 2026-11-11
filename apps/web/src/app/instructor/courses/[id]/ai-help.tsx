@@ -103,7 +103,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
         description="Describe what you want to teach and get a suggested outline."
       >
         <form onSubmit={planOutline} className="space-y-3">
-          <label className="block text-sm font-medium" htmlFor="ai-about">
+          <label className="block text-sm font-semibold" htmlFor="ai-about">
             What will learners learn?
           </label>
           <textarea
@@ -117,7 +117,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
             placeholder="For example: how to lead a simple kirtan, from choosing a melody to keeping the group together."
           />
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium">
+            <label className="block text-sm font-semibold">
               Who is it for? (optional)
               <input
                 name="audience"
@@ -126,7 +126,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
                 placeholder="Beginners who sing at home"
               />
             </label>
-            <label className="block text-sm font-medium">
+            <label className="block text-sm font-semibold">
               Length
               <select name="size" defaultValue="medium" className={input}>
                 <option value="short">Short (4 to 6 lessons)</option>
@@ -155,7 +155,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
                   <ul className="mt-1 space-y-1 pl-5 text-sm">
                     {section.lessons.map((lesson, j) => (
                       <li key={j}>
-                        <span className="font-medium">{lesson.title}</span>{' '}
+                        <span className="font-semibold">{lesson.title}</span>{' '}
                         <span className="text-gray-500">({typeLabel[lesson.type]})</span>
                         <span className="block text-gray-600">{lesson.summary}</span>
                       </li>
@@ -259,7 +259,7 @@ export function AiCourseHelp({ courseId }: { courseId: string }) {
                         },
                       )
                     }
-                    className="btn-outline px-3 py-1.5 text-sm disabled:opacity-60"
+                    className="btn-outline min-h-11 px-3 py-2 text-sm disabled:opacity-60"
                   >
                     Use this
                   </button>

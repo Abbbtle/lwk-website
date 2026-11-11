@@ -10,7 +10,7 @@ export default async function LoggedOutPage({ searchParams }: PageProps<'/logged
   if (deleted === '1') {
     return (
       <div className="flex justify-center px-4 py-16 md:py-24">
-        <div className="w-full max-w-md rounded-card bg-white p-8 text-center shadow-lg">
+        <div className="w-full max-w-md rounded-card bg-white p-8 text-center border border-gray-200 shadow-soft">
           <CheckCircle2 className="mx-auto size-12 text-brand-ink" aria-hidden />
           <h1 className="mt-4 text-3xl font-bold">Your account has been deleted</h1>
           <p className="mt-3 text-gray-700">
@@ -27,7 +27,7 @@ export default async function LoggedOutPage({ searchParams }: PageProps<'/logged
 
   return (
     <div className="flex justify-center px-4 py-16 md:py-24">
-      <div className="w-full max-w-md rounded-card bg-white p-8 text-center shadow-lg">
+      <div className="w-full max-w-md rounded-card bg-white p-8 text-center border border-gray-200 shadow-soft">
         <CheckCircle2 className="mx-auto size-12 text-brand-ink" aria-hidden />
         <h1 className="mt-4 text-3xl font-bold">You&apos;ve logged out</h1>
         <p className="mt-3 text-gray-700">
@@ -37,7 +37,7 @@ export default async function LoggedOutPage({ searchParams }: PageProps<'/logged
           Your learning progress is saved.
         </p>
         {everywhere === 'failed' && (
-          <p className="mt-4 border-l-4 border-red-600 bg-red-50 p-3 text-left text-sm text-red-900">
+          <p className="mt-4 rounded-card border border-red-600/30 bg-red-50 p-3 text-left text-sm text-red-900">
             We could not log out your other devices. Log in again and try once more, or contact
             support if this keeps happening.
           </p>

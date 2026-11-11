@@ -38,7 +38,7 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-card bg-white p-6 shadow-md sm:p-8">
+    <section className="rounded-card bg-white p-6 border border-gray-200 shadow-soft sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="flex items-center gap-3 text-xl font-bold">
           <span className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-brand-ink">
@@ -56,10 +56,10 @@ function Card({
 function Notice({ tone, children }: { tone: 'success' | 'warning'; children: ReactNode }) {
   const style =
     tone === 'success'
-      ? 'border-green-700 bg-green-50 text-green-900'
-      : 'border-brand bg-orange-50 text-gray-900';
+      ? 'border-green-700/30 bg-green-50 text-green-900'
+      : 'border-brand/40 bg-orange-50 text-gray-900';
   return (
-    <div role="status" className={`border-l-4 p-4 text-sm ${style}`}>
+    <div role="status" className={`rounded-card border p-4 text-sm ${style}`}>
       {children}
     </div>
   );
@@ -226,7 +226,7 @@ export function SecuritySettings({
         title="Two-step verification"
         status={
           <span
-            className={`border px-2 py-0.5 text-xs font-bold uppercase ${
+            className={`rounded-badge border px-2 py-0.5 text-xs font-bold uppercase ${
               mfaEnabled ? 'border-green-700 text-green-800' : 'border-gray-400 text-gray-700'
             }`}
           >

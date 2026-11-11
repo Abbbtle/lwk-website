@@ -15,7 +15,7 @@ export default async function AccountLayout({ children }: LayoutProps<'/account'
         <p className="text-sm font-semibold text-brand-ink uppercase">
           Hare Krishna, {session.name}
         </p>
-        <h1 className="mt-1 mb-6 text-3xl font-extrabold md:text-4xl">Your account</h1>
+        <h1 className="mt-1 mb-6 text-3xl font-semibold md:text-4xl">Your account</h1>
         <AccountNav />
         {children}
       </div>

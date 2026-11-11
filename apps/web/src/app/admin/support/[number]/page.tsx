@@ -55,7 +55,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm text-gray-600">{category}</p>
-              <h2 className="text-2xl font-extrabold">{ticket.subject}</h2>
+              <h2 className="text-2xl font-semibold">{ticket.subject}</h2>
             </div>
             <span className="flex gap-2">
               <TicketBadge value={ticket.priority} label={PRIORITY_LABELS[ticket.priority]} />
@@ -63,13 +63,13 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
             </span>
           </div>
           <TicketThread messages={ticket.messages} viewer="staff" />
-          <section className="rounded-card bg-white p-6 shadow-md">
+          <section className="rounded-card bg-white p-6 border border-gray-200 shadow-soft">
             <StaffReplyForm ticketNumber={ticket.number} ai={aiConfig().enabled} />
           </section>
         </div>
 
         <aside className="space-y-6">
-          <section className="rounded-card bg-white p-5 shadow-md">
+          <section className="rounded-card bg-white p-5 border border-gray-200 shadow-soft">
             <h2 className="mb-4 font-bold">Request</h2>
             <TicketDetailsForm
               ticketNumber={ticket.number}
@@ -89,7 +89,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
               }))}
             />
           </section>
-          <section className="space-y-2 rounded-card bg-white p-5 text-sm shadow-md">
+          <section className="space-y-2 rounded-card bg-white p-5 text-sm border border-gray-200 shadow-soft">
             <h2 className="font-bold">From</h2>
             <p className="font-semibold">{ticket.requester.name}</p>
             <p className="break-all text-gray-700">{ticket.requester.email}</p>
@@ -112,7 +112,7 @@ export default async function StaffTicketPage({ params }: PageProps<'/admin/supp
             )}
           </section>
           {(ticket.pageUrl || ticket.userAgent) && (
-            <section className="space-y-2 rounded-card bg-white p-5 text-sm shadow-md">
+            <section className="space-y-2 rounded-card bg-white p-5 text-sm border border-gray-200 shadow-soft">
               <h2 className="font-bold">Context</h2>
               {ticket.pageUrl && (
                 <p>

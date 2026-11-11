@@ -12,7 +12,8 @@ import './globals.css';
 const poppins = Poppins({
   variable: '--font-poppins',
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+  // Three weights: regular text, semibold headings and labels, and the POC's bold buttons.
+  weight: ['400', '600', '700'],
 });
 
 // Read per request so the public address comes from the environment (APP_URL).
