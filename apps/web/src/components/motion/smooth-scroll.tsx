@@ -10,10 +10,23 @@ const MotionRuntime = dynamic(() => import('./motion-runtime'), { ssr: false });
 /** Elements that take keyboard focus without help. */
 const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex]';
 
+/**
+ * The element a click is taking the visitor to, when it is a plain click on a link to a part of
+ * the current page (such as the skip link); otherwise null.
+ */
+export function samePageTarget(event: MouseEvent): HTMLElement | null {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return null;
+  const link = event.target instanceof Element ? event.target.closest('a[href*="#"]') : null;
+  if (!(link instanceof HTMLAnchorElement)) return null;
+  const url = new URL(link.href);
+  if (url.origin !== location.origin || url.pathname !== location.pathname || !url.hash)
+    return null;
+  return document.getElementById(decodeURIComponent(url.hash.slice(1)));
+}
+
 /** Moves keyboard focus to a link's target, after the page has scrolled there. */
-function focusTarget(id: string) {
-  const target = document.getElementById(id);
-  if (!target) return;
+function focusTarget(target: HTMLElement) {
   if (!target.matches(FOCUSABLE)) target.setAttribute('tabindex', '-1');
   target.focus({ preventScroll: true });
 }
@@ -47,15 +60,9 @@ export function SmoothScroll() {
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
-      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-        return;
-      const link = event.target instanceof Element ? event.target.closest('a[href*="#"]') : null;
-      if (!(link instanceof HTMLAnchorElement)) return;
-      const url = new URL(link.href);
-      if (url.origin !== location.origin || url.pathname !== location.pathname || !url.hash) return;
-      const id = decodeURIComponent(url.hash.slice(1));
+      const target = samePageTarget(event);
       // Two frames: the browser (or the router, for a Link) scrolls first.
-      requestAnimationFrame(() => requestAnimationFrame(() => focusTarget(id)));
+      if (target) requestAnimationFrame(() => requestAnimationFrame(() => focusTarget(target)));
     };
     document.addEventListener('click', onClick);
     return () => document.removeEventListener('click', onClick);

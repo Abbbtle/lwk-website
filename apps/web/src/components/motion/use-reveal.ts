@@ -3,6 +3,7 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { samePageTarget } from './smooth-scroll';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -35,7 +36,9 @@ function staggerFor(count: number) {
  *
  * Content is hidden only once this runs, so it always shows without scripts, and with reduced motion
  * nothing is hidden at all. Hidden content keeps its place and can still take keyboard focus (it is
- * see-through, not invisible). Runs again for each new `page`, and picks up content that streams in.
+ * see-through, not invisible), and a link to it on the same page shows it at once, so the page
+ * scrolls to where it really sits. Runs again for each new `page`, and picks up content that
+ * streams in.
  *
  * @param scope Selector of the element whose content is revealed, e.g. '#main'.
  * @param page Changes when a new page shows, e.g. the pathname.
@@ -48,6 +51,12 @@ export function useReveal(scope: string, page: string) {
       const mm = gsap.matchMedia();
       mm.add('(prefers-reduced-motion: no-preference)', (context) => {
         const seen = new WeakSet<Element>();
+        // Content still waiting for its turn, with the trigger that will reveal it.
+        const waiting = new Map<Element, ScrollTrigger>();
+        const settle = (batch: Element[], triggers: ScrollTrigger[]) => {
+          for (const trigger of triggers) trigger.kill();
+          for (const element of batch) waiting.delete(element);
+        };
         const scan = context.add('scan', () => {
           const fold = window.innerHeight;
           for (const { selector, y, duration } of kinds) {
@@ -58,7 +67,7 @@ export function useReveal(scope: string, page: string) {
             });
             if (targets.length === 0) continue;
             gsap.set(targets, { opacity: 0, y });
-            ScrollTrigger.batch(targets, {
+            const created = ScrollTrigger.batch(targets, {
               start: 'top 95%',
               onEnter: (batch, triggers) => {
                 gsap.to(batch, {
@@ -70,16 +79,35 @@ export function useReveal(scope: string, page: string) {
                   overwrite: true,
                   clearProps: 'opacity,transform',
                 });
-                for (const trigger of triggers) trigger.kill();
+                settle(batch, triggers);
               },
               // Jumped past in one go (End key, a link further down the page): just show it.
               onLeave: (batch, triggers) => {
                 gsap.set(batch, { clearProps: 'opacity,transform' });
-                for (const trigger of triggers) trigger.kill();
+                settle(batch, triggers);
               },
             });
+            for (const trigger of created) {
+              if (trigger.trigger) waiting.set(trigger.trigger, trigger);
+            }
           }
         });
+
+        // A link to a part of this page: show what it points to before the page scrolls there.
+        const showNow = context.add('showNow', (target: Element) => {
+          for (const [element, trigger] of waiting) {
+            if (element.contains(target) || target.contains(element)) {
+              gsap.set(element, { opacity: 1, y: 0, clearProps: 'opacity,transform' });
+              settle([element], [trigger]);
+            }
+          }
+        });
+        const onClick = (event: MouseEvent) => {
+          const target = samePageTarget(event);
+          // The skip link points at the whole main area, which starts on screen: nothing to show.
+          if (target && !target.contains(root)) showNow(target);
+        };
+        document.addEventListener('click', onClick, true);
         scan();
         ScrollTrigger.refresh();
 
@@ -94,6 +122,7 @@ export function useReveal(scope: string, page: string) {
         });
         observer.observe(root);
         return () => {
+          document.removeEventListener('click', onClick, true);
           observer.disconnect();
           clearTimeout(timer);
         };
