@@ -19,6 +19,25 @@
   --radius-card: 0.75rem;
 
   /*
+   * Depth: raised surfaces get a 1px gray border first, then at most a soft shadow. shadow-soft for
+   * cards and panels on the page, shadow-raised for things floating above it (menus, dialogs, the
+   * sticky course card, the help button). Both stay faint (no layer above 7% black).
+   */
+  --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.04);
+  --shadow-raised: 0 8px 24px -4px rgb(0 0 0 / 0.07), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+
+  /*
+   * Line heights: tight for large headings, open for reading. Body and small text sit at 1.5-1.6,
+   * headings at 1.1-1.25 (Tailwind's defaults put the largest sizes at 1 and small text at 1.43).
+   */
+  --text-sm--line-height: 1.5;
+  --text-xl--line-height: 1.25;
+  --text-2xl--line-height: 1.25;
+  --text-5xl--line-height: 1.1;
+  --text-6xl--line-height: 1.1;
+  --leading-relaxed: 1.6;
+
+  /*
    * Motion curves: ease-enter for things arriving, ease-exit for things leaving (the durations are
    * the --motion-* tokens below). Menus and dialogs arrive with the animations that follow; each
    * moves 8px or less.
@@ -126,9 +145,21 @@ body {
   @apply mx-auto w-full max-w-360 px-4 sm:px-6 lg:px-8;
 }
 
-/* Bold buttons as in the POC, with softly rounded corners. */
+/*
+ * Bold buttons as in the POC, with softly rounded corners. Colours change in 150ms, and a press
+ * dips the button to 98% for a moment.
+ */
 @utility btn {
-  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-control border border-black px-5 py-2.5 font-bold transition-colors;
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-control border border-black px-5 py-2.5 font-bold;
+  transition:
+    color var(--motion-150) var(--ease-enter),
+    background-color var(--motion-150) var(--ease-enter),
+    border-color var(--motion-150) var(--ease-enter),
+    transform var(--motion-100) var(--ease-enter);
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
 }
 
 /*
@@ -144,19 +175,31 @@ body {
   }
 }
 
-/* Black outline that fills black from left to right on hover. */
+/*
+ * Black outline that fills black from the left on hover, in 200ms, and drains back in 150ms. The
+ * fill is a layer behind the text that grows sideways (a transform), so nothing is repainted.
+ */
 @utility btn-outline {
-  @apply btn text-black;
-  background-image: linear-gradient(to right, black 50%, transparent 50%);
-  background-size: 200% 100%;
-  background-position: right bottom;
-  transition:
-    background-position 0.5s,
-    color 0.5s;
+  @apply btn relative isolate overflow-hidden text-black;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: black;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--motion-150) var(--ease-exit);
+  }
 
   &:hover {
-    background-position: left bottom;
     color: white;
+  }
+
+  &:hover::before {
+    transform: scaleX(1);
+    transition: transform var(--motion-200) var(--ease-enter);
   }
 }
 
@@ -189,8 +232,12 @@ body {
  * src/components/motion); menus and dialogs use motion-safe: and simply appear.
  */
 @media (prefers-reduced-motion: reduce) {
-  .btn-outline {
+  .btn-outline::before {
     transition: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
   }
 
   [data-reveal],

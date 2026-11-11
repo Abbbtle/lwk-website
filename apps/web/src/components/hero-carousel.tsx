@@ -1,15 +1,12 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** How long a slide shows before the next one. */
-const SLIDE_MS = 7000;
-
-/** How a change of slide moves: slides travel this long, easing to a stop. */
-const MOVE = { duration: 700, easing: 'ease-out' } as const;
+/** How a change of slide moves: the --motion-300 token and the --ease-enter curve in globals.css. */
+const MOVE = { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' } as const;
 
 /** Forward (1) brings the next slide in from the right; back (-1) brings it in from the left. */
 type Direction = 1 | -1;
@@ -55,10 +52,10 @@ function arrowClearance(align: HeroBannerSlide['align']) {
 
 /**
  * The home page banner: full-width slides, each a photo with white text over a dark fade, or a
- * saffron brand panel, with a label, a headline and two buttons. Slides move on by themselves;
- * rotation pauses while the pointer or keyboard focus is in the banner, stops with the pause
- * button, and is off for people who ask for reduced motion. Only the first photo loads with the
- * page; the next one loads once the page has finished loading, the rest as they are needed.
+ * saffron brand panel, with a label, a headline and two buttons. Slides change only when the
+ * visitor asks, with the arrows or the dots; with reduced motion they change without moving. Only
+ * the first photo loads with the page; the next one loads once the page has finished loading, the
+ * rest as they are needed.
  *
  * The slides go round in a loop: moving on from the last slide brings the first in from the
  * right, as for any other slide, rather than rewinding back past them all. Only the slide
@@ -66,8 +63,6 @@ function arrowClearance(align: HeroBannerSlide['align']) {
  */
 export function HeroCarousel({ label, slides }: { label: string; slides: HeroBannerSlide[] }) {
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [held, setHeld] = useState(false);
   const [ready, setReady] = useState<ReadonlySet<number>>(() => new Set([0]));
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const moving = useRef<Animation[]>([]);
@@ -127,27 +122,14 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
     return () => window.removeEventListener('load', start);
   }, [allow]);
 
-  useEffect(() => {
-    if (!playing || held || count < 2) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = setTimeout(() => go(index + 1, 1), SLIDE_MS);
-    return () => clearTimeout(timer);
-  }, [index, playing, held, count, go]);
-
   return (
     <section
       aria-roledescription="carousel"
       aria-label={label}
       className="relative overflow-hidden bg-black"
-      onPointerEnter={() => {
-        setHeld(true);
-        allow([index - 1, index + 1]);
-      }}
-      onPointerLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false);
-      }}
+      // The neighbouring photos load once the visitor shows an interest in the banner.
+      onPointerEnter={() => allow([index - 1, index + 1])}
+      onFocus={() => allow([index - 1, index + 1])}
     >
       {/* The slides are stacked in one place, so the banner is as tall as the tallest. */}
       <div className="grid">
@@ -226,7 +208,7 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
                       </p>
                     )}
                     <Heading
-                      className={`mt-4 text-4xl leading-[1.08] font-semibold tracking-tight text-balance md:text-5xl lg:text-6xl ${
+                      className={`mt-4 text-4xl leading-[1.1] font-semibold tracking-tight text-balance md:text-5xl lg:text-6xl ${
                         onPhoto ? 'text-white' : 'text-black'
                       }`}
                     >
@@ -276,12 +258,12 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
               type="button"
               aria-label={name}
               onClick={() => go(index + step, step)}
-              className={`absolute top-1/2 hidden size-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-gray-900 shadow-lg ring-1 ring-black/10 hover:bg-gray-100 md:flex ${side}`}
+              className={`absolute top-1/2 hidden size-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-gray-900 shadow-raised ring-1 ring-black/10 transition-colors duration-150 hover:bg-gray-100 md:flex ${side}`}
             >
               <Icon className="size-6" aria-hidden />
             </button>
           ))}
-          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/55 px-2 py-1">
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center rounded-full bg-black/55 px-1">
             {slides.map((slide, i) => (
               <button
                 key={slide.id}
@@ -290,27 +272,16 @@ export function HeroCarousel({ label, slides }: { label: string; slides: HeroBan
                 onClick={() => go(i, i > index ? 1 : -1)}
                 aria-label={`Show slide ${i + 1}: ${slide.heading}`}
                 aria-current={i === index}
-                className="group flex size-6 cursor-pointer items-center justify-center"
+                // A 44px target around a small dot; the current slide's dot is a longer saffron bar.
+                className="group flex size-11 cursor-pointer items-center justify-center"
               >
                 <span
-                  className={`block h-2 rounded-full transition-all duration-300 motion-reduce:transition-none ${
+                  className={`block h-2 rounded-full transition-colors duration-150 ${
                     i === index ? 'w-5 bg-brand' : 'w-2 bg-white/70 group-hover:bg-white'
                   }`}
                 />
               </button>
             ))}
-            <button
-              type="button"
-              onClick={() => setPlaying(!playing)}
-              aria-label={playing ? 'Pause slides' : 'Play slides'}
-              className="flex size-6 cursor-pointer items-center justify-center text-white motion-reduce:hidden"
-            >
-              {playing ? (
-                <Pause className="size-3.5" aria-hidden />
-              ) : (
-                <Play className="size-3.5" aria-hidden />
-              )}
-            </button>
           </div>
         </>
       )}

@@ -35,13 +35,13 @@ export function LogoutButton({ className, name }: { className: string; name: str
         aria-labelledby={titleId}
         // Clicking the backdrop (the dialog element itself, outside the panel) closes it.
         onClick={(event) => event.target === event.currentTarget && close()}
-        className="m-auto w-[calc(100%-2rem)] max-w-md bg-transparent p-0 backdrop:bg-black/50"
+        className="m-auto w-[calc(100%-2rem)] max-w-md bg-transparent p-0 backdrop:bg-black/50 motion-safe:backdrop:animate-fade-in"
       >
         <form
           action="/auth/logout"
           method="post"
           onSubmit={() => setPending(true)}
-          className="rounded-card bg-white p-6 text-left shadow-xl sm:p-8"
+          className="rounded-card bg-white p-6 text-left shadow-raised motion-safe:animate-dialog-in sm:p-8"
         >
           <div className="flex items-start gap-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-brand-ink">

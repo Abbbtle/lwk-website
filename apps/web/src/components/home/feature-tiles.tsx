@@ -10,7 +10,7 @@ import { sectionHeading, sectionIntro, textLink } from './styles';
 // download). The pictures are decorative; the text says everything.
 
 /** A white card floating on the panel, for the pictures. */
-const card = 'rounded-2xl bg-white p-5 text-left shadow-sm ring-1 ring-black/5';
+const card = 'rounded-card bg-white p-5 text-left shadow-soft ring-1 ring-black/5';
 
 function Tile({
   heading,
@@ -123,7 +123,7 @@ function HelpPicture() {
 export function FeatureTiles({ course }: { course?: CourseSummary }) {
   return (
     <section aria-labelledby="features" className="page-width py-16 lg:py-24">
-      <div className="mx-auto max-w-2xl text-center">
+      <div data-reveal className="mx-auto max-w-2xl text-center">
         <h2 id="features" className={sectionHeading}>
           Everything you need to learn at home
         </h2>
@@ -131,7 +131,7 @@ export function FeatureTiles({ course }: { course?: CourseSummary }) {
           Simple to use on a phone, tablet or computer, wherever you are.
         </p>
       </div>
-      <ul className="mt-12 grid gap-6 md:grid-cols-2">
+      <ul data-reveal-group className="mt-12 grid gap-6 md:grid-cols-2">
         <Tile
           heading="Learn at your own pace"
           text="Videos pick up where you stopped, and My Learning shows how far you have come."

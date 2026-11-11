@@ -22,7 +22,7 @@ export function CoursePrice({
   variant: 'card' | 'page';
 }): ReactElement | false {
   const Amount = variant === 'card' ? 'span' : 'p';
-  const amountClass = variant === 'card' ? 'text-lg font-bold' : 'text-3xl font-extrabold';
+  const amountClass = variant === 'card' ? 'text-lg font-bold' : 'text-3xl font-bold';
   const note = (text: string) =>
     variant === 'page' && <p className="text-sm text-gray-600">{text}</p>;
   const earlyAccess = phase === 'early_access';

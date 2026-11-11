@@ -54,11 +54,11 @@ export function MainNav({ user }: { user: NavUser | null }) {
             <summary className="btn-outline list-none">
               {user.name}
               <ChevronDown
-                className="size-4 transition-transform group-open:rotate-180"
+                className="size-4 transition-transform duration-150 ease-enter group-open:rotate-180 motion-reduce:transition-none"
                 aria-hidden
               />
             </summary>
-            <div className="absolute right-0 z-40 mt-2 w-64 rounded-card border border-gray-300 bg-white shadow-lg">
+            <div className="absolute right-0 z-40 mt-2 w-64 rounded-card border border-gray-300 bg-white shadow-raised motion-safe:animate-menu-in">
               <p className="truncate border-b border-gray-300 px-4 py-3 text-sm text-gray-600">
                 {user.email}
               </p>
@@ -98,7 +98,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
       )}
       <button
         type="button"
-        className="shrink-0 p-2 xl:hidden"
+        className="shrink-0 p-2.5 xl:hidden"
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -113,7 +113,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
       {open && (
         <div
           id="mobile-menu"
-          className="absolute inset-x-0 top-full z-40 border-b border-gray-300 bg-white shadow-md xl:hidden"
+          className="absolute inset-x-0 top-full z-40 border-b border-gray-300 bg-white shadow-raised motion-safe:animate-panel-in xl:hidden"
         >
           {/* On the page's board, so the menu lines up with the header and the page. */}
           <div className="page-width">

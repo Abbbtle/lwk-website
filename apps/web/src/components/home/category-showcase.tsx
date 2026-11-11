@@ -16,7 +16,7 @@ export function CategoryShowcase({
 }) {
   return (
     <section aria-labelledby="category-showcase" className="page-width py-16 lg:py-24">
-      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+      <div data-reveal className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="max-w-2xl">
           <h2 id="category-showcase" className={sectionHeading}>
             Devotional skills for every part of life
@@ -30,11 +30,14 @@ export function CategoryShowcase({
           Browse all courses
         </Link>
       </div>
-      <ul className="-mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+      <ul
+        data-reveal-group
+        className="-mx-4 mt-10 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4"
+      >
         {categories.map((category) => (
           <li key={category.slug} className="w-[72%] shrink-0 snap-start sm:w-auto">
             <Link href={`/courses?category=${category.slug}`} className="group block">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-200">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-card bg-gray-200">
                 <Image
                   src={categoryImage(category.slug).src}
                   alt=""

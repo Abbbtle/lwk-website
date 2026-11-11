@@ -76,11 +76,11 @@ export function NotificationBell({ unread }: { unread: number }) {
         onClick={toggle}
         aria-label={label}
         aria-expanded={open}
-        className="relative cursor-pointer p-2 text-gray-800 hover:text-brand-ink"
+        className="relative cursor-pointer p-2.5 text-gray-800 hover:text-brand-ink"
       >
         <Bell className="size-6" aria-hidden />
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0.5 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs leading-5 font-bold text-black">
+          <span className="absolute top-1 right-1 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs leading-5 font-bold text-black">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -89,7 +89,7 @@ export function NotificationBell({ unread }: { unread: number }) {
         <div
           role="region"
           aria-label="Notifications"
-          className="card-clip absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-card border border-gray-300 bg-white shadow-lg"
+          className="card-clip absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-card border border-gray-300 bg-white shadow-raised motion-safe:animate-menu-in"
         >
           <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
             <p className="font-bold">Notifications</p>

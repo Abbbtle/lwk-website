@@ -19,7 +19,10 @@ export function InstructorPromo() {
       className="page-width grid items-center gap-10 py-16 lg:grid-cols-[28rem_minmax(0,1fr)] lg:gap-16 lg:py-24"
     >
       {/* TODO: a POC photo; it needs usage permission (or replacing) before the public launch. */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-gray-200 lg:aspect-square">
+      <div
+        data-reveal
+        className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-gray-200 lg:aspect-square"
+      >
         <Image
           src="/images/become-instructor.jpg"
           alt="A devotee singing kirtan"
@@ -28,7 +31,7 @@ export function InstructorPromo() {
           className="object-cover"
         />
       </div>
-      <div className="max-w-xl">
+      <div data-reveal className="max-w-xl">
         <h2 id="instructor-promo" className={sectionHeading}>
           Become an instructor
         </h2>

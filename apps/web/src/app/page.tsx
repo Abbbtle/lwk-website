@@ -164,7 +164,7 @@ export default async function HomePage() {
       {beginners.length > 0 && (
         <section aria-labelledby="beginner-courses" className="bg-gray-50">
           <div className="page-width py-16 lg:py-24">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div data-reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <h2 id="beginner-courses" className={sectionHeading}>
                 Start with a beginner course
               </h2>
@@ -183,7 +183,7 @@ export default async function HomePage() {
 
       {resources.length > 0 && (
         <section aria-labelledby="free-content" className="page-width pt-16 lg:pt-24">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div data-reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <h2 id="free-content" className={sectionHeading}>
               Free to watch, listen and read
             </h2>

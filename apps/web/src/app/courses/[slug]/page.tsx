@@ -128,7 +128,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
                 {course.isSample && <SampleBadge />}
               </div>
             )}
-            <h1 className="text-3xl font-extrabold md:text-5xl">{course.title}</h1>
+            <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{course.title}</h1>
             <p className="text-lg text-gray-200">{course.subtitle}</p>
             <p className="text-sm text-gray-300">
               Taught by <span className="font-semibold text-white">{course.instructor}</span>
@@ -148,13 +148,13 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
       <div className="page-width grid gap-10 py-12 lg:grid-cols-3">
         <div className="space-y-12 lg:col-span-2">
           {course.isSample && (
-            <p className="border-l-4 border-gray-400 bg-white p-4 text-sm text-gray-700">
+            <p className="rounded-card border border-gray-200 bg-white p-4 text-sm text-gray-700">
               This is a sample course used to test the platform. It will be replaced by courses from
               our instructors.
             </p>
           )}
-          <section className="rounded-card border border-gray-300 p-6">
-            <h2 className="text-2xl font-bold">What you&apos;ll learn</h2>
+          <section data-reveal className="rounded-card border border-gray-300 p-6">
+            <h2 className="text-2xl font-semibold">What you&apos;ll learn</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {course.outcomes.map((outcome) => (
                 <li key={outcome} className="flex gap-3">
@@ -165,8 +165,8 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
             </ul>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold">Course content</h2>
+          <section data-reveal>
+            <h2 className="text-2xl font-semibold">Course content</h2>
             <p className="mt-1 text-sm text-gray-600">
               {joinParts([
                 plural(course.sections.length, 'section'),
@@ -191,18 +191,14 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
             </ol>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold">Description</h2>
-            <RichText
-              text={course.description}
-              size="sm"
-              className="mt-4 text-base text-gray-700"
-            />
+          <section data-reveal>
+            <h2 className="text-2xl font-semibold">Description</h2>
+            <RichText text={course.description} size="md" className="mt-4" />
           </section>
         </div>
 
         <aside className="lg:-mt-48">
-          <div className="overflow-hidden rounded-card bg-white shadow-lg lg:sticky lg:top-6">
+          <div className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-raised lg:sticky lg:top-6">
             <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
             <div className="space-y-4 p-6">
               {enrollment && isAccessLock(lock) ? (

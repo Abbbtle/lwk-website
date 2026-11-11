@@ -36,7 +36,7 @@ async function getNavUser(): Promise<NavUser | null> {
 export async function SiteHeader() {
   const user = await getNavUser();
   return (
-    <header className="relative z-30 bg-white shadow-md">
+    <header className="relative z-30 border-b border-gray-200 bg-white shadow-soft">
       <nav aria-label="Main" className="page-width flex items-center gap-4 py-2 lg:gap-6">
         <Link href="/" className="shrink-0">
           <Image

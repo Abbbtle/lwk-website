@@ -8,7 +8,7 @@ import type { ResourceSummary } from '@/server/resources';
 export function ResourceCard({ resource }: { resource: ResourceSummary }) {
   const { unit } = resourceTypes[resource.type];
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+    <article className="group relative flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-soft transition-colors duration-150 hover:border-gray-400">
       <div className="relative">
         <CourseCover categorySlug={resource.categorySlug ?? ''} imageUrl={resource.coverUrl} />
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
@@ -41,7 +41,7 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
 
 export function ResourceGrid({ resources }: { resources: ResourceSummary[] }) {
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div data-reveal-group className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {resources.map((resource) => (
         <ResourceCard key={resource.slug} resource={resource} />
       ))}

@@ -21,13 +21,13 @@ export function SearchBar({
         name="q"
         type="search"
         placeholder="Search..."
-        className="w-full rounded-full border border-black bg-white py-2.5 pr-11 pl-5 focus:ring-2 focus:ring-brand focus:outline-none"
+        className="w-full rounded-full border border-black bg-white py-2.5 pr-12 pl-5 focus:ring-2 focus:ring-brand focus:outline-none"
       />
       <button
         type="submit"
         aria-label="Search"
-        // A 36 px target (WCAG 2.2 asks for at least 24 px); the icon stays where it was.
-        className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:text-black"
+        // A 44 px target, inside the box's height; the icon stays about where it was.
+        className="absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:text-black"
       >
         <Search className="size-5" aria-hidden />
       </button>
