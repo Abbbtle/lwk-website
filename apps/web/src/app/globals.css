@@ -96,6 +96,20 @@ body {
 }
 
 /*
+ * Headings sit at a 1.2 line height at any size, unless they set their own; text sizes read their
+ * line height through --tw-leading, so this reaches headings sized with text-lg, text-xl and so on.
+ */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    --tw-leading: 1.2;
+    line-height: 1.2;
+  }
+}
+
+/*
  * Lenis smooth scrolling (on with a mouse or trackpad): panels that scroll on their own keep the
  * scroll to themselves. Lenis's own rule that hides the page's scrollbar while scrolling is paused
  * is left out, as it would shift the page sideways when a dialog opens.

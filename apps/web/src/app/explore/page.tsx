@@ -160,7 +160,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
             <p className="text-lg font-semibold">
               {filtered ? 'Nothing matches yet.' : 'Free content is on its way.'}
             </p>
-            <p className="mt-2 text-gray-700">
+            <p className="mx-auto mt-2 max-w-[70ch] text-gray-700">
               {filtered
                 ? 'Try another search or type, or browse all courses.'
                 : 'Our teachers are preparing free talks, recordings and courses. Meanwhile, browse the course catalogue.'}

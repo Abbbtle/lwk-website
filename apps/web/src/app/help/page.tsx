@@ -153,7 +153,7 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
               <LifeBuoy className="mt-1 size-8 shrink-0 text-brand" aria-hidden />
               <div>
                 <h2 className="text-xl font-semibold">Still need help?</h2>
-                <p className="text-gray-300">
+                <p className="max-w-[70ch] text-gray-300">
                   {session
                     ? 'Send us a support request and follow the reply in your account.'
                     : 'Send us a message and we reply by email.'}{' '}

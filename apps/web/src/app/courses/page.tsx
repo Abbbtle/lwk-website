@@ -46,7 +46,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
           'All Courses'
         )}
       </h1>
-      <p className="mt-2 text-lg text-gray-700">
+      <p className="mt-2 max-w-[70ch] text-lg text-gray-700">
         {category?.description ?? 'Find a course to deepen your devotional practice.'}
       </p>
 

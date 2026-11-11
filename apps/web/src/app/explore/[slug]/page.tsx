@@ -57,7 +57,7 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
             {resource.isSample && <SampleBadge />}
           </div>
           <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{resource.title}</h1>
-          <p className="text-lg text-gray-700">{resource.summary}</p>
+          <p className="max-w-[70ch] text-lg text-gray-700">{resource.summary}</p>
           <p className="text-sm text-gray-600">
             {joinParts([
               resource.authorName,

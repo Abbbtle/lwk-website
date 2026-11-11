@@ -129,7 +129,7 @@ export default async function CoursePage({ params }: PageProps<'/courses/[slug]'
               </div>
             )}
             <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{course.title}</h1>
-            <p className="text-lg text-gray-200">{course.subtitle}</p>
+            <p className="max-w-[70ch] text-lg text-gray-200">{course.subtitle}</p>
             <p className="text-sm text-gray-300">
               Taught by <span className="font-semibold text-white">{course.instructor}</span>
             </p>

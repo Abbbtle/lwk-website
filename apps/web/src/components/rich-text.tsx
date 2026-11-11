@@ -159,14 +159,14 @@ function inline(text: string, keyPrefix = ''): ReactNode[] {
 const sizes = {
   // Lessons and articles.
   lg: {
-    root: 'space-y-5 text-lg leading-relaxed text-gray-800',
+    root: 'max-w-[70ch] space-y-5 text-lg leading-relaxed text-gray-800',
     h2: 'pt-2 text-2xl font-semibold text-gray-900',
     h3: 'pt-1 text-xl font-semibold text-gray-900',
     h4: 'font-semibold text-gray-900',
   },
   // Course descriptions: body size, beside the rest of the page.
   md: {
-    root: 'space-y-4 leading-relaxed text-gray-700',
+    root: 'max-w-[70ch] space-y-4 leading-relaxed text-gray-700',
     h2: 'pt-2 text-xl font-semibold text-gray-900',
     h3: 'pt-1 text-lg font-semibold text-gray-900',
     h4: 'font-semibold text-gray-900',

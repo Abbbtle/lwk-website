@@ -18,7 +18,7 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-5">
-        <h3 className="text-lg leading-snug font-semibold">
+        <h3 className="text-lg leading-tight font-semibold">
           <Link
             href={`/explore/${resource.slug}`}
             className="after:absolute after:inset-0 group-hover:text-brand-ink"

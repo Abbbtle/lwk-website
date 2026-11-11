@@ -58,7 +58,7 @@ export default async function SupportPage() {
               ))}
             </ul>
           )}
-          <p className="text-sm text-gray-600">
+          <p className="max-w-[70ch] text-sm text-gray-600">
             We reply on working days ({site.officeHours.join(' ')}), usually within one working day.
             You get a notification when we do.
           </p>

@@ -30,7 +30,7 @@ export function Faq({
               />
             </summary>
             {/* The answer fades in as it opens; its space is not animated. */}
-            <p className="mt-3 text-gray-700 motion-safe:animate-fade-in">{answer}</p>
+            <p className="mt-3 max-w-[70ch] text-gray-700 motion-safe:animate-fade-in">{answer}</p>
           </details>
         ))}
       </div>

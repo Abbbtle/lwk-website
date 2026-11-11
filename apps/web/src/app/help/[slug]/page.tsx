@@ -44,7 +44,7 @@ export default async function HelpArticlePage({ params }: PageProps<'/help/[slug
           )}
         </nav>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">{article.title}</h1>
-        <p className="mt-3 text-lg text-gray-700">{article.summary}</p>
+        <p className="mt-3 max-w-[70ch] text-lg text-gray-700">{article.summary}</p>
 
         <article className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-soft sm:p-8">
           <RichText text={article.body} size="md" />

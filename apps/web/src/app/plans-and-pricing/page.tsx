@@ -240,7 +240,7 @@ export default async function PlansAndPricingPage() {
           Prices for {visitorRegionPhrase(region)}, {regionTaxNote(region)}.
         </p>
         {earlyAccess && (
-          <p className="mx-auto mt-6 max-w-3xl rounded-card border border-brand/40 bg-orange-50 px-4 py-3 text-sm font-semibold text-black sm:text-base">
+          <p className="mx-auto mt-6 max-w-[70ch] rounded-card border border-brand/40 bg-orange-50 px-4 py-3 text-sm font-semibold text-black sm:text-base">
             {endsAt
               ? `Early access ends on ${formatEarlyAccessEnd(endsAt)}. Until then every course is free, and the courses you join stay yours.`
               : 'Paid plans open soon. Until then every course is free during early access, and the courses you join now stay yours.'}
@@ -257,7 +257,7 @@ export default async function PlansAndPricingPage() {
             <PlanCard key={plan.name} plan={plan} />
           ))}
         </ul>
-        <div data-reveal className="mt-10 space-y-3 text-center text-gray-700">
+        <div data-reveal className="mx-auto mt-10 max-w-[70ch] space-y-3 text-center text-gray-700">
           <p>
             <strong className="text-gray-900">Founding members:</strong>{' '}
             {earlyAccess ? 'join during early access, or be' : 'be'} one of the first{' '}
