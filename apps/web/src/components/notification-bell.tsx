@@ -108,7 +108,7 @@ export function NotificationBell({ unread }: { unread: number }) {
           ) : items.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-gray-600">You are all caught up.</p>
           ) : (
-            <ul className="max-h-96 divide-y divide-gray-200 overflow-y-auto">
+            <ul data-lenis-prevent className="max-h-96 divide-y divide-gray-200 overflow-y-auto">
               {items.map((item) => (
                 <li key={item.id}>
                   <a

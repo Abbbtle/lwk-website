@@ -207,6 +207,7 @@ export function HelpPanel({
           <div
             role={assistant ? 'tabpanel' : undefined}
             hidden={assistant && tab !== 'browse'}
+            data-lenis-prevent
             className="flex-1 space-y-6 overflow-y-auto px-5 py-5"
           >
             <div className="relative">

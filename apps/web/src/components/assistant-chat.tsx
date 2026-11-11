@@ -209,6 +209,7 @@ export function AssistantChat({
         role="log"
         aria-live="polite"
         aria-label="Conversation with the assistant"
+        data-lenis-prevent
         className="flex-1 space-y-4 overflow-y-auto px-5 py-4"
       >
         <ol ref={log} className="space-y-4">

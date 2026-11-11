@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { HelpPanel } from '@/components/help-panel';
+import { SmoothScroll } from '@/components/motion/smooth-scroll';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { site } from '@/lib/site';
@@ -39,8 +40,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: LayoutProps<'/'>) {
   const session = await getSession();
   return (
-    <html lang="en" className={`${poppins.variable} h-full`}>
-      <body className="flex min-h-full flex-col font-sans">
+    // The page grows with its content (smooth scrolling measures it); the body fills the screen.
+    <html lang="en" className={poppins.variable}>
+      <body className="flex min-h-svh flex-col font-sans">
         <a
           href="#main"
           className="sr-only z-50 bg-black px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
@@ -48,7 +50,8 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           Skip to content
         </a>
         <SiteHeader />
-        <main id="main" className="flex-1">
+        {/* Takes focus from the skip link; a landmark, not a control, so it draws no focus ring. */}
+        <main id="main" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </main>
         <SiteFooter />
@@ -57,6 +60,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           name={session?.name}
           assistant={aiConfig().enabled}
         />
+        <SmoothScroll />
       </body>
     </html>
   );

@@ -18,6 +18,49 @@
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
 
+  /*
+   * Motion curves: ease-enter for things arriving, ease-exit for things leaving (the durations are
+   * the --motion-* tokens below). Menus and dialogs arrive with the animations that follow; each
+   * moves 8px or less.
+   */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+  --animate-fade-in: fade-in 150ms var(--ease-enter) both;
+  --animate-menu-in: menu-in 150ms var(--ease-enter) both;
+  --animate-panel-in: menu-in 200ms var(--ease-enter) both;
+  --animate-dialog-in: dialog-in 200ms var(--ease-enter) both;
+  --animate-slide-in: slide-in 200ms var(--ease-enter) both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Drops 4px into place, under the control that opened it. */
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* Rises 8px into place. */
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  /* Comes 8px in from the right, for panels on the right edge. */
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(8px);
+    }
+  }
+
   --animate-strand-count: strand-count 600ms linear both;
   --animate-tassel-drop: tassel-drop 480ms ease-out both;
 
@@ -41,8 +84,36 @@
   }
 }
 
+/*
+ * The only durations motion uses. Scroll reveals use the same values (src/components/motion).
+ */
+:root {
+  --motion-100: 100ms;
+  --motion-150: 150ms;
+  --motion-200: 200ms;
+  --motion-300: 300ms;
+}
+
 body {
   @apply bg-surface text-gray-900 antialiased;
+}
+
+/*
+ * Lenis smooth scrolling (on with a mouse or trackpad): panels that scroll on their own keep the
+ * scroll to themselves. Lenis's own rule that hides the page's scrollbar while scrolling is paused
+ * is left out, as it would shift the page sideways when a dialog opens.
+ */
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Content waiting to be revealed on scroll still prints. */
+@media print {
+  [data-reveal],
+  [data-reveal-group] > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /*
@@ -113,8 +184,18 @@ body {
   background-repeat: no-repeat space;
 }
 
+/*
+ * Reduced motion: nothing slides or scales. Lenis stays off and scroll reveals hide nothing (see
+ * src/components/motion); menus and dialogs use motion-safe: and simply appear.
+ */
 @media (prefers-reduced-motion: reduce) {
   .btn-outline {
     transition: none;
+  }
+
+  [data-reveal],
+  [data-reveal-group] > * {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
