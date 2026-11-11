@@ -157,8 +157,11 @@ body {
     border-color var(--motion-150) var(--ease-enter),
     transform var(--motion-100) var(--ease-enter);
 
-  &:active:not(:disabled) {
-    transform: scale(0.98);
+  /* Every button style copies this, so the press only dips when motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
   }
 }
 
@@ -234,10 +237,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .btn-outline::before {
     transition: none;
-  }
-
-  .btn:active:not(:disabled) {
-    transform: none;
   }
 
   [data-reveal],

@@ -4,8 +4,12 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
 // GSAP, ScrollTrigger and Lenis (about 52 KB gzipped) come in a chunk of their own, fetched once the
-// page has loaded, so they never hold up the first paint or compete with the banner photo.
-const MotionRuntime = dynamic(() => import('./motion-runtime'), { ssr: false });
+// page has loaded, so they never hold up the first paint or compete with the banner photo. If the
+// chunk cannot be fetched (a dropped connection), the site simply goes without motion.
+const MotionRuntime = dynamic(
+  () => import('./motion-runtime').catch(() => ({ default: () => null })),
+  { ssr: false },
+);
 
 /** Elements that take keyboard focus without help. */
 const FOCUSABLE = 'a[href], button, input, select, textarea, summary, [tabindex]';

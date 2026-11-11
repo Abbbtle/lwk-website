@@ -11,8 +11,11 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 const MOTION_200 = 0.2;
 const MOTION_300 = 0.3;
 
-/** GSAP's expo.out is the --ease-enter curve in globals.css. */
-const EASE_ENTER = 'expo.out';
+/**
+ * An ease-out gentler than the menus' --ease-enter: that curve finishes most of its travel in the
+ * first frames, which suits a menu but makes a reveal read as a pop. This one glides to a stop.
+ */
+const EASE_REVEAL = 'power2.out';
 
 /** Items in a group follow one another by this much, and a whole group takes no longer than the cap. */
 const STAGGER_EACH = 0.03;
@@ -22,7 +25,7 @@ const kinds = [
   // One block, such as a section heading or a panel.
   { selector: '[data-reveal]', y: 8, duration: MOTION_300 },
   // The items of a group, such as the cards of a grid, one after another.
-  { selector: '[data-reveal-group] > *', y: 4, duration: MOTION_200 },
+  { selector: '[data-reveal-group] > *', y: 8, duration: MOTION_200 },
 ] as const;
 
 function staggerFor(count: number) {
@@ -74,7 +77,7 @@ export function useReveal(scope: string, page: string) {
                   opacity: 1,
                   y: 0,
                   duration,
-                  ease: EASE_ENTER,
+                  ease: EASE_REVEAL,
                   stagger: staggerFor(batch.length),
                   overwrite: true,
                   clearProps: 'opacity,transform',
