@@ -20,11 +20,13 @@ export function TicketThread({
   return (
     <ol className="space-y-4">
       {messages.map((message) => {
+        // Who wrote it shows in the whole card's tint, not a bar down one side: staff notes in
+        // yellow, our replies on a saffron wash, the requester's messages in white.
         const style = message.internal
-          ? 'border-l-4 border-yellow-500 bg-yellow-50'
+          ? 'border-yellow-500/40 bg-yellow-50'
           : message.fromStaff
-            ? 'border-l-4 border-brand bg-white'
-            : 'border-l-4 border-gray-400 bg-white';
+            ? 'border-brand/30 bg-orange-50'
+            : 'border-gray-200 bg-white';
         const who = message.internal
           ? `${message.authorName} · internal note`
           : message.fromStaff
@@ -33,7 +35,7 @@ export function TicketThread({
               : `${message.authorName} · staff`
             : message.authorName;
         return (
-          <li key={message.id} className={`${style} rounded-card p-4 shadow-soft`}>
+          <li key={message.id} className={`${style} rounded-card border p-4 shadow-soft`}>
             <p className="text-sm">
               <span className="font-semibold">{who}</span>{' '}
               <time dateTime={message.createdAt.toISOString()} className="text-gray-500">

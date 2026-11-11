@@ -76,12 +76,12 @@ export default async function SupportPage() {
                 name="q"
                 type="search"
                 placeholder="Search help"
-                className="w-full rounded-control border border-gray-300 bg-surface py-2.5 pr-11 pl-3 focus:border-black focus:outline-none"
+                className="w-full rounded-control border border-gray-300 bg-surface py-2.5 pr-3 pl-11 focus:border-black focus:outline-none"
               />
               <button
                 type="submit"
                 aria-label="Search"
-                className="absolute top-1/2 right-0 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center"
+                className="absolute top-1/2 left-0 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center text-gray-600 transition-colors duration-150 hover:text-black"
               >
                 <Search className="size-4" aria-hidden />
               </button>

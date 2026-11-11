@@ -31,27 +31,41 @@ export function MainNav({ user }: { user: NavUser | null }) {
     setOpen(false);
   }
 
-  const linkClass = (href: string) =>
-    isActive(pathname, href) ? 'text-brand-ink' : 'text-gray-800 hover:text-brand-ink';
+  // Links are pills: light gray under the pointer, and the current page in saffron on a saffron
+  // wash, so pointing at a link never looks like being on its page. The weight stays the same, so
+  // the links do not shift when the page changes.
+  const linkState = (href: string) =>
+    isActive(pathname, href)
+      ? 'bg-orange-50 text-brand-ink'
+      : 'text-gray-700 hover:bg-gray-100 hover:text-black';
+  const navLinkClass = (href: string) =>
+    `inline-flex min-h-11 items-center rounded-control px-3 text-sm transition-colors duration-150 ${linkState(href)}`;
+  const menuLinkClass = (href: string) =>
+    `flex min-h-11 items-center rounded-control px-3 transition-colors duration-150 ${linkState(href)}`;
+  const current = (href: string) => (isActive(pathname, href) ? 'page' : undefined);
   const returnTo = encodeURIComponent(pathname);
 
   return (
     <>
-      <ul className="hidden shrink-0 items-center gap-6 xl:flex">
+      <ul className="hidden shrink-0 items-center gap-1 xl:flex">
         {mainNav.map((item) => (
           <li key={item.href}>
-            <Link href={item.href} className={linkClass(item.href)}>
+            <Link
+              href={item.href}
+              aria-current={current(item.href)}
+              className={navLinkClass(item.href)}
+            >
               {item.label}
             </Link>
           </li>
         ))}
       </ul>
 
-      <div className="hidden shrink-0 items-center gap-3 lg:flex">
+      <div className="hidden shrink-0 items-center gap-2 lg:flex">
         {user && <NotificationBell unread={user.unread} />}
         {user ? (
           <details className="group relative">
-            <summary className="btn-outline list-none">
+            <summary className="btn-outline min-h-11 list-none px-4 py-2 text-sm">
               {user.name}
               <ChevronDown
                 className="size-4 transition-transform duration-150 ease-enter group-open:rotate-180 motion-reduce:transition-none"
@@ -65,7 +79,10 @@ export function MainNav({ user }: { user: NavUser | null }) {
               <ul className="py-1">
                 {user.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="block px-4 py-2 hover:bg-gray-100">
+                    <Link
+                      href={link.href}
+                      className="flex min-h-11 items-center px-4 transition-colors duration-150 hover:bg-gray-100"
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -74,17 +91,23 @@ export function MainNav({ user }: { user: NavUser | null }) {
               <div className="border-t border-gray-300 py-1">
                 <LogoutButton
                   name={user.name}
-                  className="w-full cursor-pointer px-4 py-2 text-left hover:bg-gray-100"
+                  className="flex min-h-11 w-full cursor-pointer items-center px-4 text-left transition-colors duration-150 hover:bg-gray-100"
                 />
               </div>
             </div>
           </details>
         ) : (
           <>
-            <a href={`/login?returnTo=${returnTo}`} className="btn-outline">
+            <a
+              href={`/login?returnTo=${returnTo}`}
+              className="btn-outline min-h-11 px-4 py-2 text-sm"
+            >
               Log In
             </a>
-            <a href={`/sign-up?returnTo=${returnTo}`} className="btn-solid">
+            <a
+              href={`/sign-up?returnTo=${returnTo}`}
+              className="btn-solid min-h-11 px-4 py-2 text-sm"
+            >
               Sign Up
             </a>
           </>
@@ -98,7 +121,7 @@ export function MainNav({ user }: { user: NavUser | null }) {
       )}
       <button
         type="button"
-        className="flex size-11 shrink-0 items-center justify-center xl:hidden"
+        className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control transition-colors duration-150 hover:bg-gray-100 xl:hidden"
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -117,11 +140,18 @@ export function MainNav({ user }: { user: NavUser | null }) {
         >
           {/* On the page's board, so the menu lines up with the header and the page. */}
           <div className="page-width">
-            <SearchBar id="mobile-search" label="Courses (menu)" className="pt-4 md:hidden" />
-            <ul className="flex flex-col py-2">
+            {/* The space above sits outside the search form, so its button stays centred. */}
+            <div className="pt-4 md:hidden">
+              <SearchBar id="mobile-search" label="Courses (menu)" />
+            </div>
+            <ul className="-mx-3 flex flex-col gap-1 py-3 md:max-w-sm">
               {mainNav.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className={`block py-3 ${linkClass(item.href)}`}>
+                  <Link
+                    href={item.href}
+                    aria-current={current(item.href)}
+                    className={menuLinkClass(item.href)}
+                  >
                     {item.label}
                   </Link>
                 </li>
@@ -130,10 +160,14 @@ export function MainNav({ user }: { user: NavUser | null }) {
             {user ? (
               <div className="border-t border-gray-300 py-2 lg:hidden">
                 <p className="py-2 text-sm text-gray-600">Signed in as {user.name}</p>
-                <ul>
+                <ul className="-mx-3 flex flex-col gap-1 pb-2 md:max-w-sm">
                   {user.links.map((link) => (
                     <li key={link.href}>
-                      <Link href={link.href} className={`block py-3 ${linkClass(link.href)}`}>
+                      <Link
+                        href={link.href}
+                        aria-current={current(link.href)}
+                        className={menuLinkClass(link.href)}
+                      >
                         {link.label}
                       </Link>
                     </li>

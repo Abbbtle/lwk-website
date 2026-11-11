@@ -116,12 +116,12 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
               type="search"
               defaultValue={query}
               placeholder="Search free content..."
-              className="w-full rounded-full border border-white bg-white py-3 pr-14 pl-5 text-black focus:ring-2 focus:ring-brand focus:outline-none"
+              className="w-full rounded-full border border-white bg-white py-3 pr-5 pl-14 text-black focus:ring-2 focus:ring-brand focus:outline-none"
             />
             <button
               type="submit"
               aria-label="Search"
-              className="absolute top-1/2 right-1 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:text-black"
+              className="absolute top-1/2 left-1 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-600 transition-colors duration-150 hover:text-black"
             >
               <Search className="size-5" aria-hidden />
             </button>

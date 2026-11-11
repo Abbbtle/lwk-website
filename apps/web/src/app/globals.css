@@ -107,6 +107,29 @@ body {
     --tw-leading: 1.2;
     line-height: 1.2;
   }
+
+  /* Paragraphs avoid ending on a single word where the browser can manage it. */
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Placeholders stay readable (gray-500 is 4.6:1 or better on every field background). */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-500);
+    opacity: 1;
+  }
+
+  /* The browser's own surfaces carry the palette too: a saffron-tinted selection and caret. */
+  ::selection {
+    background-color: var(--color-orange-100);
+    color: var(--color-gray-900);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-brand-ink);
+  }
 }
 
 /*
