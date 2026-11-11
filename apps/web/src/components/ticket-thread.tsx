@@ -33,7 +33,7 @@ export function TicketThread({
               : `${message.authorName} · staff`
             : message.authorName;
         return (
-          <li key={message.id} className={`${style} rounded-card p-4 shadow-sm`}>
+          <li key={message.id} className={`${style} rounded-card p-4 shadow-soft`}>
             <p className="text-sm">
               <span className="font-semibold">{who}</span>{' '}
               <time dateTime={message.createdAt.toISOString()} className="text-gray-500">
@@ -44,7 +44,7 @@ export function TicketThread({
                 })}
               </time>
             </p>
-            <RichText text={message.body} size="sm" className="mt-2 text-base text-gray-800" />
+            <RichText text={message.body} size="md" className="mt-2" />
           </li>
         );
       })}

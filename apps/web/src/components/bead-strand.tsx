@@ -1,42 +1,35 @@
 import type { ReactNode } from 'react';
 
-/** How long one item's beads take to darken when the page opens. */
-const COUNT_MS = 600;
-
 /** Where the beads run, centred in the gutter beside each item. */
-const strand = 'bead-strand absolute inset-y-0 left-1/2 w-3 -translate-x-1/2';
+const strand = 'bead-strand absolute inset-y-0 left-1/2 w-3 -translate-x-1/2 text-black';
 
 export type BeadStrandItem = { id: string; content: ReactNode };
 
 /**
- * A list strung on a strand of japa beads, after the mala on the coming-soon page. When the page
- * opens the beads darken from the top, like a round being counted, and the saffron head bead's
- * tassel drops at the end. With reduced motion the finished strand shows straight away.
+ * A list strung on a strand of japa beads, after the mala on the coming-soon page, closed by the
+ * saffron head bead and its tassel. The strand itself stays still; where it starts below the fold
+ * (on phones) the contact page fades it in with its column.
  */
 export function BeadStrand({ items, label }: { items: BeadStrandItem[]; label: string }) {
   return (
     <div>
       <ul aria-label={label}>
-        {items.map((item, index) => (
+        {items.map((item) => (
           <li key={item.id} className="grid grid-cols-[2.5rem_1fr]">
             <span aria-hidden className="relative">
-              <span className={`${strand} text-gray-300`} />
-              <span
-                className={`${strand} text-black motion-safe:animate-strand-count`}
-                style={{ animationDelay: `${index * COUNT_MS}ms` }}
-              />
+              <span className={strand} />
             </span>
             <div className="py-5 pl-4">{item.content}</div>
           </li>
         ))}
       </ul>
-      <HeadBead tasselDelayMs={items.length * COUNT_MS} />
+      <HeadBead />
     </div>
   );
 }
 
 /** The head bead that closes the strand, with its tassel (drawn as on the coming-soon page). */
-function HeadBead({ tasselDelayMs }: { tasselDelayMs: number }) {
+function HeadBead() {
   return (
     <svg
       aria-hidden
@@ -47,10 +40,7 @@ function HeadBead({ tasselDelayMs }: { tasselDelayMs: number }) {
       className="ml-1 block"
     >
       <circle cx="200" cy="378" r="7.5" className="fill-brand" />
-      <g
-        className="origin-top fill-brand stroke-brand [transform-box:fill-box] motion-safe:animate-tassel-drop"
-        style={{ animationDelay: `${tasselDelayMs}ms` }}
-      >
+      <g className="fill-brand stroke-brand">
         <path d="M200 385.5V399" className="fill-none" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="200" cy="401.5" r="2.6" className="stroke-none" />
         <path

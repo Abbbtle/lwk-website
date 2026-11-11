@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 
 /** A status message, starting at the page's left edge like the heading above it. */
 function Notice({ children }: { children: React.ReactNode }) {
-  return <div className="max-w-2xl space-y-4 rounded-card bg-white p-8 shadow-md">{children}</div>;
+  return (
+    <div className="max-w-2xl space-y-4 rounded-card border border-gray-200 bg-white p-8 shadow-soft">
+      {children}
+    </div>
+  );
 }
 
 export default async function BecomeAnInstructorPage() {
@@ -58,7 +62,7 @@ export default async function BecomeAnInstructorPage() {
     content = (
       <>
         {latest?.status === 'REJECTED' && (
-          <div className="mb-8 border-l-4 border-brand bg-surface p-4">
+          <div className="mb-8 rounded-card border border-brand/40 bg-orange-50 p-4">
             <p className="font-semibold">Your previous application was not approved.</p>
             {latest.reviewNote && <p className="mt-1 text-gray-700">{latest.reviewNote}</p>}
             <p className="mt-1 text-gray-700">You are welcome to apply again.</p>
@@ -83,7 +87,9 @@ export default async function BecomeAnInstructorPage() {
         <p className="mt-4">
           <HelpLink slug="becoming-an-instructor">How applying works</HelpLink>
         </p>
-        <div className="mt-10">{content}</div>
+        <div data-reveal className="mt-10">
+          {content}
+        </div>
       </div>
     </div>
   );

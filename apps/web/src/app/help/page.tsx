@@ -29,7 +29,9 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
         <div className="page-width py-14">
           <div className="max-w-4xl">
             <p className="font-semibold text-brand uppercase">Help centre</p>
-            <h1 className="mt-2 text-4xl font-extrabold md:text-5xl">How can we help?</h1>
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">
+              How can we help?
+            </h1>
             <form
               action="/help"
               role="search"
@@ -45,13 +47,13 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
                 type="search"
                 defaultValue={query}
                 placeholder="Describe your question, e.g. 'forgot my password'"
-                className="w-full rounded-full border border-white bg-white py-3 pr-12 pl-5 text-black focus:ring-2 focus:ring-brand focus:outline-none"
+                className="w-full rounded-full border border-white bg-white py-3 pr-14 pl-5 text-black focus:ring-2 focus:ring-brand focus:outline-none"
               />
               <button
                 type="submit"
                 aria-label="Search"
-                // A 36 px target, as in the header search; the icon stays where it was.
-                className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:text-black"
+                // A 44 px target, as in the header search; the icon stays about where it was.
+                className="absolute top-1/2 right-1 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:text-black"
               >
                 <Search className="size-5" aria-hidden />
               </button>
@@ -64,13 +66,13 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
         <div className="max-w-5xl space-y-12">
           {query && (
             <section aria-live="polite" className="space-y-4">
-              <h2 className="text-2xl font-extrabold">
+              <h2 className="text-2xl font-semibold">
                 {results.length > 0
                   ? `Articles about “${query}”`
                   : `We could not find an article about “${query}”`}
               </h2>
               {results.length > 0 ? (
-                <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
+                <ul className="card-clip divide-y divide-gray-200 rounded-card border border-gray-200 bg-white shadow-soft">
                   {results.map((article) => (
                     <li key={article.slug}>
                       <Link
@@ -96,13 +98,13 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
 
           {!query && (
             <section className="space-y-4">
-              <h2 className="text-2xl font-extrabold">Popular questions</h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <h2 className="text-2xl font-semibold">Popular questions</h2>
+              <ul data-reveal-group className="grid gap-3 sm:grid-cols-2">
                 {popular.map((article) => (
                   <li key={article.slug}>
                     <Link
                       href={`/help/${article.slug}`}
-                      className="flex h-full items-center justify-between gap-3 rounded-card bg-white px-5 py-4 shadow-md hover:shadow-lg"
+                      className="flex h-full items-center justify-between gap-3 rounded-card border border-gray-200 bg-white px-5 py-4 shadow-soft transition-colors duration-150 hover:border-gray-400"
                     >
                       <span className="font-semibold">{article.title}</span>
                       <ChevronRight className="size-5 shrink-0 text-gray-400" aria-hidden />
@@ -114,15 +116,17 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
           )}
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-extrabold">Browse by topic</h2>
-            <div className="grid gap-6 md:grid-cols-2">
+            <h2 data-reveal className="text-2xl font-semibold">
+              Browse by topic
+            </h2>
+            <div data-reveal-group className="grid gap-6 md:grid-cols-2">
               {topics.map((topic) => (
                 <section
                   key={topic.slug}
                   id={topic.slug}
-                  className="rounded-card bg-white p-6 shadow-md"
+                  className="rounded-card border border-gray-200 bg-white p-6 shadow-soft"
                 >
-                  <h3 className="text-lg font-bold">{topic.title}</h3>
+                  <h3 className="text-lg font-semibold">{topic.title}</h3>
                   <p className="mt-1 text-sm text-gray-600">{topic.description}</p>
                   <ul className="mt-4 space-y-2">
                     {topic.articles.map((article) => (
@@ -141,11 +145,14 @@ export default async function HelpPage({ searchParams }: PageProps<'/help'>) {
             </div>
           </section>
 
-          <section className="flex flex-col items-start gap-4 bg-black p-8 text-white sm:flex-row sm:items-center sm:justify-between">
+          <section
+            data-reveal
+            className="flex flex-col items-start gap-4 rounded-card bg-black p-8 text-white sm:flex-row sm:items-center sm:justify-between"
+          >
             <div className="flex items-start gap-4">
               <LifeBuoy className="mt-1 size-8 shrink-0 text-brand" aria-hidden />
               <div>
-                <h2 className="text-xl font-bold">Still need help?</h2>
+                <h2 className="text-xl font-semibold">Still need help?</h2>
                 <p className="text-gray-300">
                   {session
                     ? 'Send us a support request and follow the reply in your account.'

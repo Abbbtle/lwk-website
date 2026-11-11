@@ -61,7 +61,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
   const session = await getSession();
   return (
     <div className="page-width py-12 lg:py-16">
-      <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">Contact us</h1>
+      <h1 className="text-4xl font-semibold tracking-tight text-black md:text-5xl">Contact us</h1>
       <p className="mt-3 max-w-2xl text-lg text-gray-700">
         Questions, feedback or partnership ideas? Send us a message, or reach us another way.
       </p>
@@ -69,7 +69,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
       <div className="mt-12 grid gap-x-16 gap-y-14 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-7">
           {session && (
-            <p className="border-l-4 border-brand bg-orange-50 p-4 text-sm">
+            <p className="rounded-card border border-brand/40 bg-orange-50 p-4 text-sm">
               You are logged in: for questions about your account or courses,{' '}
               <Link href="/support/new" className="font-semibold underline">
                 send a support request
@@ -79,7 +79,7 @@ export default async function ContactPage({ searchParams }: PageProps<'/contact'
           )}
           <ContactForm inquiryType={inquiryType} />
         </div>
-        <div className="lg:col-span-5">
+        <div data-reveal className="lg:col-span-5">
           <BeadStrand items={otherWays} label="Other ways to reach us" />
         </div>
       </div>

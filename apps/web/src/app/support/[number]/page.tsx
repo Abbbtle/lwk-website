@@ -43,7 +43,7 @@ export default async function RequestPage({
         {isNew && (
           <p
             role="status"
-            className="mt-6 border-l-4 border-green-700 bg-green-50 p-4 text-green-900"
+            className="mt-6 rounded-card border border-green-700/30 bg-green-50 p-4 text-green-900"
           >
             <strong>We have your request {ticketRef(ticket.number)}.</strong> We usually reply
             within one working day, and you will get a notification when we do.
@@ -55,7 +55,9 @@ export default async function RequestPage({
             <p className="text-sm text-gray-600">
               {ticketRef(ticket.number)} · {category}
             </p>
-            <h1 className="mt-1 text-2xl font-extrabold md:text-3xl">{ticket.subject}</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
+              {ticket.subject}
+            </h1>
           </div>
           <TicketBadge value={ticket.status} label={STATUS_LABELS[ticket.status]} />
         </div>
@@ -66,7 +68,7 @@ export default async function RequestPage({
 
         <div className="mt-8 space-y-4">
           {closed ? (
-            <p className="rounded-card bg-white p-6 text-gray-700 shadow-md">
+            <p className="rounded-card border border-gray-200 bg-white p-6 text-gray-700 shadow-soft">
               This request is closed.{' '}
               <Link href="/support/new" className="font-semibold underline">
                 Start a new request
@@ -74,7 +76,7 @@ export default async function RequestPage({
               if you need more help.
             </p>
           ) : (
-            <section className="rounded-card bg-white p-6 shadow-md">
+            <section className="rounded-card border border-gray-200 bg-white p-6 shadow-soft">
               <ReplyForm ticketNumber={ticket.number} />
             </section>
           )}

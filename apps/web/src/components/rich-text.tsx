@@ -160,9 +160,9 @@ const sizes = {
   // Lessons and articles.
   lg: {
     root: 'space-y-5 text-lg leading-relaxed text-gray-800',
-    h2: 'pt-2 text-2xl font-bold text-gray-900',
-    h3: 'pt-1 text-xl font-bold text-gray-900',
-    h4: 'font-bold text-gray-900',
+    h2: 'pt-2 text-2xl font-semibold text-gray-900',
+    h3: 'pt-1 text-xl font-semibold text-gray-900',
+    h4: 'font-semibold text-gray-900',
   },
   // Course descriptions: body size, beside the rest of the page.
   md: {
@@ -174,8 +174,8 @@ const sizes = {
   // Help text and chat messages.
   sm: {
     root: 'space-y-3 text-sm leading-relaxed',
-    h2: 'text-base font-bold',
-    h3: 'text-sm font-bold',
+    h2: 'text-base font-semibold',
+    h3: 'text-sm font-semibold',
     h4: 'text-sm font-semibold',
   },
 };

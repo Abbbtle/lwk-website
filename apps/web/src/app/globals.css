@@ -79,28 +79,6 @@
       transform: translateX(8px);
     }
   }
-
-  --animate-strand-count: strand-count 600ms linear both;
-  --animate-tassel-drop: tassel-drop 480ms ease-out both;
-
-  /* Beads darken from the top, like a round of japa being counted. */
-  @keyframes strand-count {
-    from {
-      clip-path: inset(0 0 100% 0);
-    }
-    to {
-      clip-path: inset(0);
-    }
-  }
-
-  @keyframes tassel-drop {
-    from {
-      transform: scaleY(0);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
 }
 
 /*
