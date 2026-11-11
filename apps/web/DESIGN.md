@@ -112,10 +112,24 @@ components:
     rounded: '{rounded.control}'
     padding: '10px 16px'
   search-field:
-    backgroundColor: '{colors.white}'
+    backgroundColor: '{colors.band-gray}'
     textColor: '{colors.charcoal}'
     rounded: '{rounded.round}'
-    padding: '10px 48px 10px 20px'
+    padding: '10px 20px 10px 48px'
+  search-field-focus:
+    backgroundColor: '{colors.white}'
+  nav-link:
+    textColor: '{colors.graphite}'
+    typography: '{typography.secondary}'
+    rounded: '{rounded.control}'
+    padding: '0 12px'
+    height: '44px'
+  nav-link-hover:
+    backgroundColor: '{colors.soft-gray}'
+    textColor: '{colors.ink-black}'
+  nav-link-current:
+    backgroundColor: '{colors.saffron-wash}'
+    textColor: '{colors.saffron-ink}'
   filter-pill:
     textColor: '{colors.slate}'
     rounded: '{rounded.control}'
@@ -251,6 +265,7 @@ Bold and plain, as in the POC.
 - **Brand:** Marigold Saffron fill with black text, on photos and dark panels; hover deepens to Saffron Deep.
 - **Light:** white outline and text on photos; fills white on hover.
 - **Press:** any button dips to 98% for 100ms; not with reduced motion.
+- **Compact:** in the header and other tight rows, buttons drop to 14px bold at 44px tall (16px of side padding).
 
 ### Chips
 
@@ -269,14 +284,17 @@ Bold and plain, as in the POC.
 ### Inputs / Fields
 
 - **Style:** 1px Divider Gray border, Morning Paper fill, 8px corners, 46px tall; labels sit above in 14px 600.
-- **Search:** fully round field with a white fill and black border, a 44px search button inside its right end.
-- **Focus:** border turns black (boxed fields) or a 2px saffron ring appears (search fields).
+- **Search:** a fully round field in Band Gray with a 1px Divider Gray edge (darker on hover) and the 44px search button at its start; on dark page headers the field is white.
+- **Focus:** boxed fields take a black border; search fields turn white with a dark border and a 2px saffron ring.
+- **Placeholder:** Pebble (gray-500), 4.6:1 or better on every field background; the caret is Saffron Ink.
 - **Error:** red border and a red message under the field.
 
 ### Navigation
 
-- **Header:** white, a Hairline Gray bottom edge and Soft shadow, the logo at 48px, the search field, 16px links in dark gray (gray-800, about #1e2939) with Saffron Ink for the current page and on hover, Log In as an outline button and Sign Up as a primary button.
-- **Mobile:** below 1280px a 44px menu button opens a panel that drops 4px into place in 200ms; the page behind it stops scrolling while it is open.
+- **Header:** white, a Hairline Gray bottom edge and Soft shadow, 64px tall: the logo at 48px, the search field filling the middle, then the links and the account buttons.
+- **Links:** 14px pills 44px tall in Graphite; a Soft Gray pill under the pointer, and the current page in Saffron Ink on Saffron Wash (marked as the current page for screen readers). Hover and current never look alike, and the weight never changes, so links do not shift between pages.
+- **Account buttons:** Log In (outline) and Sign Up (primary) in the compact size, 44px tall with 14px bold text; signed in, the account button and the notification bell take the same height.
+- **Mobile:** below 1280px a 44px menu button opens a panel that drops 4px into place in 200ms, with the search on top (phones), the same pill links (at most 384px wide on wider screens), then the account buttons; the page behind it stops scrolling while it is open.
 - **Footer:** Ink Black with white text, the white logo, link groups at 1.125rem 600 headings, saffron on hover.
 
 ### Home banner (signature)
