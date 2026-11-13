@@ -56,8 +56,8 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
             <FreeBadge />
             {resource.isSample && <SampleBadge />}
           </div>
-          <h1 className="text-3xl font-extrabold md:text-5xl">{resource.title}</h1>
-          <p className="text-lg text-gray-700">{resource.summary}</p>
+          <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{resource.title}</h1>
+          <p className="max-w-[70ch] text-lg text-gray-700">{resource.summary}</p>
           <p className="text-sm text-gray-600">
             {joinParts([
               resource.authorName,
@@ -68,7 +68,7 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
         </header>
 
         {resource.isSample && (
-          <p className="mt-6 border-l-4 border-gray-400 bg-white p-4 text-sm text-gray-700">
+          <p className="mt-6 rounded-card border border-gray-200 bg-white p-4 text-sm text-gray-700">
             This is sample content used to test the platform. It will be replaced by teachings from
             our instructors.
           </p>
@@ -90,7 +90,7 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
             ))}
           {resource.type === 'AUDIO' &&
             (resource.mediaUrl ? (
-              <div className="rounded-card bg-white p-6 shadow-md">
+              <div className="rounded-card border border-gray-200 bg-white p-6 shadow-soft">
                 <audio controls preload="metadata" src={resource.mediaUrl} className="w-full" />
               </div>
             ) : (
@@ -121,13 +121,13 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
               </p>
             ))}
           {resource.type === 'ARTICLE' && (
-            <article className="rounded-card bg-white p-6 shadow-md sm:p-10">
+            <article className="rounded-card border border-gray-200 bg-white p-6 shadow-soft sm:p-10">
               <RichText text={resource.body} />
             </article>
           )}
           {resource.type !== 'ARTICLE' && resource.body.trim() && (
             <section className="mt-8">
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-semibold">
                 About this {resourceTypes[resource.type].label.toLowerCase()}
               </h2>
               <RichText text={resource.body} className="mt-3" />
@@ -137,14 +137,19 @@ export default async function ResourcePage({ params }: PageProps<'/explore/[slug
 
         {related.length > 0 && (
           <section className="mt-16 space-y-6">
-            <h2 className="text-2xl font-extrabold">More to explore</h2>
+            <h2 data-reveal className="text-2xl font-semibold">
+              More to explore
+            </h2>
             <ResourceGrid resources={related} />
           </section>
         )}
 
-        <section className="mt-16 flex flex-col items-start gap-4 bg-black p-8 text-white sm:flex-row sm:items-center sm:justify-between">
+        <section
+          data-reveal
+          className="mt-16 flex flex-col items-start gap-4 rounded-card bg-black p-8 text-white sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
-            <h2 className="text-xl font-bold">Want to go deeper?</h2>
+            <h2 className="text-xl font-semibold">Want to go deeper?</h2>
             <p className="text-gray-300">
               Full courses guide you step by step and track your progress.
             </p>

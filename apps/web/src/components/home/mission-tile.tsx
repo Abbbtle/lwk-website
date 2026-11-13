@@ -5,7 +5,10 @@ import Link from 'next/link';
 export function MissionTile() {
   return (
     <section aria-labelledby="mission" className="page-width">
-      <div className="rounded-3xl bg-black px-6 py-16 text-center text-white sm:px-12 lg:py-24">
+      <div
+        data-reveal
+        className="rounded-3xl bg-black px-6 py-16 text-center text-white sm:px-12 lg:py-24"
+      >
         <Image
           src="/images/krishna-flute.svg"
           alt=""

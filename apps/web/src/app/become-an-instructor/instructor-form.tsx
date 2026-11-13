@@ -9,7 +9,7 @@ import { submitApplication } from './actions';
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-5">
-      <h2 className="text-2xl font-medium">{title}</h2>
+      <h2 className="text-2xl font-semibold">{title}</h2>
       {children}
     </section>
   );

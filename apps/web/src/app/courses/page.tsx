@@ -35,7 +35,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
 
   return (
     <div className="page-width py-12">
-      <h1 className="text-3xl font-extrabold md:text-4xl">
+      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
         {query ? (
           <>
             {courses.length} {courses.length === 1 ? 'result' : 'results'} for &ldquo;{query}&rdquo;
@@ -46,7 +46,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
           'All Courses'
         )}
       </h1>
-      <p className="mt-2 text-lg text-gray-700">
+      <p className="mt-2 max-w-[70ch] text-lg text-gray-700">
         {category?.description ?? 'Find a course to deepen your devotional practice.'}
       </p>
 
@@ -63,7 +63,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
         >
           <span
             aria-hidden
-            className={`flex size-5 items-center justify-center rounded border-2 ${free ? 'border-brand bg-brand text-black' : 'border-black'}`}
+            className={`flex size-5 items-center justify-center rounded-badge border-2 ${free ? 'border-brand bg-brand text-black' : 'border-black'}`}
           >
             {free && '✓'}
           </span>
@@ -82,7 +82,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/courses'
           <CourseGrid courses={courses} region={region} phase={phase} />
         </>
       ) : (
-        <div className="rounded-card bg-white p-10 text-center shadow-md">
+        <div className="rounded-card border border-gray-200 bg-white p-10 text-center shadow-soft">
           <p className="text-lg font-semibold">No courses match your search.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link href="/courses" className="btn-outline">

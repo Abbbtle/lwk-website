@@ -79,12 +79,12 @@ export function ConfirmAction({
       )}
       <div aria-live="polite">
         {result?.error && (
-          <p className="border-l-4 border-red-600 bg-red-50 p-3 text-sm text-red-900">
+          <p className="rounded-card border border-red-600/30 bg-red-50 p-3 text-sm text-red-900">
             {result.error}
           </p>
         )}
         {result?.done && (
-          <p className="border-l-4 border-green-700 bg-green-50 p-3 text-sm text-green-900">
+          <p className="rounded-card border border-green-700/30 bg-green-50 p-3 text-sm text-green-900">
             {result.done}
           </p>
         )}

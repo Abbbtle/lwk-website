@@ -53,9 +53,14 @@ export default function OurMissionPage() {
           sizes="100vw"
           className="object-cover"
         />
+        {/* Darkens the top of the photo, so the white headline reads on the bright sky. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-linear-to-b from-black/60 via-black/25 to-transparent"
+        />
         {/* On the page's board, like the home page banner's text. */}
         <div className="page-width relative pt-10 md:pt-16">
-          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] md:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
             Embracing Krishna&apos;s Teachings in Modern Life
           </h1>
         </div>
@@ -65,8 +70,10 @@ export default function OurMissionPage() {
       </p>
 
       <section className="page-width flex flex-col items-center gap-12 py-20 md:flex-row">
-        <div className="md:w-1/2">
-          <h2 className="text-3xl font-bold md:text-4xl">About Living With Krishna</h2>
+        <div data-reveal className="md:w-1/2">
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            About Living With Krishna
+          </h2>
           <p className="mt-4 text-lg text-gray-700">
             Living With Krishna is dedicated to bringing the ancient wisdom of the Bhagavad-gita to
             the modern world. Our focus is on promoting spiritual growth, inner peace, and mindful
@@ -74,23 +81,28 @@ export default function OurMissionPage() {
             practitioner, there&apos;s something here for everyone.
           </p>
         </div>
-        <div className="md:w-1/2">
+        <div data-reveal className="md:w-1/2">
           <Image
             src="/images/mission-about.webp"
             alt="The Temple of the Vedic Planetarium seen across the river"
             width={1080}
             height={1586}
             sizes="(min-width: 768px) 30vw, 80vw"
-            className="mx-auto h-auto w-2/3 rounded-card shadow-lg md:mr-0 md:w-3/5"
+            className="mx-auto h-auto w-2/3 rounded-card md:mr-0 md:w-3/5"
           />
         </div>
       </section>
 
       <section className="page-width pb-8">
-        <h2 className="text-center text-3xl font-semibold">What We Offer</h2>
-        <ul className="mt-10 grid gap-8 md:grid-cols-3">
+        <h2 data-reveal className="text-center text-3xl font-semibold tracking-tight">
+          What We Offer
+        </h2>
+        <ul data-reveal-group className="mt-10 grid gap-8 md:grid-cols-3">
           {offerings.map(({ title, text }) => (
-            <li key={title} className="rounded-card bg-gray-100 p-6 shadow-md">
+            <li
+              key={title}
+              className="rounded-card border border-gray-200 bg-white p-6 shadow-soft"
+            >
               <h3 className="text-xl font-semibold">{title}</h3>
               <p className="mt-2 text-gray-600">{text}</p>
             </li>

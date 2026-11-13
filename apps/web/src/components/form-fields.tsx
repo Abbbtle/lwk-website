@@ -5,7 +5,7 @@ const inputClasses = {
   // Boxed inputs on the light page background (instructor application, editors).
   boxed:
     'w-full rounded-control border border-gray-300 bg-surface px-3 py-2 focus:border-black focus:outline-none aria-invalid:border-red-600',
-  // Underlined inputs with the label as placeholder (POC contact form).
+  // Underlined inputs, after the POC contact form, with their labels above them.
   underline:
     'w-full border-0 border-b border-black bg-transparent px-2 py-3 text-lg placeholder:text-gray-500 focus:border-brand focus:outline-none aria-invalid:border-red-600',
 };
@@ -32,17 +32,20 @@ function Field({
   const error = state.errors?.[name]?.[0];
   const describedBy = [hint && `${name}-hint`, error && `${name}-error`].filter(Boolean).join(' ');
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <label
         htmlFor={name}
-        className={variant === 'underline' ? 'sr-only' : 'block text-sm font-medium'}
+        className={
+          variant === 'underline'
+            ? 'block px-2 text-sm font-semibold text-gray-700'
+            : 'block text-sm font-semibold'
+        }
       >
         {label}
         {!required && <span className="font-normal"> (optional)</span>}
       </label>
       {children({
         className: inputClasses[variant],
-        placeholder: variant === 'underline' ? label : undefined,
         id: name,
         name,
         required,
@@ -102,10 +105,10 @@ export function SelectField({
 }) {
   return (
     <Field {...props}>
-      {({ defaultValue, placeholder: labelAsPlaceholder, ...aria }) => (
+      {({ defaultValue, ...aria }) => (
         <select defaultValue={defaultValue ?? ''} {...aria}>
           <option value="" disabled>
-            {labelAsPlaceholder ?? placeholder}
+            {placeholder}
           </option>
           {options.map((option) => {
             const { value, label } =
@@ -144,7 +147,7 @@ export function CheckboxField({
         className="mt-1 size-4 accent-black"
       />
       <span>
-        <span className="font-medium">{label}</span>
+        <span className="font-semibold">{label}</span>
         {hint && (
           <span id={`${name}-hint`} className="block text-sm text-gray-500">
             {hint}
@@ -159,10 +162,10 @@ export function FormStatus({ state }: { state: FormState }) {
   if (state.status === 'idle') return <div aria-live="polite" />;
   const tone =
     state.status === 'received'
-      ? 'border-green-700 bg-green-50 text-green-900'
-      : 'border-red-600 bg-red-50 text-red-900';
+      ? 'border-green-700/30 bg-green-50 text-green-900'
+      : 'border-red-600/30 bg-red-50 text-red-900';
   return (
-    <div aria-live="polite" className={`border-l-4 p-4 ${tone}`}>
+    <div aria-live="polite" className={`rounded-card border p-4 ${tone}`}>
       {state.message}
     </div>
   );

@@ -52,12 +52,12 @@ export function NewRequestForm({
       <FormStatus state={state} />
 
       <fieldset aria-describedby={error ? 'category-error' : undefined}>
-        <legend className="text-sm font-medium">What is your request about?</legend>
+        <legend className="text-sm font-semibold">What is your request about?</legend>
         <div className="mt-2 grid gap-3 sm:grid-cols-2">
           {categories.map((category) => (
             <label
               key={category.value}
-              className="flex cursor-pointer items-start gap-3 rounded-control border border-gray-300 bg-white p-3 has-checked:border-black has-checked:shadow-[0_3px_0_0_black]"
+              className="flex cursor-pointer items-start gap-3 rounded-control border border-gray-300 bg-white p-3 has-checked:border-black has-checked:shadow-[inset_0_-3px_0_0_black]"
             >
               <input
                 type="radio"
@@ -82,8 +82,8 @@ export function NewRequestForm({
         )}
       </fieldset>
 
-      <div className="space-y-1.5">
-        <label htmlFor="subject" className="block text-sm font-medium">
+      <div className="space-y-2">
+        <label htmlFor="subject" className="block text-sm font-semibold">
           Subject
         </label>
         <input
@@ -104,7 +104,7 @@ export function NewRequestForm({
       </div>
 
       {suggestions.length > 0 && subject.trim().length >= 4 && (
-        <aside aria-live="polite" className="border-l-4 border-brand bg-orange-50 p-4">
+        <aside aria-live="polite" className="rounded-card border border-brand/40 bg-orange-50 p-4">
           <p className="flex items-center gap-2 font-semibold">
             <Lightbulb className="size-4" aria-hidden /> These articles might answer your question
           </p>

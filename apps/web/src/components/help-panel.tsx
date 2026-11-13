@@ -139,7 +139,7 @@ export function HelpPanel({
           setOpened(true);
         }}
         aria-haspopup="dialog"
-        className="fixed right-4 bottom-4 z-40 flex cursor-pointer items-center gap-2 rounded-full bg-black px-4 py-3 font-bold text-white shadow-lg hover:bg-[#282828] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none print:hidden"
+        className="fixed right-4 bottom-4 z-40 flex cursor-pointer items-center gap-2 rounded-full bg-black px-4 py-3 font-bold text-white shadow-raised ring-1 ring-white/20 transition-colors duration-150 hover:bg-[#282828] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none print:hidden"
       >
         <CircleHelp className="size-5" aria-hidden />
         <span className="sr-only sm:not-sr-only">Help</span>
@@ -150,18 +150,18 @@ export function HelpPanel({
         aria-labelledby={titleId}
         onClose={() => setOpen(false)}
         onClick={(event) => event.target === event.currentTarget && dialog.current?.close()}
-        className="m-0 ml-auto h-dvh max-h-none w-full max-w-md bg-transparent p-0 backdrop:bg-black/40"
+        className="m-0 ml-auto h-dvh max-h-none w-full max-w-md bg-transparent p-0 backdrop:bg-black/40 motion-safe:backdrop:animate-fade-in"
       >
-        <div className="flex h-full flex-col bg-white shadow-2xl">
+        <div className="flex h-full flex-col bg-white shadow-raised motion-safe:animate-slide-in">
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-            <h2 id={titleId} className="text-xl font-extrabold">
+            <h2 id={titleId} className="text-xl font-semibold">
               How can we help?
             </h2>
             <button
               type="button"
               onClick={() => dialog.current?.close()}
               aria-label="Close help"
-              className="cursor-pointer p-1 text-gray-600 hover:text-black"
+              className="-mr-2 flex size-11 cursor-pointer items-center justify-center text-gray-600 hover:text-black"
             >
               <X className="size-6" aria-hidden />
             </button>
@@ -207,6 +207,7 @@ export function HelpPanel({
           <div
             role={assistant ? 'tabpanel' : undefined}
             hidden={assistant && tab !== 'browse'}
+            data-lenis-prevent
             className="flex-1 space-y-6 overflow-y-auto px-5 py-5"
           >
             <div className="relative">

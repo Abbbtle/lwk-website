@@ -25,7 +25,7 @@ export function CourseCard({
   sizes?: string;
 }) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card bg-white shadow-md transition-shadow duration-300 hover:shadow-xl">
+    <article className="group relative flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-soft transition-colors duration-150 hover:border-gray-400">
       <div className="relative">
         <CourseCover
           categorySlug={course.categorySlug}
@@ -40,8 +40,8 @@ export function CourseCard({
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 p-5">
-        <h3 className="text-lg leading-snug font-semibold">
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <h3 className="text-lg leading-tight font-semibold">
           <Link
             href={`/courses/${course.slug}`}
             className="after:absolute after:inset-0 group-hover:text-brand-ink"
@@ -61,7 +61,7 @@ export function CourseCard({
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
           <CoursePrice pricing={course.pricing} region={region} phase={phase} variant="card" />
           {/* The whole card links to the course; this is the visual call to action. */}
-          <span aria-hidden className="btn-outline px-4 py-2 text-sm">
+          <span aria-hidden className="btn-outline pointer-events-none px-4 py-2 text-sm">
             {course.isFree ? 'Start free' : 'Enroll Now'}
           </span>
         </div>
@@ -74,7 +74,7 @@ type CourseListProps = { courses: CourseSummary[]; region: PriceRegion; phase: S
 
 export function CourseGrid({ courses, region, phase }: CourseListProps) {
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div data-reveal-group className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((course, index) => (
         <CourseCard
           key={course.slug}
@@ -95,7 +95,10 @@ export function CourseGrid({ courses, region, phase }: CourseListProps) {
  */
 export function CourseRow({ courses, region, phase }: CourseListProps) {
   return (
-    <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3">
+    <ul
+      data-reveal-group
+      className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pt-1 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:p-0 lg:grid-cols-3"
+    >
       {courses.map((course) => (
         <li key={course.slug} className="grid w-[82%] shrink-0 snap-start sm:w-auto">
           {/* Cards are 82% of the screen wide on phones, so a smaller cover is enough. */}

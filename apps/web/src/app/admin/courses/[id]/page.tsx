@@ -32,14 +32,14 @@ function CoursePriceNote({ pricing }: { pricing: CoursePricing }): ReactElement 
   switch (pricing.kind) {
     case 'free':
       return (
-        <p className="border-l-4 border-brand bg-orange-50 p-3 text-sm">
+        <p className="rounded-card border border-brand/40 bg-orange-50 p-3 text-sm">
           The instructor offers this course <strong>for free</strong>: once published it is listed
           in Explore and stays free for everyone.
         </p>
       );
     case 'tier':
       return (
-        <div className="border-l-4 border-gray-400 bg-white p-3 text-sm">
+        <div className="rounded-card border border-gray-200 bg-white p-3 text-sm">
           <p>
             Price: <strong>{courseTierTitle(pricing.tier)}</strong>
           </p>
@@ -54,7 +54,7 @@ function CoursePriceNote({ pricing }: { pricing: CoursePricing }): ReactElement 
       );
     case 'unpriced':
       return (
-        <p className="border-l-4 border-gray-400 bg-white p-3 text-sm">
+        <p className="rounded-card border border-gray-200 bg-white p-3 text-sm">
           No price has been chosen yet.
         </p>
       );
@@ -91,7 +91,7 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
         <div className="space-y-10 lg:col-span-2">
           <section className="space-y-3">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-3xl font-extrabold">{course.title}</h2>
+              <h2 className="text-3xl font-semibold">{course.title}</h2>
               <StatusBadge status={course.status} />
             </div>
             <p className="text-lg text-gray-700">{course.subtitle}</p>
@@ -123,10 +123,10 @@ export default async function ReviewCoursePage({ params }: PageProps<'/admin/cou
           <CourseCover
             categorySlug={course.category.slug}
             imageUrl={coverUrl}
-            className="rounded-card shadow-md"
+            className="rounded-card border border-gray-200 shadow-soft"
           />
           {missing.length > 0 && (
-            <div className="border-l-4 border-red-600 bg-red-50 p-4 text-sm">
+            <div className="rounded-card border border-red-600/30 bg-red-50 p-4 text-sm">
               <p className="font-semibold">Incomplete</p>
               <ul className="mt-2 list-disc pl-5">
                 {missing.map((item) => (

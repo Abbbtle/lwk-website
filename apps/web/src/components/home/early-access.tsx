@@ -8,7 +8,7 @@ import { formatEarlyAccessEnd } from '@/lib/early-access';
 export function EarlyAccess({ signedIn, endsAt }: { signedIn: boolean; endsAt: Date | null }) {
   return (
     <section aria-labelledby="early-access" className="page-width">
-      <div className="rounded-3xl bg-brand px-6 py-14 text-center sm:px-12 lg:py-20">
+      <div data-reveal className="rounded-3xl bg-brand px-6 py-14 text-center sm:px-12 lg:py-20">
         <h2
           id="early-access"
           className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-balance text-black md:text-5xl"

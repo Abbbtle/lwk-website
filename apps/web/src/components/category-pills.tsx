@@ -2,9 +2,11 @@ import Link from 'next/link';
 import type { Category } from '@/lib/catalog/types';
 
 export function pillClass(active: boolean) {
-  const base = 'shrink-0 whitespace-nowrap rounded-control border-2 px-4 py-2 font-medium';
+  const base =
+    'shrink-0 whitespace-nowrap rounded-control border-2 px-4 py-2 font-semibold transition-colors duration-150';
+  // The chosen pill is outlined, with a thicker bar along its bottom edge (inside the outline).
   return active
-    ? `${base} border-black text-black shadow-[0_3px_0_0_black]`
+    ? `${base} border-black text-black shadow-[inset_0_-3px_0_0_black]`
     : `${base} border-transparent text-gray-600 hover:text-black`;
 }
 

@@ -1,0 +1,497 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T12:31:09+00:00",
+  "title": "Design System: Living With Krishna",
+  "extensions": {
+    "colorMeta": {
+      "marigold-saffron": {
+        "role": "primary",
+        "displayName": "Marigold Saffron",
+        "canonical": "oklch(70.5% 0.213 47.604)",
+        "tonalRamp": [
+          "#7e2a0c",
+          "#9f2d00",
+          "#ca3500",
+          "#f54900",
+          "#ff6900",
+          "#ff8904",
+          "#ffb86a",
+          "#ffedd4"
+        ]
+      },
+      "saffron-deep": {
+        "role": "primary",
+        "displayName": "Saffron Deep",
+        "canonical": "oklch(64.6% 0.222 41.116)",
+        "tonalRamp": [
+          "#7e2a0c",
+          "#9f2d00",
+          "#ca3500",
+          "#f54900",
+          "#ff6900",
+          "#ff8904",
+          "#ffb86a",
+          "#ffedd4"
+        ]
+      },
+      "saffron-ink": {
+        "role": "primary",
+        "displayName": "Saffron Ink",
+        "canonical": "oklch(55.3% 0.195 38.402)",
+        "tonalRamp": [
+          "#7e2a0c",
+          "#9f2d00",
+          "#ca3500",
+          "#f54900",
+          "#ff6900",
+          "#ff8904",
+          "#ffb86a",
+          "#ffedd4"
+        ]
+      },
+      "saffron-wash": {
+        "role": "primary",
+        "displayName": "Saffron Wash",
+        "canonical": "oklch(98% 0.016 73.684)",
+        "tonalRamp": [
+          "#7e2a0c",
+          "#9f2d00",
+          "#ca3500",
+          "#f54900",
+          "#ff6900",
+          "#ff8904",
+          "#ffb86a",
+          "#ffedd4"
+        ]
+      },
+      "ink-black": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#000000",
+          "#141414",
+          "#282828",
+          "#3d3d3d",
+          "#5c5c5c",
+          "#8a8a8a",
+          "#c7c7c7",
+          "#f2f2f2"
+        ]
+      },
+      "ink-black-hover": {
+        "role": "neutral",
+        "displayName": "Ink Black Hover",
+        "canonical": "#282828",
+        "tonalRamp": [
+          "#000000",
+          "#141414",
+          "#282828",
+          "#3d3d3d",
+          "#5c5c5c",
+          "#8a8a8a",
+          "#c7c7c7",
+          "#f2f2f2"
+        ]
+      },
+      "charcoal": {
+        "role": "neutral",
+        "displayName": "Charcoal",
+        "canonical": "oklch(21% 0.034 264.665)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "oklch(37.3% 0.034 259.733)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "oklch(44.6% 0.03 256.802)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "pebble": {
+        "role": "neutral",
+        "displayName": "Pebble",
+        "canonical": "oklch(55.1% 0.027 264.364)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "divider-gray": {
+        "role": "neutral",
+        "displayName": "Divider Gray",
+        "canonical": "oklch(87.2% 0.01 258.338)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "hairline-gray": {
+        "role": "neutral",
+        "displayName": "Hairline Gray",
+        "canonical": "oklch(92.8% 0.006 264.531)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "soft-gray": {
+        "role": "neutral",
+        "displayName": "Soft Gray",
+        "canonical": "oklch(96.7% 0.003 264.542)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "band-gray": {
+        "role": "neutral",
+        "displayName": "Band Gray",
+        "canonical": "oklch(98.5% 0.002 247.839)",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "morning-paper": {
+        "role": "neutral",
+        "displayName": "Morning Paper",
+        "canonical": "#f9f9f9",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#101828",
+          "#1e2939",
+          "#364153",
+          "#4a5565",
+          "#6a7282",
+          "#99a1af",
+          "#d1d5dc",
+          "#f3f4f6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The home banner headline and page heroes."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings and page titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel and card-group headings."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "Section intros and page summaries, 70 characters a line at most."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text, 70 characters a line at most."
+      },
+      "secondary": {
+        "displayName": "Secondary",
+        "purpose": "Supporting text, notes and card subtitles."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Timestamps, counts, instructor names and badges; never primary content."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons and prices."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-soft",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.04)",
+        "purpose": "Cards and panels on the page, always with a 1px Hairline Gray border."
+      },
+      {
+        "name": "shadow-raised",
+        "value": "0 8px 24px -4px rgb(0 0 0 / 0.07), 0 2px 6px -2px rgb(0 0 0 / 0.05)",
+        "purpose": "Menus, dialogs, the sticky course card, the help button and banner arrows."
+      }
+    ],
+    "motion": [
+      {
+        "name": "motion-100",
+        "value": "100ms",
+        "purpose": "Button press."
+      },
+      {
+        "name": "motion-150",
+        "value": "150ms",
+        "purpose": "Colour changes, menus, exits, backdrops, FAQ answers."
+      },
+      {
+        "name": "motion-200",
+        "value": "200ms",
+        "purpose": "Dialogs, the help panel, the mobile menu, the outline-button fill, card reveals."
+      },
+      {
+        "name": "motion-300",
+        "value": "300ms",
+        "purpose": "Block reveals and the banner slide change."
+      },
+      {
+        "name": "ease-enter",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Things arriving: menus, dialogs, the banner, button fills."
+      },
+      {
+        "name": "ease-exit",
+        "value": "cubic-bezier(0.7, 0, 0.84, 0)",
+        "purpose": "Things leaving, such as the outline-button fill draining back."
+      },
+      {
+        "name": "ease-reveal",
+        "value": "cubic-bezier(0.33, 1, 0.68, 1)",
+        "purpose": "Scroll reveals (GSAP power2.out): a gentler ease-out so the 8px rise reads as a glide."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "content-max",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Black bold button for the main action on light surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Start learning</button>",
+      "css": ".ds-btn-primary { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border: 1px solid #000; border-radius: var(--radius-control, 8px); background: #000; color: #f9f9f9; font-size: 16px; font-weight: 700; line-height: 1.5; cursor: pointer; transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 100ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: #282828; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Black outline that fills black from the left on hover (a transform on a layer behind the text).",
+      "html": "<button class=\"ds-btn-outline\">See plans</button>",
+      "css": ".ds-btn-outline { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border: 1px solid #000; border-radius: var(--radius-control, 8px); background: transparent; color: #000; font-size: 16px; font-weight: 700; line-height: 1.5; cursor: pointer; transition: color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-outline::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #000; transform: scaleX(0); transform-origin: left; transition: transform 150ms cubic-bezier(0.7, 0, 0.84, 0); } .ds-btn-outline:hover { color: #fff; } .ds-btn-outline:hover::before { transform: scaleX(1); transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-outline:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Brand Button",
+      "kind": "button",
+      "refersTo": "button-brand",
+      "description": "Saffron button with black text, for photos and dark panels.",
+      "html": "<button class=\"ds-btn-brand\">Start learning</button>",
+      "css": ".ds-btn-brand { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border: 1px solid var(--color-brand, oklch(70.5% 0.213 47.604)); border-radius: var(--radius-control, 8px); background: var(--color-brand, oklch(70.5% 0.213 47.604)); color: #000; font-size: 16px; font-weight: 700; line-height: 1.5; cursor: pointer; transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-brand:hover { background: var(--color-brand-dark, oklch(64.6% 0.222 41.116)); border-color: var(--color-brand-dark, oklch(64.6% 0.222 41.116)); } .ds-btn-brand:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Header search: a soft gray pill with a hairline edge and the 44px search button at its start; white with a saffron ring in use.",
+      "html": "<form class=\"ds-search\" role=\"search\"><label class=\"ds-sr\" for=\"ds-q\">Search courses</label><input id=\"ds-q\" class=\"ds-search-input\" type=\"search\" placeholder=\"Search...\"><button class=\"ds-search-btn\" type=\"submit\" aria-label=\"Search\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg></button></form>",
+      "css": ".ds-search { position: relative; width: 360px; } .ds-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .ds-search-input { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; width: 100%; box-sizing: border-box; padding: 10px 20px 10px 48px; border: 1px solid #d1d5dc; border-radius: 9999px; background: #f9fafb; color: #101828; font-size: 16px; line-height: 1.5; caret-color: var(--color-brand-ink, oklch(55.3% 0.195 38.402)); transition: border-color 150ms ease, background-color 150ms ease; } .ds-search-input::placeholder { color: #6a7282; opacity: 1; } .ds-search-input:hover { border-color: #99a1af; } .ds-search-input:focus { outline: none; background: #fff; border-color: #101828; box-shadow: 0 0 0 2px var(--color-brand, oklch(70.5% 0.213 47.604)); } .ds-search-btn { position: absolute; top: 50%; left: 2px; width: 44px; height: 44px; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; border: 0; border-radius: 9999px; background: transparent; color: #4a5565; cursor: pointer; transition: color 150ms ease; } .ds-search-btn:hover { color: #000; }"
+    },
+    {
+      "name": "Filter Pills",
+      "kind": "chip",
+      "refersTo": "filter-pill",
+      "description": "Category filters; the chosen pill is outlined with a thicker bar along its bottom edge.",
+      "html": "<nav class=\"ds-pills\"><a class=\"ds-pill ds-pill-active\" href=\"#\">All</a><a class=\"ds-pill\" href=\"#\">Kirtan</a><a class=\"ds-pill\" href=\"#\">Prasadam</a></nav>",
+      "css": ".ds-pills { display: flex; gap: 12px; } .ds-pill { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; padding: 8px 16px; border: 2px solid transparent; border-radius: var(--radius-control, 8px); color: #4a5565; font-weight: 600; text-decoration: none; transition: color 150ms ease; } .ds-pill:hover { color: #000; } .ds-pill-active { border-color: #000; color: #000; box-shadow: inset 0 -3px 0 0 #000; } .ds-pill:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Course Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Image-led course card with a hairline border; the border darkens on hover.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-img\"></div><div class=\"ds-card-body\"><span class=\"ds-badge\">Free</span><h3 class=\"ds-card-title\">Kirtan Basics</h3><p class=\"ds-card-sub\">Start singing the holy names with confidence.</p><p class=\"ds-card-meta\">LWK Kirtan Faculty · 15 lessons · Beginner</p></div></article>",
+      "css": ".ds-card { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; width: 300px; overflow: hidden; border: 1px solid #e5e7eb; border-radius: var(--radius-card, 12px); background: #fff; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: border-color 150ms ease; } .ds-card:hover { border-color: #99a1af; } .ds-card-img { aspect-ratio: 16 / 9; background: linear-gradient(#e5e7eb, #e5e7eb); } .ds-card-body { display: flex; flex-direction: column; gap: 8px; padding: 20px; } .ds-badge { align-self: flex-start; padding: 2px 8px; border-radius: var(--radius-badge, 6px); background: var(--color-brand, oklch(70.5% 0.213 47.604)); color: #000; font-size: 12px; font-weight: 700; text-transform: uppercase; } .ds-card-title { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.25; color: #101828; } .ds-card-sub { margin: 0; font-size: 14px; line-height: 1.5; color: #4a5565; } .ds-card-meta { margin: 0; font-size: 12px; line-height: 1.333; color: #6a7282; }"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "White header with a hairline edge: 44px pill links (gray on hover, saffron for the current page), then compact Log In and Sign Up.",
+      "html": "<nav class=\"ds-nav\"><strong class=\"ds-logo\">Living With Krishna</strong><a class=\"ds-nav-link\" href=\"#\">Explore</a><a class=\"ds-nav-link ds-nav-current\" href=\"#\" aria-current=\"page\">Courses</a><a class=\"ds-nav-link\" href=\"#\">Plans &amp; Pricing</a><span class=\"ds-nav-gap\"></span><a class=\"ds-nav-btn ds-nav-outline\" href=\"#\">Log In</a><a class=\"ds-nav-btn ds-nav-solid\" href=\"#\">Sign Up</a></nav>",
+      "css": ".ds-nav { font-family: var(--font-poppins, Poppins), ui-sans-serif, system-ui, sans-serif; display: flex; align-items: center; gap: 4px; padding: 8px 32px; background: #fff; border-bottom: 1px solid #e5e7eb; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.04); } .ds-logo { margin-right: 20px; font-size: 14px; font-weight: 700; color: #000; } .ds-nav-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--radius-control, 8px); color: #364153; font-size: 14px; line-height: 1.5; text-decoration: none; transition: background-color 150ms ease, color 150ms ease; } .ds-nav-link:hover { background: #f3f4f6; color: #000; } .ds-nav-current, .ds-nav-current:hover { background: var(--color-orange-50, #fff7ed); color: var(--color-brand-ink, oklch(55.3% 0.195 38.402)); } .ds-nav-link:focus-visible, .ds-nav-btn:focus-visible { outline: 2px solid #000; outline-offset: 2px; } .ds-nav-gap { flex: 1; } .ds-nav-btn { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; margin-left: 4px; padding: 8px 16px; border: 1px solid #000; border-radius: var(--radius-control, 8px); font-size: 14px; font-weight: 700; text-decoration: none; transition: background-color 150ms ease, color 150ms ease; } .ds-nav-outline { color: #000; } .ds-nav-outline:hover { background: #000; color: #fff; } .ds-nav-solid { background: #000; color: #f9f9f9; } .ds-nav-solid:hover { background: #282828; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Saffron Classroom",
+    "overview": "A bright, orderly classroom that anyone recognises at a glance. The room is white and light gray, the writing is charcoal, the furniture is plain and well made, and one warm colour, Marigold Saffron, points to what to do next. Nothing in the room competes with the lesson. The mood is warm, clear and unhurried: friendly without being playful, easy to read, and calm in its pacing and motion.\n\nThe system follows the earlier Living With Krishna POC (https://livingwithkrishna.netlify.app) and takes Udemy as its reference for familiarity: full-width photo banners, image-led course cards, rows that swipe on phones and become grids on wider screens. Visitors range from newcomers to long-time devotees, many on low-end phones and slow connections, so the room stays light: one eager image per page, flat surfaces, small tokens, and motion that loads only after the page.\n\nDepth comes from hairline gray borders, not shadows; buttons are bold and plain, as in the POC; the large rounded feature panels on the home page are the one place the room relaxes into generous shapes.",
+    "keyCharacteristics": [
+      "White and light gray canvas, charcoal text, one saffron accent, black primary buttons.",
+      "Poppins in three weights (400, 600, 700), large headings tight, reading text open and capped at 70 characters a line.",
+      "Rounded corners from three tokens; no square corners anywhere.",
+      "Hairline borders first; faint shadows only for things that float.",
+      "Quick, quiet motion that never touches what is on screen when the page opens."
+    ],
+    "rules": [
+      {
+        "name": "The One Flame Rule",
+        "body": "Marigold Saffron marks the next step and stays a small share of any screen; black carries every other button. Large saffron panels are reserved for the early-access offer.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-on-Saffron Rule",
+        "body": "Text on saffron is black; saffron text on light backgrounds is Saffron Ink. White text never sits on saffron.",
+        "section": "colors"
+      },
+      {
+        "name": "The POC Palette Rule",
+        "body": "No colour outside this palette joins the brand. Status colours (green for done, red for errors, yellow for staff notes) appear only in their messages.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Weights Rule",
+        "body": "400 for reading, 600 for headings and labels, 700 for buttons and prices. Nothing heavier, nothing lighter; no text under 12px.",
+        "section": "typography"
+      },
+      {
+        "name": "The 70-Character Rule",
+        "body": "Reading text stops at 70 characters a line, however wide the screen.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Board Rule",
+        "body": "Nothing breaks the shared content width except full-bleed bands and the home banner; everything inside a section starts on the board's edge.",
+        "section": "layout"
+      },
+      {
+        "name": "The 46px Control Rule",
+        "body": "Buttons and text boxes have 10px of padding above and below, so with the 24px line and 1px borders they stand 46px tall, clear of the 44px touch target. Icon-only buttons are 44px squares.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline-First Rule",
+        "body": "A raised surface gets a 1px gray border before any shadow, and no shadow layer passes 7% black.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Colour-Not-Lift Rule",
+        "body": "Hover changes a border or text colour; it never grows a shadow or scales a card.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Token Corners Rule",
+        "body": "Every corner comes from a token. No square corners and no one-off radii.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Quiet Motion Rule",
+        "body": "Motion only clarifies a change: 8px or less, 300ms or less, and nothing that is on screen when the page opens moves.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use black bold buttons for primary actions, and saffron buttons only on photos and dark panels.",
+      "Do separate surfaces with a 1px Hairline Gray border and the Soft shadow; give floating layers the Raised shadow.",
+      "Do take every corner from the badge (6px), control (8px) or card (12px) token.",
+      "Do cap reading text at 70 characters a line and keep text at 12px or larger.",
+      "Do mark below-the-fold sections with the scroll reveal attributes, and leave everything above the fold still.",
+      "Do make icon-only buttons 44px squares."
+    ],
+    "donts": [
+      "Don't add colours outside the POC palette; the light blue of the old circular logo is not part of the brand.",
+      "Don't use weights above 700 or below 400.",
+      "Don't add one-sided accent bars to cards; callouts use a full light border in their colour.",
+      "Don't grow shadows, scale cards or use bounce, elastic or looping decoration.",
+      "Don't auto-rotate the home banner or animate anything at first paint.",
+      "Don't use the japa-mala motif anywhere but the contact page.",
+      "Don't use glass blur, gradient buttons or decorative blobs."
+    ]
+  }
+}

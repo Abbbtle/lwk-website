@@ -187,13 +187,13 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <li
       className={`flex flex-col rounded-card border p-6 ${
-        featured ? 'border-brand bg-brand text-black' : 'border-gray-600 bg-gray-100'
+        featured ? 'border-brand bg-brand text-black' : 'border-gray-300 bg-gray-100'
       }`}
     >
       <h3 className="text-2xl font-semibold">{plan.name}</h3>
       <p className={`mt-1 text-sm ${muted}`}>{plan.audience}</p>
       <p className="mt-6">
-        <span className="text-4xl font-extrabold">{plan.price}</span>
+        <span className="text-4xl font-bold">{plan.price}</span>
         {plan.per && ` ${plan.per}`}
       </p>
       {plan.billing && <p className={`mt-1 text-sm ${muted}`}>{plan.billing}</p>}
@@ -229,7 +229,7 @@ export default async function PlansAndPricingPage() {
   return (
     <>
       <section className="page-width pt-12 text-center">
-        <h1 className="text-3xl font-bold md:text-5xl">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
           Elevate Your Spiritual Practice with Tailored Plans
         </h1>
         <p className="mx-auto mt-4 max-w-3xl md:text-lg">
@@ -240,7 +240,7 @@ export default async function PlansAndPricingPage() {
           Prices for {visitorRegionPhrase(region)}, {regionTaxNote(region)}.
         </p>
         {earlyAccess && (
-          <p className="mx-auto mt-6 max-w-3xl rounded-card bg-brand px-4 py-3 text-sm font-semibold text-black sm:text-base">
+          <p className="mx-auto mt-6 max-w-[70ch] rounded-card border border-brand/40 bg-orange-50 px-4 py-3 text-sm font-semibold text-black sm:text-base">
             {endsAt
               ? `Early access ends on ${formatEarlyAccessEnd(endsAt)}. Until then every course is free, and the courses you join stay yours.`
               : 'Paid plans open soon. Until then every course is free during early access, and the courses you join now stay yours.'}
@@ -252,12 +252,12 @@ export default async function PlansAndPricingPage() {
         <h2 id="plans" className="sr-only">
           Plans
         </h2>
-        <ul className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+        <ul data-reveal-group className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {plansFor(region, phase).map((plan) => (
             <PlanCard key={plan.name} plan={plan} />
           ))}
         </ul>
-        <div className="mt-10 space-y-3 text-center text-gray-700">
+        <div data-reveal className="mx-auto mt-10 max-w-[70ch] space-y-3 text-center text-gray-700">
           <p>
             <strong className="text-gray-900">Founding members:</strong>{' '}
             {earlyAccess ? 'join during early access, or be' : 'be'} one of the first{' '}

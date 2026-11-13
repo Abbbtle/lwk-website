@@ -84,14 +84,14 @@ export function StaffReplyForm({ ticketNumber, ai }: { ticketNumber: number; ai:
             type="button"
             onClick={draftReply}
             disabled={drafting}
-            className="btn-outline px-3 py-1.5 text-sm disabled:opacity-60"
+            className="btn-outline min-h-11 px-3 py-2 text-sm disabled:opacity-60"
           >
             <Sparkles className="size-4 text-brand-ink" aria-hidden />
             {drafting ? 'Drafting...' : 'Draft a reply with AI'}
           </button>
           {draft?.error && <p className="text-sm text-red-700">{draft.error}</p>}
           {draft?.note && (
-            <p className="border-l-4 border-yellow-500 bg-yellow-50 p-2 text-sm">
+            <p className="rounded-card border border-yellow-500/40 bg-yellow-50 p-2 text-sm">
               <span className="font-semibold">For staff:</span> {draft.note}
             </p>
           )}
@@ -123,8 +123,8 @@ export function StaffReplyForm({ ticketNumber, ai }: { ticketNumber: number; ai:
           ))}
         </select>
       </div>
-      <div className="space-y-1.5">
-        <label htmlFor="staff-body" className="block text-sm font-medium">
+      <div className="space-y-2">
+        <label htmlFor="staff-body" className="block text-sm font-semibold">
           {mode === 'reply' ? 'Reply (they see this)' : 'Note (staff only)'}
         </label>
         <textarea

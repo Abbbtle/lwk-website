@@ -22,11 +22,13 @@ export default async function NewRequestPage({ searchParams }: PageProps<'/suppo
         <Link href="/support" className="text-sm hover:text-brand-ink">
           ← Help and support
         </Link>
-        <h1 className="mt-3 text-3xl font-extrabold md:text-4xl">New support request</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+          New support request
+        </h1>
         <p className="mt-2 text-gray-700">
           Tell us what you need and we will reply here. You get a notification when we do.
         </p>
-        <div className="mt-8 rounded-card bg-white p-6 shadow-md sm:p-8">
+        <div className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-soft sm:p-8">
           <NewRequestForm
             categories={TICKET_CATEGORIES}
             initialCategory={category}

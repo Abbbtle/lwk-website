@@ -42,9 +42,9 @@ function Row({
 }) {
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div data-reveal className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold md:text-3xl">{title}</h2>
+          <h2 className="text-2xl font-semibold md:text-3xl">{title}</h2>
           <p className="mt-1 text-gray-700">{subtitle}</p>
         </div>
         <Link href={href} className="flex items-center gap-1 font-semibold hover:text-brand-ink">
@@ -92,7 +92,7 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
       <section className="bg-black text-white">
         <div className="page-width py-14 lg:py-20">
           <p className="font-semibold text-brand uppercase">Explore</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold md:text-5xl">
+          <h1 className="mt-2 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
             Free courses and teachings, open to everyone
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-gray-200">
@@ -116,12 +116,12 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
               type="search"
               defaultValue={query}
               placeholder="Search free content..."
-              className="w-full rounded-full border border-white bg-white py-3 pr-12 pl-5 text-black focus:ring-2 focus:ring-brand focus:outline-none"
+              className="w-full rounded-full border border-white bg-white py-3 pr-5 pl-14 text-black focus:ring-2 focus:ring-brand focus:outline-none"
             />
             <button
               type="submit"
               aria-label="Search"
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-black"
+              className="absolute top-1/2 left-1 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-gray-600 transition-colors duration-150 hover:text-black"
             >
               <Search className="size-5" aria-hidden />
             </button>
@@ -153,11 +153,14 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
         </div>
 
         {total === 0 ? (
-          <div className="rounded-card bg-white p-10 text-center shadow-md">
+          <div
+            data-reveal
+            className="rounded-card border border-gray-200 bg-white p-10 text-center shadow-soft"
+          >
             <p className="text-lg font-semibold">
               {filtered ? 'Nothing matches yet.' : 'Free content is on its way.'}
             </p>
-            <p className="mt-2 text-gray-700">
+            <p className="mx-auto mt-2 max-w-[70ch] text-gray-700">
               {filtered
                 ? 'Try another search or type, or browse all courses.'
                 : 'Our teachers are preparing free talks, recordings and courses. Meanwhile, browse the course catalogue.'}
@@ -182,14 +185,14 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
             </p>
             {courses.length > 0 && (
               <div className="space-y-4">
-                {resources.length > 0 && <h3 className="text-xl font-bold">Free courses</h3>}
+                {resources.length > 0 && <h3 className="text-xl font-semibold">Free courses</h3>}
                 <CourseGrid courses={courses} region={region} phase={phase} />
               </div>
             )}
             {resources.length > 0 && (
               <div className="space-y-4">
                 {courses.length > 0 && (
-                  <h3 className="text-xl font-bold">Videos, audio and reading</h3>
+                  <h3 className="text-xl font-semibold">Videos, audio and reading</h3>
                 )}
                 <ResourceGrid resources={resources} />
               </div>
@@ -236,8 +239,11 @@ export default async function ExplorePage({ searchParams }: PageProps<'/explore'
           </>
         )}
 
-        <section className="flex flex-col items-center gap-4 rounded-card bg-white p-10 text-center shadow-md">
-          <h2 className="text-2xl font-extrabold">Ready to go deeper?</h2>
+        <section
+          data-reveal
+          className="flex flex-col items-center gap-4 rounded-card border border-gray-200 bg-white p-10 text-center shadow-soft"
+        >
+          <h2 className="text-2xl font-semibold">Ready to go deeper?</h2>
           <p className="max-w-xl text-gray-700">
             Our full courses guide you step by step, with progress tracking to keep you going.
           </p>

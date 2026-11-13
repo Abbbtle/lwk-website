@@ -21,7 +21,7 @@ export default async function MyLearningPage() {
   return (
     <div className="page-width py-12">
       <p className="text-sm font-semibold text-brand-ink uppercase">Hare Krishna, {session.name}</p>
-      <h1 className="mt-1 text-3xl font-extrabold md:text-4xl">My Learning</h1>
+      <h1 className="mt-1 text-3xl font-semibold md:text-4xl">My Learning</h1>
 
       {checklist && (
         <div className="mt-8">
@@ -30,7 +30,7 @@ export default async function MyLearningPage() {
       )}
 
       {courses.length === 0 ? (
-        <div className="mt-8 rounded-card bg-white p-10 text-center shadow-md">
+        <div className="mt-8 rounded-card bg-white p-10 text-center border border-gray-200 shadow-soft">
           <p className="text-lg text-gray-700">
             You have not enrolled in a course yet. Start with a free course, or browse the catalogue
             {earlyAccess ? ': every course is free during early access' : ''}.
@@ -49,7 +49,7 @@ export default async function MyLearningPage() {
           {courses.map((course) => (
             <li
               key={course.slug}
-              className="flex flex-col overflow-hidden rounded-card bg-white shadow-md"
+              className="flex flex-col overflow-hidden rounded-card bg-white border border-gray-200 shadow-soft"
             >
               <CourseCover categorySlug={course.categorySlug} imageUrl={course.coverUrl} />
               <div className="flex flex-1 flex-col gap-3 p-5">

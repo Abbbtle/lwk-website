@@ -98,11 +98,11 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
           </p>
 
           {tickets.length === 0 ? (
-            <p className="rounded-card bg-white p-8 text-center text-gray-700 shadow-md">
+            <p className="rounded-card bg-white p-8 text-center text-gray-700 border border-gray-200 shadow-soft">
               {view === 'open' ? 'No open requests. Well done.' : 'Nothing here.'}
             </p>
           ) : (
-            <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white shadow-md">
+            <ul className="card-clip divide-y divide-gray-200 rounded-card bg-white border border-gray-200 shadow-soft">
               {tickets.map((ticket) => (
                 <li key={ticket.id}>
                   <Link
@@ -161,7 +161,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
 
         <aside className="space-y-6">
           {hasRole(session, 'admin') && (
-            <section className="space-y-2 rounded-card bg-white p-5 shadow-md">
+            <section className="space-y-2 rounded-card bg-white p-5 border border-gray-200 shadow-soft">
               <h2 className="font-bold">Contact form</h2>
               <p className="text-sm text-gray-600">Messages from people without an account.</p>
               <Link href="/admin/messages" className="text-sm font-semibold underline">
@@ -169,7 +169,7 @@ export default async function SupportInboxPage({ searchParams }: PageProps<'/adm
               </Link>
             </section>
           )}
-          <section className="space-y-3 rounded-card bg-white p-5 shadow-md">
+          <section className="space-y-3 rounded-card bg-white p-5 border border-gray-200 shadow-soft">
             <h2 className="font-bold">Help article feedback</h2>
             <p className="text-sm text-gray-600">Last 30 days.</p>
             {feedback.articles.length === 0 ? (

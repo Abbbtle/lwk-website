@@ -159,16 +159,23 @@ function inline(text: string, keyPrefix = ''): ReactNode[] {
 const sizes = {
   // Lessons and articles.
   lg: {
-    root: 'space-y-5 text-lg leading-relaxed text-gray-800',
-    h2: 'pt-2 text-2xl font-bold text-gray-900',
-    h3: 'pt-1 text-xl font-bold text-gray-900',
-    h4: 'font-bold text-gray-900',
+    root: 'max-w-[70ch] space-y-5 text-lg leading-relaxed text-gray-800',
+    h2: 'pt-2 text-2xl font-semibold text-gray-900',
+    h3: 'pt-1 text-xl font-semibold text-gray-900',
+    h4: 'font-semibold text-gray-900',
+  },
+  // Course descriptions: body size, beside the rest of the page.
+  md: {
+    root: 'max-w-[70ch] space-y-4 leading-relaxed text-gray-700',
+    h2: 'pt-2 text-xl font-semibold text-gray-900',
+    h3: 'pt-1 text-lg font-semibold text-gray-900',
+    h4: 'font-semibold text-gray-900',
   },
   // Help text and chat messages.
   sm: {
     root: 'space-y-3 text-sm leading-relaxed',
-    h2: 'text-base font-bold',
-    h3: 'text-sm font-bold',
+    h2: 'text-base font-semibold',
+    h3: 'text-sm font-semibold',
     h4: 'text-sm font-semibold',
   },
 };
@@ -200,7 +207,7 @@ export function RichText({
             return (
               <Tag
                 key={index}
-                className={`space-y-1.5 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}
+                className={`space-y-2 pl-6 ${block.ordered ? 'list-decimal' : 'list-disc'}`}
               >
                 {block.items.map((item, itemIndex) => (
                   <li key={itemIndex}>{inline(item)}</li>

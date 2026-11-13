@@ -110,7 +110,7 @@ export default async function LessonPage({ params }: PageProps<'/learn/[slug]/[l
             <p className="text-sm font-semibold text-brand-ink uppercase">
               {lesson.isPreview && !player.enrolled ? 'Free preview' : course.category.name}
             </p>
-            <h1 className="mt-1 text-2xl font-extrabold md:text-3xl">{lesson.title}</h1>
+            <h1 className="mt-1 text-2xl font-semibold md:text-3xl">{lesson.title}</h1>
           </header>
 
           {!lesson.unlocked ? (
